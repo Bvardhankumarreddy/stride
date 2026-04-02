@@ -6,6 +6,7 @@ const API = process.env.API_URL ?? "http://localhost:4000";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 }, // 7 days — matches backend JWT_EXPIRES_IN
   providers: [
     Credentials({
       name: "credentials",
