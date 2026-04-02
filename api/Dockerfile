@@ -13,7 +13,7 @@ RUN npx prisma generate
 COPY api/src ./src
 COPY api/tsconfig*.json ./
 COPY api/nest-cli.json ./
-RUN npm run build
+RUN npm run build && echo "=== dist contents ===" && ls -la dist/ && ls -la dist/src/ | head -5
 
 # ── Production image ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
@@ -32,4 +32,4 @@ COPY api/tsconfig*.json ./
 
 EXPOSE 4000
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
