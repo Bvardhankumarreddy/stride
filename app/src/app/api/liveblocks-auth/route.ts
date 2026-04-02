@@ -2,10 +2,6 @@ import { Liveblocks } from "@liveblocks/node";
 import { auth } from "@/lib/auth";
 import { NextRequest } from "next/server";
 
-const liveblocks = new Liveblocks({
-  secret: process.env.LIVEBLOCKS_SECRET_KEY!,
-});
-
 const COLORS = ["#1a73e8", "#6b38d4", "#d93025", "#e37400", "#0f9d58", "#00796b"];
 
 function getUserColor(id: string) {
@@ -24,6 +20,8 @@ export async function POST(request: NextRequest) {
   }
 
   const { room } = await request.json() as { room: string };
+
+  const liveblocks = new Liveblocks({ secret: process.env.LIVEBLOCKS_SECRET_KEY! });
 
   const userId = session.user.id ?? session.user.email ?? "anonymous";
   const name = session.user.name ?? "Anonymous";
