@@ -32,4 +32,4 @@ COPY api/tsconfig*.json ./
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "echo \"DATABASE_URL=$DATABASE_URL\" > .env && npx prisma db push && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma db push && node dist/main.js"]
