@@ -1,13 +1,18 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package*.json ./
+# Install dependencies
+COPY api/package*.json ./
 RUN npm ci
 
-COPY prisma ./prisma
+# Generate Prisma client
+COPY api/prisma ./prisma
 RUN npx prisma generate
 
-COPY . .
+# Build
+COPY api/src ./src
+COPY api/tsconfig*.json ./
+COPY api/nest-cli.json ./
 RUN npm run build
 
 # ── Production image ──────────────────────────────────────────────────────────
