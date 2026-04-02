@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private jwt: JwtService) {}
 
   async create(dto: CreateOrgDto, userId: string) {
     const exists = await this.prisma.organization.findUnique({ where: { slug: dto.slug } });
@@ -19,6 +20,31 @@ export class OrganizationsService {
     });
 
     return org;
+  }
+
+  async listMemberships(userId: string) {
+    return this.prisma.organizationMember.findMany({
+      where: { userId },
+      include: { organization: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async switchWorkspace(userId: string, orgId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { userId_organizationId: { userId, organizationId: orgId } },
+    });
+    if (!member) throw new ForbiddenException('Not a member of this workspace');
+    await this.prisma.user.update({ where: { id: userId }, data: { organizationId: orgId } });
+    const token = this.jwt.sign({
+      sub: userId,
+      email: user!.email,
+      role: user!.role,
+      organizationId: orgId,
+      mustChangePassword: user!.mustChangePassword,
+    });
+    return { accessToken: token, organizationId: orgId };
   }
 
   async findMine(userId: string) {

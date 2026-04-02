@@ -35,10 +35,10 @@ export const authConfig: NextAuthConfig = {
         token.organizationId = (user as any).organizationId;
         token.mustChangePassword = (user as any).mustChangePassword ?? false;
       }
-      // After successful password change, clear the flag
-      if (trigger === "update" && session?.mustChangePassword === false) {
-        token.mustChangePassword = false;
-        if (session.accessToken) token.accessToken = session.accessToken;
+      if (trigger === "update") {
+        if (session?.mustChangePassword === false) token.mustChangePassword = false;
+        if (session?.accessToken) token.accessToken = session.accessToken;
+        if (session?.organizationId) token.organizationId = session.organizationId;
       }
       return token;
     },

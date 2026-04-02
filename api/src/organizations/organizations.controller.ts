@@ -12,6 +12,11 @@ import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 export class OrganizationsController {
   constructor(private orgs: OrganizationsService) {}
 
+  @Get()
+  listAll(@Req() req: any) {
+    return this.orgs.listMemberships(req.user.sub);
+  }
+
   @Post()
   create(@Body() dto: CreateOrgDto, @Req() req: any) {
     return this.orgs.create(dto, req.user.sub);
@@ -20,6 +25,11 @@ export class OrganizationsController {
   @Get('mine')
   mine(@Req() req: any) {
     return this.orgs.findMine(req.user.sub);
+  }
+
+  @Post('switch/:orgId')
+  switch(@Param('orgId') orgId: string, @Req() req: any) {
+    return this.orgs.switchWorkspace(req.user.sub, orgId);
   }
 
   @Patch(':orgId')

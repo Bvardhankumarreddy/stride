@@ -235,10 +235,14 @@ export const api = {
   },
 
   organizations: {
+    listAll: (token: string) =>
+      apiFetch<{ organization: ApiOrganization; role: string }[]>(`/organizations`, token),
     create: (token: string, data: { name: string; slug: string }) =>
       apiFetch<ApiOrganization>(`/organizations`, token, { method: 'POST', body: JSON.stringify(data) }),
     mine: (token: string) =>
       apiFetch<ApiOrganization>(`/organizations/mine`, token),
+    switch: (token: string, orgId: string) =>
+      apiFetch<{ accessToken: string; organizationId: string }>(`/organizations/switch/${orgId}`, token, { method: 'POST' }),
     members: (token: string, orgId: string) =>
       apiFetch<ApiOrgMember[]>(`/organizations/${orgId}/members`, token),
     updateMember: (token: string, orgId: string, userId: string, role: string) =>

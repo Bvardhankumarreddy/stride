@@ -34,8 +34,12 @@ export default function DocEditorPage() {
 
   async function handleSave(content: object, wordCount: number) {
     if (!token || !id) return;
-    await api.docs.update(token, id, { content, wordCount }).catch(() => {});
-    toast("Document saved");
+    try {
+      await api.docs.update(token, id, { content, wordCount });
+      toast("Document saved");
+    } catch {
+      toast("Failed to save document");
+    }
   }
 
   if (!doc) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import TopBar from "@/components/TopBar";
 import { useToken } from "@/lib/useToken";
 import { useSession } from "next-auth/react";
-import { api, ApiOrgMember, ApiInvitation } from "@/lib/api";
+import { api, ApiOrgMember, ApiInvitation, ApiOrganization } from "@/lib/api";
 import clsx from "clsx";
 
 const ROLE_BADGE: Record<string, string> = {
@@ -21,6 +21,7 @@ export default function MembersPage() {
 
   const [members, setMembers] = useState<ApiOrgMember[]>([]);
   const [invitations, setInvitations] = useState<ApiInvitation[]>([]);
+  const [org, setOrg] = useState<ApiOrganization | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [inviteEmail, setInviteEmail] = useState("");
@@ -33,9 +34,11 @@ export default function MembersPage() {
     Promise.all([
       api.organizations.members(token, orgId),
       api.organizations.invitations(token, orgId),
-    ]).then(([m, inv]) => {
+      api.organizations.mine(token),
+    ]).then(([m, inv, o]) => {
       setMembers(m);
       setInvitations(inv);
+      setOrg(o);
     }).finally(() => setLoading(false));
   }, [token, orgId]);
 
@@ -82,7 +85,15 @@ export default function MembersPage() {
         {/* Invite form */}
         {canManage && (
           <section className="mb-8 p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
-            <h2 className="text-sm font-bold text-on-surface mb-4">Invite a teammate</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-on-surface">Invite a teammate</h2>
+              {org && (
+                <span className="flex items-center gap-1.5 text-xs text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>corporate_fare</span>
+                  {org.name}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2">
               <input
                 value={inviteEmail}
