@@ -14,28 +14,43 @@ function getInitials(name: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return new Response("Unauthorized", { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const secret = process.env.LIVEBLOCKS_SECRET_KEY;
+    if (!secret) {
+      console.error("[liveblocks-auth] LIVEBLOCKS_SECRET_KEY is not set");
+      return new Response("Liveblocks not configured", { status: 503 });
+    }
+
+    const body = await request.json() as { room?: string };
+    const room = body.room;
+    if (!room) {
+      return new Response("Missing room", { status: 400 });
+    }
+
+    const liveblocks = new Liveblocks({ secret });
+
+    const userId = session.user.id ?? session.user.email ?? "anonymous";
+    const name = session.user.name ?? "Anonymous";
+
+    const lb = liveblocks.prepareSession(userId, {
+      userInfo: {
+        name,
+        color: getUserColor(userId),
+        initials: getInitials(name),
+      },
+    });
+
+    lb.allow(room, lb.FULL_ACCESS);
+
+    const { body: lbBody, status } = await lb.authorize();
+    return new Response(lbBody, { status });
+  } catch (err) {
+    console.error("[liveblocks-auth] error:", err);
+    return new Response("Internal server error", { status: 500 });
   }
-
-  const { room } = await request.json() as { room: string };
-
-  const liveblocks = new Liveblocks({ secret: process.env.LIVEBLOCKS_SECRET_KEY! });
-
-  const userId = session.user.id ?? session.user.email ?? "anonymous";
-  const name = session.user.name ?? "Anonymous";
-
-  const lb = liveblocks.prepareSession(userId, {
-    userInfo: {
-      name,
-      color: getUserColor(userId),
-      initials: getInitials(name),
-    },
-  });
-
-  lb.allow(room, lb.FULL_ACCESS);
-
-  const { body, status } = await lb.authorize();
-  return new Response(body, { status });
 }
