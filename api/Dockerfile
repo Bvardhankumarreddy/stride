@@ -31,4 +31,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "echo \"DATABASE_URL=$DATABASE_URL\" > .env && npx prisma db push && node dist/main"]
+CMD ["node", "dist/main"]
