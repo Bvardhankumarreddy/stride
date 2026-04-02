@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      OrganizationMember[]
+  invitations  Invitation[]
+  users        User[]
+  projects     Project[]
+  issues       Issue[]
+  documents    Document[]
+  customFields CustomField[]
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  role           String   @default("member")
+  createdAt      DateTime @default(now())
+
+  userId         String
+  organizationId String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model Invitation {
+  id             String    @id @default(cuid())
+  email          String
+  role           String    @default("member")
+  token          String    @unique @default(cuid())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organizationId String
+  invitedById    String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("SentInvitations", fields: [invitedById], references: [id])
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  initials       String?
+  role           String    @default("member")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organizationId String?
+  organization   Organization?      @relation(fields: [organizationId], references: [id])
+  memberships    OrganizationMember[]
+  sentInvitations Invitation[]      @relation("SentInvitations")
+
+  assignedIssues Issue[]        @relation("AssignedIssues")
+  createdIssues  Issue[]        @relation("CreatedIssues")
+  documents      Document[]
+  notifications  Notification[]
+  comments       Comment[]
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  sprints   Sprint[]
+  issues    Issue[]
+  documents Document[]
+}
+
+model Sprint {
+  id        String    @id @default(cuid())
+  name      String
+  startDate DateTime?
+  endDate   DateTime?
+  status    String    @default("planned")
+  projectId String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issues  Issue[]
+}
+
+model Issue {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  status         String    @default("todo")
+  priority       String    @default("medium")
+  estimate       Int?
+  dueDate        DateTime?
+  labels         Json      @default("[]")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  projectId      String?
+  sprintId       String?
+  assigneeId     String?
+  creatorId      String?
+  organizationId String?
+
+  project      Project?      @relation(fields: [projectId], references: [id])
+  sprint       Sprint?       @relation(fields: [sprintId], references: [id])
+  assignee     User?         @relation("AssignedIssues", fields: [assigneeId], references: [id])
+  creator      User?         @relation("CreatedIssues", fields: [creatorId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  comments          Comment[]
+  customFieldValues CustomFieldValue[]
+}
+
+model Document {
+  id             String   @id @default(cuid())
+  title          String
+  emoji          String   @default("📄")
+  content        Json     @default("{}")
+  status         String   @default("draft")
+  wordCount      Int      @default(0)
+  visibility     String   @default("org")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  authorId       String?
+  projectId      String?
+  organizationId String?
+
+  author       User?         @relation(fields: [authorId], references: [id])
+  project      Project?      @relation(fields: [projectId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String?
+  issueId  String?
+
+  author User?  @relation(fields: [authorId], references: [id])
+  issue  Issue? @relation(fields: [issueId], references: [id], onDelete: Cascade)
+}
+
+model CustomField {
+  id             String   @id @default(cuid())
+  name           String
+  type           String   @default("text")
+  options        Json     @default("[]")
+  required       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  values         CustomFieldValue[]
+}
+
+model CustomFieldValue {
+  id            String @id @default(cuid())
+  value         String
+
+  issueId       String
+  customFieldId String
+
+  issue       Issue       @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, customFieldId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  issueId   String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

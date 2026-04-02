@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2170e4",
+                        "surface-bright": "#f8f9fb",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container": "#edeef0",
+                        "tertiary-container": "#00855b",
+                        "surface": "#f8f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-secondary-fixed": "#23005c",
+                        "secondary-fixed": "#e9ddff",
+                        "outline-variant": "#c2c6d6",
+                        "surface-dim": "#d9dadc",
+                        "surface-container-highest": "#e1e2e4",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-container": "#fefcff",
+                        "outline": "#727785",
+                        "surface-container-high": "#e7e8ea",
+                        "on-background": "#191c1e",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#8455ef",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary": "#0058be",
+                        "inverse-surface": "#2e3132",
+                        "inverse-primary": "#adc6ff",
+                        "on-surface-variant": "#424754",
+                        "background": "#f8f9fb",
+                        "on-primary-fixed": "#001a42",
+                        "surface-tint": "#005ac2",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#e1e2e4",
+                        "on-secondary-container": "#fffbff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#6b38d4",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "tertiary": "#006947",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .timeline-grid {
+            background-size: 33.33% 100%;
+            background-image: linear-gradient(to right, transparent 99%, rgba(114, 119, 133, 0.1) 1%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-label text-on-surface antialiased min-h-screen pb-32">
+<!-- TopAppBar Execution -->
+<header class="fixed top-0 w-full z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="workspace_logo">workspaces</span>
+<h1 class="text-xl font-bold tracking-tighter text-slate-900">Stride</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-100/50 transition-colors">
+<span class="material-symbols-outlined text-slate-500" data-icon="auto_awesome">auto_awesome</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-fixed overflow-hidden">
+<img alt="Profile" data-alt="professional corporate headshot of a young male executive with short dark hair and a friendly smile in a high-end office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4J9mj96FbplpP56M0uI_k398_bUWi5rs8VB7tLvijqAhATmN9DiJMgFHY4FzmelgSDVEKMuVvpFfjgCrxZNEMKCsrrOXtTTy1qIQdI5HB7CF9t_FMQ3-Qc1D1vNKFbvmMPGyRVXvTYq1JBAD2X8GaWJm3Tt9BHnzZr_wtJ6dajqzUvG2ygmf31o0D8WeuiCmeb0CfmIm5MMVH9qZDWbu8YnWoeVoPzhfam0z1S2XLLCP1c0fDUwNZoMHZybdGCSxHGSstkRKGMluu"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-6 max-w-7xl mx-auto">
+<!-- Header & Controls -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div>
+<nav class="flex items-center gap-2 mb-2 text-label-md text-on-surface-variant">
+<span>Projects</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span>Q1 Product Vision</span>
+</nav>
+<h2 class="text-4xl font-headline font-bold tracking-tight text-on-surface">Roadmap</h2>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<!-- Zoom Controls -->
+<div class="bg-surface-container-low p-1 rounded-lg flex items-center">
+<button class="px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-900">Quarter</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-primary">Month</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-900">Week</button>
+</div>
+<!-- Filters -->
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant/20 rounded-lg text-sm font-medium hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="group">group</span>
+                    Team: All
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant/20 rounded-lg text-sm font-medium hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                    Filter
+                </button>
+</div>
+</div>
+<!-- Timeline Container -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
+<!-- Timeline Header -->
+<div class="flex border-b border-outline-variant/10">
+<div class="w-64 p-4 border-r border-outline-variant/10 font-semibold text-xs uppercase tracking-wider text-on-surface-variant bg-surface-container-low">
+                    Epic Breakdown
+                </div>
+<div class="flex-1 flex text-center font-semibold text-xs uppercase tracking-wider text-on-surface-variant bg-surface-container-low">
+<div class="flex-1 py-4 border-r border-outline-variant/10">February</div>
+<div class="flex-1 py-4 border-r border-outline-variant/10">March</div>
+<div class="flex-1 py-4">April</div>
+</div>
+</div>
+<!-- Timeline Content -->
+<div class="relative">
+<!-- "Today" Line -->
+<div class="absolute left-[calc(16rem+45%)] top-0 bottom-0 w-px bg-primary z-10">
+<div class="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-primary/10"></div>
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-bold">TODAY</div>
+</div>
+<!-- Epic Row 1 -->
+<div class="flex group hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 p-5 border-r border-outline-variant/10 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-blue-400"></div>
+<span class="text-sm font-medium text-on-surface">Mobile Checkout</span>
+</div>
+<div class="flex-1 relative h-16 timeline-grid">
+<div class="absolute top-4 left-[10%] w-[35%] h-8 bg-blue-100 text-blue-700 rounded-full flex items-center px-4 text-xs font-semibold shadow-sm border border-blue-200/50">
+                            Development phase
+                        </div>
+</div>
+</div>
+<!-- Epic Row 2 -->
+<div class="flex group hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 p-5 border-r border-outline-variant/10 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-purple-400"></div>
+<span class="text-sm font-medium text-on-surface">Auth Overhaul</span>
+</div>
+<div class="flex-1 relative h-16 timeline-grid">
+<div class="absolute top-4 left-[30%] w-[50%] h-8 bg-purple-100 text-purple-700 rounded-full flex items-center px-4 text-xs font-semibold shadow-sm border border-purple-200/50">
+                            Security Audit &amp; Rollout
+                        </div>
+</div>
+</div>
+<!-- Epic Row 3 -->
+<div class="flex group hover:bg-surface-container-low/50 transition-colors">
+<div class="w-64 p-5 border-r border-outline-variant/10 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-amber-400"></div>
+<span class="text-sm font-medium text-on-surface">Analytics Engine</span>
+</div>
+<div class="flex-1 relative h-16 timeline-grid">
+<div class="absolute top-4 left-[45%] w-[40%] h-8 bg-amber-100 text-amber-700 rounded-full flex items-center px-4 text-xs font-semibold shadow-sm border border-amber-200/50">
+                            Beta Testing
+                        </div>
+</div>
+</div>
+<!-- Milestone Layer -->
+<div class="flex border-t border-outline-variant/5">
+<div class="w-64 p-4 border-r border-outline-variant/10"></div>
+<div class="flex-1 relative h-12 flex items-center">
+<!-- Q1 Release Milestone -->
+<div class="absolute left-[33.33%] -translate-x-1/2 flex items-center gap-2 group cursor-help">
+<span class="material-symbols-outlined text-primary scale-110" data-icon="diamond" style="font-variation-settings: 'FILL' 1;">diamond</span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant group-hover:text-primary transition-colors">Q1 Release</span>
+</div>
+<div class="absolute left-[90%] -translate-x-1/2 flex items-center gap-2 opacity-40">
+<span class="material-symbols-outlined text-slate-400" data-icon="diamond">diamond</span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Internal Alpha</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Insight Banner -->
+<div class="mt-12 mb-24 p-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary-container text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
+<!-- Decorative Elements -->
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+<div class="flex items-start gap-5 relative z-10">
+<div class="bg-white/20 p-3 rounded-xl backdrop-blur-md">
+<span class="material-symbols-outlined text-2xl" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h4 class="text-lg font-bold mb-1">Predictive Capacity Insight</h4>
+<p class="text-white/80 max-w-2xl leading-relaxed">
+                        At current velocity, <span class="text-white font-bold">2 epics will miss Q2</span>. Suggested adjustment shown: re-prioritize Mobile Checkout backend tasks to free up 15% dev capacity.
+                    </p>
+<div class="mt-4 flex gap-3">
+<button class="px-5 py-2 bg-white text-secondary text-sm font-bold rounded-lg hover:bg-secondary-fixed transition-colors">Apply Optimization</button>
+<button class="px-5 py-2 bg-white/10 text-white text-sm font-bold rounded-lg hover:bg-white/20 transition-colors backdrop-blur-sm">View Analysis</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Execution -->
+<!-- Maps to "Roadmap" (index 5 in label_texts if counting all options, but let's stick to the JSON's provided 5 items) -->
+<!-- Since "Roadmap" is not in the BottomNavBar JSON labels but is the current page, we highlight "Work" as the closest fallback -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 backdrop-blur-lg z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-200/20 md:hidden">
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="home_app_logo">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Work</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Search</span>
+</a>
+<!-- Mapping Roadmap to Projects for this view -->
+<a class="flex flex-col items-center justify-center text-blue-600 bg-blue-50/50 rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="article">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Docs</span>
+</a>
+</nav>
+</body></html>

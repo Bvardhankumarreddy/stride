@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stride - Payments Team Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2170e4",
+                        "surface-bright": "#f8f9fb",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container": "#edeef0",
+                        "tertiary-container": "#00855b",
+                        "surface": "#f8f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-secondary-fixed": "#23005c",
+                        "secondary-fixed": "#e9ddff",
+                        "outline-variant": "#c2c6d6",
+                        "surface-dim": "#d9dadc",
+                        "surface-container-highest": "#e1e2e4",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-container": "#fefcff",
+                        "outline": "#727785",
+                        "surface-container-high": "#e7e8ea",
+                        "on-background": "#191c1e",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#8455ef",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary": "#0058be",
+                        "inverse-surface": "#2e3132",
+                        "inverse-primary": "#adc6ff",
+                        "on-surface-variant": "#424754",
+                        "background": "#f8f9fb",
+                        "on-primary-fixed": "#001a42",
+                        "surface-tint": "#005ac2",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#e1e2e4",
+                        "on-secondary-container": "#fffbff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#6b38d4",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "tertiary": "#006947",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tonal-shift { background-color: #f2f4f6; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full tonal-shift">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">workspaces</span>
+</div>
+<span class="text-xl font-bold tracking-tighter text-slate-900 font-headline">Stride</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100/50 transition-colors">
+<span class="material-symbols-outlined text-blue-600">auto_awesome</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="Portrait of Alex Rivera, professional headshot with soft lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsk2-lc7McwWmiVmky3C5ZTI10FYo7Yml15K4xXjEwYYc08LQuhV23TpkNVJlA1s2RbiyPJ_bPm1ScuAg7dwcYtnuJT7ZXr_GDrkZID5ZSwruyPmWQgSAk8kyjbtnqLMW3daejB4E8Yok7eCC9DFmFIhngk6UH9N7KdMotIZJ2pJGUjY6dTIekrRZN3CW6lj9sXdV1rJPfWllUwLR9ycNBeoCuSK0ef8FBS19H5XiYNRqfwqEIybN7652Y9fWMOCOuFGlmQca4wez4"/>
+</div>
+</div>
+</header>
+<!-- Project Sub-Header (The View Switcher & Controls) -->
+<div class="fixed top-16 left-0 w-full bg-surface-container-lowest z-30 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">payments</span>
+<h1 class="text-lg font-semibold tracking-tight font-headline">Payments Team</h1>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant/30 hidden md:block"></div>
+<nav class="flex gap-1 bg-surface-container-low p-1 rounded-lg">
+<button class="px-3 py-1 text-sm font-bold bg-white text-blue-600 shadow-sm rounded-md transition-all">Board</button>
+<button class="px-3 py-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">List</button>
+<button class="px-3 py-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Timeline</button>
+</nav>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors border border-outline-variant/20">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                Filter
+            </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors border border-outline-variant/20">
+<span class="material-symbols-outlined text-sm">group_work</span>
+                Group by
+            </button>
+<button class="ml-2 flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white shadow-md hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Main Kanban Canvas -->
+<main class="pt-40 pb-24 px-6 min-h-screen overflow-x-auto no-scrollbar flex gap-8 items-start">
+<!-- Column: To Do -->
+<section class="flex-shrink-0 w-80">
+<div class="flex items-center justify-between mb-6 px-1">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-slate-400"></span>
+<h2 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">To Do</h2>
+<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">12</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="space-y-4">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-outline-variant/40 transition-all cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-442</span>
+<span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" title="Medium Priority"></span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Refactor Stripe webhook signature validation</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">Backend</span>
+</div>
+<img class="w-6 h-6 rounded-full border border-white" data-alt="Avatar of developer John Doe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrCXTmG6ljnnxH0UyAtIlR3aO669QE1LYxRoL1ng-wLGWo5bpgEjY9t_XDYH4Jsjm1IUBSSkFkAxa_CyiIu2YKGGyFU-YgaEuaKtouUsz3QiOL_ABIcZPSIEZV3yQ0A7iv0Hl29a3wxegLWrcnwAAgCRHHbrWhQzqtD9WIhbuxjKGTTOQggasC56XT4hbG-IgoDmjQ9ih7zPDD66ePbKvtZGzS1AqbCZA75EGCJ39wbw9UW8Ksw82N_DcKBWq19NtE389O80ivLmIh"/>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-outline-variant/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-445</span>
+<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" title="Low Priority"></span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Update invoice template with new brand assets</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">Design</span>
+</div>
+<img class="w-6 h-6 rounded-full border border-white" data-alt="Avatar of designer Maria Lopez" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR1yMf8iORXjaCAO4UoUOF5DUNMmwlipqVcvZHeL7Z8-99W3RcFEtfB0viviNLpSasLH4rmPeatRR-GwV3_hiO2KFozi1UBV1BcUi4mXOFVErTf11lsa2q1CwqQ1wKOnEeU54crYsJWYWmqz020Hqs4dzJiV-czyn77ytQpM3myiyrftqPp4qv-q6XApvy2UnBhjt60Pr8ix1OsPI3OsUua8PUNRf8yVs1fwrUMAeaH9Plnbs_2yjsyynnNglwYiKWGS-7NQpVJT-2"/>
+</div>
+</article>
+</div>
+</section>
+<!-- Column: In Progress -->
+<section class="flex-shrink-0 w-80">
+<div class="flex items-center justify-between mb-6 px-1">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+<h2 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">In Progress</h2>
+<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">3 / 5</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="space-y-4">
+<!-- Highlighted Card -->
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_8px_24px_rgba(33,112,228,0.08)] border-2 border-primary-container ring-4 ring-primary-container/5 transition-all cursor-grab active:cursor-grabbing">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-primary tracking-tight font-headline">STR-439</span>
+<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" title="Urgent Priority"></span>
+</div>
+<h3 class="text-sm font-semibold leading-tight mb-4 text-on-surface line-clamp-2">Investigate failed payout transactions for JP region</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-primary/5 text-[10px] font-bold text-primary uppercase border border-primary/10">Incident</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">FinOps</span>
+</div>
+<img class="w-6 h-6 rounded-full border-2 border-primary-container" data-alt="Avatar of Alex Rivera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNhNJ1TIsuwb0IwisIKCb5yhRZVXs9RUQAU3ZVQJ2mm0_1furekrNGdlr7iIeYmMDkS0zBrfMvp6vcRzhIy-tgNKuFoFM4dfkDFREQjOdRkMjT4qHMP_Z8boyWh16ZkOCXke6zep7kAQRZMMw6hdBtYTdVW6kTN1swtAsQt8pJYQNmPrPAzd3KcGcroh4r5doMridVdW91zTZV_jAOWbKdy5YjisqaI3ZFtP-q6T6Zm_Vov87hNsKx_WAuzCPZa61MRfJZ-3xR01uP"/>
+</div>
+</article>
+<!-- Normal Card -->
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-outline-variant/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-441</span>
+<span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Draft Q3 merchant fee policy updates</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">Legal</span>
+</div>
+<img class="w-6 h-6 rounded-full border border-white" data-alt="Avatar of Kelly Brown" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCW7C30siLghkAkUl-gt7SzdSqGrL0X5705mJGpwtxJQ0U1Cv1BY76_USvZVjkoWBr9x6pmuxVlqCaxeu-4QQMJTSlp9vDjGwLbVciIu8criFA41_o--lF1iOzIOZGu-2MQqIgb4hUqRbPmfgS6QiYwxzlUpeFdWBS-pH2rq-igjfxR-zj_5gzukuTx4lsDC35ZlySyMhjARNEWfP5RSJxSkw9WRC2a9dAJx_f8PgHDWUjfRvo02CokrmvIq5bbbRaiVmJFgo8kWwV"/>
+</div>
+</article>
+<!-- Normal Card -->
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-outline-variant/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-448</span>
+<span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Apple Pay integration for recurring subscriptions</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">iOS</span>
+</div>
+<img class="w-6 h-6 rounded-full border border-white" data-alt="Avatar of Tom Harris" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRxjiXp5EP3XGjoDQ5pa5C8D_tIcHRPDAHmszg6W287vv2Cklk1SysDyOvHo05CqdW43v5JrQ6C7qCJm9bXa_8RrmHMncg_xItACXa47_nNCCbkF8HvdrVAYNNizp6xLG-bLiVyHkuOY2jYB1oMrIY3uhpXtQr_EYL240SXcPy6ZJd7Y23NFZCCEieaQdswFQ0HsXh_ZVA_0GIR6YiNugrt0eKk6I9xgxIDKcXrWASNJRIeksGR1ioAXtEQ5dnhaybEhnNI1o5IdgR"/>
+</div>
+</article>
+</div>
+</section>
+<!-- Column: In Review -->
+<section class="flex-shrink-0 w-80">
+<div class="flex items-center justify-between mb-6 px-1">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(107,56,212,0.6)]"></span>
+<h2 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">In Review</h2>
+<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">2</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="space-y-4">
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-outline-variant/40 transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-430</span>
+<span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Audit log for manual ledger adjustments</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-surface-container-low text-[10px] font-bold text-slate-500 uppercase">Compliance</span>
+</div>
+<img class="w-6 h-6 rounded-full border border-white" data-alt="Avatar of Sarah Kim" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkQL3z1QGDCmHGiyxFqis-147i4RqNVrSAxnPVNxuR8d2UxhdQLqCYTmI5RAcUrXdeGl7P99pdQhxzHTpFa759YA1H1spp7nRSsn4IgTvGNFSojZ09tDw2SkB8f-cEba40d6KK8y-U4GXh65fR8l5wdoPKihXO9IRforQgS05a0mi0FCxHFrKSGaE_tNhg5fYH-TgVx5zfzq3pBST9Ys-K6yztyJwUYFlZdgtlCE2sNmY4x-p4FOjdm35_EU1Mqum4h2yS1hUz83v2"/>
+</div>
+</article>
+</div>
+</section>
+<!-- Column: Done -->
+<section class="flex-shrink-0 w-80">
+<div class="flex items-center justify-between mb-6 px-1">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-tertiary-container shadow-[0_0_8px_rgba(0,133,91,0.6)]"></span>
+<h2 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Done</h2>
+<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">48</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="opacity-60 grayscale-[0.5] space-y-4">
+<article class="bg-surface-container-lowest p-4 rounded-xl shadow-none border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-slate-400 tracking-tight font-headline">STR-422</span>
+<span class="material-symbols-outlined text-tertiary text-xs">check_circle</span>
+</div>
+<h3 class="text-sm font-medium leading-tight mb-4 text-on-surface line-clamp-2">Migrate legacy payout engine to v3 API</h3>
+</article>
+</div>
+</section>
+<!-- Empty Spacer for scroll room -->
+<div class="w-8 flex-shrink-0"></div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 backdrop-blur-lg z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-200/20">
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined mb-1">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Work</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined mb-1">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined mb-1">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Search</span>
+</a>
+<!-- Projects is Active -->
+<a class="flex flex-col items-center justify-center text-blue-600 bg-blue-50/50 rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined mb-1">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined mb-1">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Docs</span>
+</a>
+</nav>
+</body></html>

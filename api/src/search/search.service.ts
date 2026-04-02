@@ -1,0 +1,162 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { TypesenseClient, ISSUES_COLLECTION, DOCS_COLLECTION } from './typesense.client';
+
+@Injectable()
+export class SearchService {
+  private readonly logger = new Logger(SearchService.name);
+
+  constructor(private ts: TypesenseClient) {}
+
+  // ── Issues ─────────────────────────────────────────────────────────────────
+
+  async indexIssue(issue: {
+    id: string;
+    title: string;
+    description?: string | null;
+    status: string;
+    priority: string;
+    labels: any;
+    projectId?: string | null;
+    sprintId?: string | null;
+    assignee?: { name: string } | null;
+    createdAt: Date;
+  }) {
+    const doc = {
+      id: issue.id,
+      title: issue.title,
+      description: issue.description ?? '',
+      status: issue.status,
+      priority: issue.priority,
+      labels: Array.isArray(issue.labels) ? issue.labels.map(String) : [],
+      projectId: issue.projectId ?? '',
+      sprintId: issue.sprintId ?? '',
+      assigneeName: issue.assignee?.name ?? '',
+      createdAt: Math.floor(issue.createdAt.getTime() / 1000),
+    };
+
+    try {
+      await this.ts.client.collections(ISSUES_COLLECTION).documents().upsert(doc);
+    } catch (err) {
+      this.logger.warn(`Failed to index issue ${issue.id}: ${err.message}`);
+    }
+  }
+
+  async removeIssue(id: string) {
+    try {
+      await this.ts.client.collections(ISSUES_COLLECTION).documents(id).delete();
+    } catch { /* already gone */ }
+  }
+
+  // ── Docs ───────────────────────────────────────────────────────────────────
+
+  async indexDoc(doc: {
+    id: string;
+    title: string;
+    emoji?: string | null;
+    status: string;
+    wordCount: number;
+    projectId?: string | null;
+    author?: { name: string } | null;
+    createdAt: Date;
+  }) {
+    const record = {
+      id: doc.id,
+      title: doc.title,
+      emoji: doc.emoji ?? '📄',
+      status: doc.status,
+      wordCount: doc.wordCount,
+      projectId: doc.projectId ?? '',
+      authorName: doc.author?.name ?? '',
+      createdAt: Math.floor(doc.createdAt.getTime() / 1000),
+    };
+
+    try {
+      await this.ts.client.collections(DOCS_COLLECTION).documents().upsert(record);
+    } catch (err) {
+      this.logger.warn(`Failed to index doc ${doc.id}: ${err.message}`);
+    }
+  }
+
+  async removeDoc(id: string) {
+    try {
+      await this.ts.client.collections(DOCS_COLLECTION).documents(id).delete();
+    } catch { /* already gone */ }
+  }
+
+  // ── Multi-search ───────────────────────────────────────────────────────────
+
+  async search(query: string, filter?: 'issues' | 'docs') {
+    const q = query.trim() || '*';
+
+    const searches: any[] = [];
+
+    if (!filter || filter === 'issues') {
+      searches.push({
+        collection: ISSUES_COLLECTION,
+        q,
+        query_by: 'title,description,assigneeName',
+        sort_by: 'createdAt:desc',
+        per_page: 10,
+      });
+    }
+
+    if (!filter || filter === 'docs') {
+      searches.push({
+        collection: DOCS_COLLECTION,
+        q,
+        query_by: 'title,authorName',
+        sort_by: 'createdAt:desc',
+        per_page: 10,
+      });
+    }
+
+    const response = await this.ts.client.multiSearch.perform({ searches }, {});
+
+    const results: SearchResult[] = [];
+
+    response.results.forEach((res: any, idx: number) => {
+      const type = searches[idx].collection === ISSUES_COLLECTION ? 'issue' : 'doc';
+      (res.hits ?? []).forEach((hit: any) => {
+        const doc = hit.document;
+        if (type === 'issue') {
+          results.push({
+            type: 'issue',
+            id: doc.id,
+            title: doc.title,
+            meta: `${doc.status} · ${doc.priority}`,
+            href: `/issues/${doc.id}`,
+            highlight: hit.highlights?.[0]?.snippet,
+          });
+        } else {
+          results.push({
+            type: 'doc',
+            id: doc.id,
+            title: doc.title,
+            meta: `${doc.status} · ${doc.authorName || 'Unknown'}`,
+            href: `/docs/${doc.id}`,
+            highlight: hit.highlights?.[0]?.snippet,
+          });
+        }
+      });
+    });
+
+    return results;
+  }
+
+  // ── Bulk re-index ──────────────────────────────────────────────────────────
+
+  async reindex(issues: any[], docs: any[]) {
+    for (const issue of issues) await this.indexIssue(issue);
+    for (const doc of docs) await this.indexDoc(doc);
+    return { issues: issues.length, docs: docs.length };
+  }
+}
+
+export interface SearchResult {
+  type: 'issue' | 'doc';
+  id: string;
+  title: string;
+  meta: string;
+  href: string;
+  highlight?: string;
+}

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stride — Mobile Checkout Redesign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2170e4",
+                        "surface-bright": "#f8f9fb",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container": "#edeef0",
+                        "tertiary-container": "#00855b",
+                        "surface": "#f8f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-secondary-fixed": "#23005c",
+                        "secondary-fixed": "#e9ddff",
+                        "outline-variant": "#c2c6d6",
+                        "surface-dim": "#d9dadc",
+                        "surface-container-highest": "#e1e2e4",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-container": "#fefcff",
+                        "outline": "#727785",
+                        "surface-dim": "#d9dadc",
+                        "on-background": "#191c1e",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#8455ef",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary": "#0058be",
+                        "inverse-surface": "#2e3132",
+                        "inverse-primary": "#adc6ff",
+                        "on-surface-variant": "#424754",
+                        "background": "#f8f9fb",
+                        "on-primary-fixed": "#001a42",
+                        "surface-tint": "#005ac2",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#e1e2e4",
+                        "on-secondary-container": "#fffbff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#6b38d4",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "tertiary": "#006947",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .serif-body { font-family: 'Newsreader', serif; }
+        .canvas-max-width { max-width: 720px; margin: 0 auto; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium">
+<span class="hover:text-primary cursor-pointer transition-colors">Specs</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Mobile Checkout Redesign</span>
+</div>
+</div>
+<div class="hidden md:flex items-center text-on-surface-variant text-xs font-medium bg-surface-container-low px-3 py-1.5 rounded-full">
+<span class="mr-2 h-1.5 w-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+            Saved 2 min ago
+        </div>
+<div class="flex items-center gap-3">
+<div class="flex -space-x-2 items-center">
+<img class="h-8 w-8 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="portrait of a creative professional woman in a modern bright office setting, soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjbD9epHYWp-HSMsUM00ce5CtY_gtC5T2Eaj0P_IgOg1U1INCT_tU7PAMoUCcUPgS1bTd2x_H-qm155eCTxfn3YekuViMbSot-pFHu4CBcobQVhv48EACmxZfTBRbcFuvAY7P4vOZ_Sep063DLYADzzRktuJ7c6KQURzg3AQuLu8gvXXPci_vzhCk-4uyo9nLdnPv9Yf3n-8uytKgCtlzKIm-XHUBKdafIlID-h1SZyvsWSs_JGzeFatwHc6h3Jy9o5DUwzZJPaMTn"/>
+<img class="h-8 w-8 rounded-full border-2 border-surface-container-lowest object-cover" data-alt="portrait of a focused software engineer man, studio lighting, clean professional background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAUKrnmpy6xL8a40afv-emf0jjTMy_AcQ-PZrVbkElwS-J2fTvALNMsXILqGrxYVkPx3ayophgDIgsBi3k5kj5fJOApk-K2EN95K7aBwZxyb73yDVudGXWZJQX5uEVVfhisvmBBvF9MWN40b8o6a7dUSq2ZIx5Mj5s5tjZdHjGkdUZK1uI5MBETbvtNajEJIOGzauGv1_CUApmbYcD29YB6BhvXkNScI1sHuA8MtKvI3akR86YU9PSXDdCFOD9HJBFogMl1YquT-Tb"/>
+<div class="h-8 w-8 rounded-full border-2 border-surface-container-lowest bg-primary-container text-white flex items-center justify-center text-[10px] font-bold">+3</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+                Share
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-6 min-h-screen">
+<div class="canvas-max-width">
+<!-- Editor Header -->
+<div class="mb-12">
+<div class="text-6xl mb-6 cursor-default">📱</div>
+<h1 class="font-headline font-extrabold text-4xl md:text-5xl tracking-tight text-on-surface leading-tight">
+                    Mobile Checkout Redesign — Spec v2
+                </h1>
+</div>
+<!-- Editor Body -->
+<div class="serif-body space-y-8 text-lg text-on-surface/90 leading-relaxed">
+<!-- Overview Section -->
+<section>
+<h2 class="font-headline font-bold text-xl text-on-surface mb-3 tracking-tight">Overview</h2>
+<p>
+                        The current mobile checkout experience has a 42% drop-off rate at the payment step. This redesign focuses on reducing cognitive load by consolidating shipping and billing into a single-flow interface, leveraging biometric authentication where available.
+                    </p>
+</section>
+<!-- Goals Section -->
+<section>
+<h2 class="font-headline font-bold text-xl text-on-surface mb-3 tracking-tight">Goals</h2>
+<ul class="space-y-3 list-none pl-1">
+<li class="flex gap-4">
+<span class="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0"></span>
+<span>Reduce time-to-complete by at least 25% for returning users.</span>
+</li>
+<li class="flex gap-4">
+<span class="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0"></span>
+<span>Introduce Apple Pay and Google Pay as primary express actions.</span>
+</li>
+<li class="flex gap-4">
+<span class="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0"></span>
+<span>Optimize form validation to appear inline rather than at submission.</span>
+</li>
+</ul>
+</section>
+<!-- Callout Block -->
+<section class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-xl my-10">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-amber-600 fill-amber-600" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="text-amber-900 text-base font-label font-medium leading-relaxed">
+<strong class="block mb-1 font-bold">Regulatory Compliance</strong>
+                            The new biometric flow must be audited by the legal team for PSD2 compliance before the Q3 sprint begins.
+                        </div>
+</div>
+</section>
+<!-- Tasks/Issues Section -->
+<section>
+<h2 class="font-headline font-bold text-xl text-on-surface mb-6 tracking-tight">Tasks</h2>
+<div class="grid gap-4">
+<!-- Issue Card 1 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/20 p-5 rounded-xl hover:shadow-md transition-shadow cursor-pointer flex justify-between items-start">
+<div class="flex gap-4">
+<div class="bg-blue-50 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined">confirmation_number</span>
+</div>
+<div>
+<span class="text-xs font-bold text-on-surface-variant font-label tracking-wider">STR-402</span>
+<h3 class="font-headline font-semibold text-base text-on-surface mt-0.5">Define API endpoints for biometric verification</h3>
+<div class="flex items-center gap-3 mt-3">
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight font-label">In Progress</span>
+<span class="text-xs text-on-surface-variant font-label italic">Due Sept 14</span>
+</div>
+</div>
+</div>
+<img class="h-7 w-7 rounded-full object-cover" data-alt="professional man smiling, clean minimalist background, soft focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRGIGZrrPpdtZE2S3-gbhxhPdn9NmCxd1IievbiVApDZcUYnBSlv06AM5YOxOt0vN5_wO9NWqPO2nolmlGBNw5GRXRscApOpdKZbFhAqtpuw_W38ODebAxB3r_2LVjMw2yWlNpg6PIzPgMQC4VwW5lr4r5ANF-LdrpOeUbe9Ax3fmqRrlOhHW7_gLOUaYUIh4rj6Yh1bAlUAFKUPYuPksvB7xSETKdh1y1zkNDYDdUTTUkPi94onjU-pHvo4ABYe8HebTOTurQRmyF"/>
+</div>
+<!-- Issue Card 2 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/20 p-5 rounded-xl hover:shadow-md transition-shadow cursor-pointer flex justify-between items-start">
+<div class="flex gap-4">
+<div class="bg-purple-50 text-secondary p-2 rounded-lg">
+<span class="material-symbols-outlined">palette</span>
+</div>
+<div>
+<span class="text-xs font-bold text-on-surface-variant font-label tracking-wider">STR-405</span>
+<h3 class="font-headline font-semibold text-base text-on-surface mt-0.5">Finalize high-fidelity prototype in Figma</h3>
+<div class="flex items-center gap-3 mt-3">
+<span class="bg-secondary-container/10 text-secondary px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight font-label">Review</span>
+<span class="text-xs text-on-surface-variant font-label italic">Due Sept 18</span>
+</div>
+</div>
+</div>
+<img class="h-7 w-7 rounded-full object-cover" data-alt="portrait of a woman designer, neutral aesthetic, bright lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO9Px-a6DJQ6cQSQ-uZ4ZhPNXbE7-Rt1aLIzAbn11jFiEYn448vcQyoHNlqPPYUklesqbLR-FoLmIX8gqwVr0An8iu2wIPeslSyGKXuhh2R6KveeknnQqd5GFhtRV1YE6vaUEPkzU5vi-_JGRNqvO8HIECj4AlpdWMc-6UHaL-gjNc7A0p9D5CDqzk1as-itxRSzc-GLoCPQLSoxD7zJgUVbgtL70p5V8c0zMZITTVtD0pfFWUAHANN_lVTo_xdsmfBPue5qpJ8_ZO"/>
+</div>
+</div>
+</section>
+<!-- Slash Command Overlay Placeholder (Visual representation) -->
+<div class="mt-12 relative">
+<div class="flex items-center gap-2 text-on-surface-variant/40 animate-pulse">
+<span class="text-2xl">|</span>
+<span class="font-label italic">Type '/' for commands...</span>
+</div>
+<!-- Command Menu -->
+<div class="absolute top-10 left-0 w-72 bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/30 overflow-hidden z-20 backdrop-blur-xl">
+<div class="p-2 border-b border-outline-variant/10 bg-surface-container-low flex justify-between items-center">
+<span class="text-[10px] font-bold text-on-surface-variant/60 px-2 uppercase tracking-widest">Blocks</span>
+</div>
+<div class="p-1">
+<button class="w-full flex items-center gap-3 p-2.5 hover:bg-surface-container rounded-lg transition-colors group">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center group-hover:bg-white">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">format_h1</span>
+</div>
+<div class="text-left">
+<p class="text-sm font-bold text-on-surface">Heading 1</p>
+<p class="text-[10px] text-on-surface-variant">Large section header</p>
+</div>
+</button>
+<button class="w-full flex items-center gap-3 p-2.5 hover:bg-surface-container rounded-lg transition-colors group">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center group-hover:bg-white">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">format_list_bulleted</span>
+</div>
+<div class="text-left">
+<p class="text-sm font-bold text-on-surface">Bulleted list</p>
+<p class="text-[10px] text-on-surface-variant">Simple bulleted list</p>
+</div>
+</button>
+<button class="w-full flex items-center gap-3 p-2.5 bg-primary/5 border border-primary/20 rounded-lg group">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">confirmation_number</span>
+</div>
+<div class="text-left">
+<p class="text-sm font-bold text-on-surface">Issue</p>
+<p class="text-[10px] text-primary">Live task from Stride</p>
+</div>
+<span class="ml-auto material-symbols-outlined text-primary text-sm">subdirectory_arrow_left</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-200/20 dark:border-slate-800/20">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Work</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl px-3 py-1 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Docs</span>
+</a>
+</nav>
+<!-- FAB (Suppressed on Details according to logic, but implied for editor interaction if needed - keeping suppressed per instruction) -->
+</body></html>

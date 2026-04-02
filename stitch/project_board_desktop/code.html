@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-dim": "#d9dadc",
+                        "primary": "#0058be",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8f9fb",
+                        "on-secondary-fixed": "#23005c",
+                        "surface-tint": "#005ac2",
+                        "on-primary-container": "#fefcff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary": "#006947",
+                        "outline-variant": "#c2c6d6",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#e1e2e4",
+                        "background": "#f8f9fb",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#fffbff",
+                        "tertiary-container": "#00855b",
+                        "inverse-primary": "#adc6ff",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#f0f1f3",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#6b38d4",
+                        "surface-variant": "#e1e2e4",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-background": "#191c1e",
+                        "outline": "#727785",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#424754",
+                        "surface-container": "#edeef0",
+                        "surface-container-high": "#e7e8ea",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f8f9fb",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "surface-container-low": "#f2f4f6",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#8455ef",
+                        "primary-container": "#2170e4",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed-variant": "#004395",
+                        "secondary-fixed": "#e9ddff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-label selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation (NavigationDrawer Shell) -->
+<aside class="hidden md:flex flex-col p-4 gap-2 h-screen w-72 bg-slate-50 dark:bg-slate-900 transition-all duration-200 ease-in-out border-r border-outline-variant/20">
+<div class="flex items-center gap-3 px-3 py-4 mb-4">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined">workspaces</span>
+</div>
+<div>
+<h2 class="text-lg font-black text-slate-900 dark:text-white leading-none">Stride</h2>
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Premium</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>My Work</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">inbox</span>
+<span>Inbox</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm rounded-lg font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span>Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">confirmation_number</span>
+<span>Issues</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Docs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors font-sans text-sm font-medium" href="#">
+<span class="material-symbols-outlined">map</span>
+<span>Roadmap</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant/20 pt-4 px-3 flex items-center gap-3">
+<img alt="Alex Rivera" class="w-8 h-8 rounded-full bg-surface-container" data-alt="close-up portrait of a professional man with a friendly expression in a modern office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCz3ANunw_ZYgCLJVGJ2MsMoJf0ojTglNCXX_M3XBpwREASG1N9eWZd_uCmw3L7vP90mMFWrAUlwhwII9-8CDAn7gzY4DBRbjavfF1qcyeGYzwr6Zwd1vOCuyJe9C3j-ylD5WsZVm8oK9d1xfMdTQIb0zKQ-kx8i2PLaaFjxZfYK5i8zRXliWgdNp7xvirJ7Y9ExLvmxOE8VUUpfBP-7ZaSNwI5fGll3m-Yc_-zWWyR_NvpIJ3PsfpBNmIG9GuOsurzsf_KHa5xWrgt"/>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-on-surface-variant truncate">Stride Workspace</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">settings</span>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background relative">
+<!-- TopAppBar Navigation Shell -->
+<header class="fixed top-0 right-0 left-0 md:left-72 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl h-16 flex items-center justify-between px-6 transition-colors border-b border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="flex items-center text-sm font-medium gap-2 text-slate-500">
+<span>Projects</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface font-bold tracking-tight">Payments Team</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-surface-container-low rounded-lg p-1">
+<button class="px-3 py-1.5 text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm rounded-md text-primary transition-all">Board</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-all">List</button>
+<button class="px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-all">Timeline</button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant/30 mx-1"></div>
+<button class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Issue
+                    </button>
+</div>
+</header>
+<!-- Board Content -->
+<div class="pt-20 px-6 pb-6 h-full flex flex-col overflow-hidden">
+<!-- Board Columns Container -->
+<div class="flex-1 flex gap-6 overflow-x-auto no-scrollbar pb-4">
+<!-- To Do Column -->
+<div class="flex-col min-w-[320px] max-w-[320px] flex gap-4 h-full">
+<div class="flex items-center justify-between px-2 mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<h3 class="font-semibold text-sm text-on-surface">To Do</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-1.5 py-0.5 rounded-full font-bold">4</span>
+</div>
+<button class="w-6 h-6 flex items-center justify-center hover:bg-surface-container rounded-md transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto no-scrollbar pb-10">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/10 hover:border-primary/20 transition-all cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-wider">STR-442</span>
+</div>
+<img alt="Assignee" class="w-5 h-5 rounded-full bg-slate-100" data-alt="professional portrait of a creative professional in a bright studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDB-tTvjo5y961wiqmR86Rl3C59-ovdWi0KgGkEWV0d9SsKlXqP2aNywYyNBWlGq-8PNeISVbtCDhFKMBx6iY39m5aH0yVZjA3dnP1VarTKlnekMu8F4gekKsQRzPwn4IzjCr3CNtXJSElruaHRNA-sk4gj9hYKtmI6dKRndM-2phQE257eM34KnkzWeS3HZJQ4RjeP5GKKoXueIzcdmKCY_0tcduIqtvZtKDOXKoOV1TvoxNfETtOK7ygGqCLQO4pLceXzSB4GDwq1"/>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug line-clamp-2 mb-3">Refactor stripe webhook handler for recurring payments</h4>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold">Backend</span>
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">v1.2</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/10 hover:border-primary/20 transition-all cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-wider">STR-445</span>
+</div>
+<img alt="Assignee" class="w-5 h-5 rounded-full bg-slate-100" data-alt="smiling woman working on a laptop in a modern collaborative workspace" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXKuNIW5vcje6NuBFY8CFLQ5mJ5KyXR_aHJJ19YtdN6OKAFGjFkFqg04ETHt5TY_r9Nfv-OdecL1QCP8D6pHPE29dMpFaBNmcLDT0MNDw86cynT4uuGvj89o_oaPVg7y06qzLjiIIIofAwVe0d5tmGSzCFrI-sSWxivzV3nK4FSauyMipJFs0IlWuKh3meI3jQeabvrCm1PEqWsuOwNK_M79ogf612lt7xplckjdyD3YrIlcbOYgVBgNNaBs_kQSt4RQbTB_mZWdQa"/>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug line-clamp-2 mb-3">Update PCI compliance documentation for Q3 audit</h4>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">Compliance</span>
+</div>
+</div>
+</div>
+</div>
+<!-- In Progress Column -->
+<div class="flex-col min-w-[320px] max-w-[320px] flex gap-4 h-full">
+<div class="flex items-center justify-between px-2 mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+<h3 class="font-semibold text-sm text-on-surface">In Progress</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-1.5 py-0.5 rounded-full font-bold">2</span>
+</div>
+<button class="w-6 h-6 flex items-center justify-center hover:bg-surface-container rounded-md transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto no-scrollbar pb-10">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-primary/10 hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-wider">STR-441</span>
+</div>
+<img alt="Assignee" class="w-5 h-5 rounded-full bg-slate-100" data-alt="portrait of a focused man in business casual attire with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMSaiIGx-Eg8U4KuDDOW78pd1Zx9DJslAe1Y_JLRbEHZ7jHmcFXpJvQ-lNhMzKefDI-gekw6spSIWsLHSucUHOm8ceRr1Q7G8nPfXvM3rbvrdQtzpVqJ1u2OvKPy22BHyz2vS_wfoBZtD_5gzG5dLM1j1eQXt_TOVN3d1-R0E38stxf5qKqrr3lzgAXEz7I3_fNGi-lF1KmZPv2F0tz8tjIHIIEC69FyLixE1Gwa7c8_L6VQNai6tZlsWk1kFZ7fyU0nV9jYCNJEc8"/>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug line-clamp-2 mb-3">Investigate intermittent checkout failures in EMEA</h4>
+<div class="flex items-center justify-between">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[10px] font-bold">Bug</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+</div>
+</div>
+<!-- In Review Column -->
+<div class="flex-col min-w-[320px] max-w-[320px] flex gap-4 h-full">
+<div class="flex items-center justify-between px-2 mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<h3 class="font-semibold text-sm text-on-surface">In Review</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-1.5 py-0.5 rounded-full font-bold">1</span>
+</div>
+<button class="w-6 h-6 flex items-center justify-center hover:bg-surface-container rounded-md transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto no-scrollbar pb-10">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-outline-variant/10 hover:border-primary/20 transition-all cursor-grab active:cursor-grabbing">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-wider">STR-439</span>
+</div>
+<div class="flex -space-x-1.5">
+<img alt="Assignee" class="w-5 h-5 rounded-full ring-2 ring-white bg-slate-100" data-alt="close-up of a designer working at a minimalist desk with soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBN3O7sDKwOC1D1zZqfApnMMrf7S3CxlcVHwa5sAfDzDxGrSPsWpeo5Q_YQbNzGqoObK8bz_ZLULv5an5svYGx1V7FhE5jIMYhs9_ya34djO3lVvq1B0hYkmrDQ7ThvWnscJkt-ieCuYsqfBtt3WkCOeelJpDxrjBx1GoD-DiwehToiCzGUaJySa_EjTRluvMchbHFTDiFwA0lvR7wmf-YHhAu9QmjBX86QblEiXH-Z3-Yxr4E9SLQ4KsBSi3jvfOqdIsgz_3CqPH63"/>
+<img alt="Reviewer" class="w-5 h-5 rounded-full ring-2 ring-white bg-slate-100" data-alt="business person in a well-lit modern corporate environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuCjNJx70OhdZMYTEdTFFwDhQ-dRIZwx5733g3eLMiaeDihR4z7iBAM0JRxq43EciCoQJ7XumwsPpSxpGboqKoUZsUh9ipS8l9pjEPCV6-FPt4mFmqSH7inDoyOr8FC8h4CDCi24hHpLWIvCuapq0sD_4Zcwwwi47ZDR0Rb-MCfvta1nVS-zCtzVgBPNLtw_d5hI20Um4v6by3u_42dpfzFz4FOSJz1o4hZCLegbiz-5ETEStl0p6ebsANSAlF8k_6g-dnil0PlmOU"/>
+</div>
+</div>
+<h4 class="text-sm font-semibold text-on-surface leading-snug line-clamp-2 mb-3">Add 'Apple Pay' as a primary funding source in checkout flow</h4>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-600 text-[10px] font-bold">Feature</span>
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">UI/UX</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Done Column -->
+<div class="flex-col min-w-[320px] max-w-[320px] flex gap-4 h-full">
+<div class="flex items-center justify-between px-2 mb-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<h3 class="font-semibold text-sm text-on-surface">Done</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-1.5 py-0.5 rounded-full font-bold">12</span>
+</div>
+<button class="w-6 h-6 flex items-center justify-center hover:bg-surface-container rounded-md transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto no-scrollbar pb-10 opacity-60 grayscale-[0.3]">
+<!-- Done Card Example -->
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-wider">STR-412</span>
+</div>
+</div>
+<h4 class="text-sm font-semibold text-on-surface line-through decoration-on-surface-variant/30 leading-snug line-clamp-2 mb-3">Implement localized currency formatting for JPY and KRW</h4>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[10px] font-bold">Internationalization</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Command Bar (Floating) -->
+<div class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-50">
+<div class="glass-effect bg-white/80 dark:bg-slate-900/80 border border-outline-variant/20 rounded-2xl shadow-2xl p-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium placeholder:text-slate-400" placeholder="Ask AI to group by priority or summarize status..." type="text"/>
+<div class="flex items-center gap-2 px-2 py-1 bg-surface-container rounded-md text-[10px] font-bold text-on-surface-variant">
+<span>⌘</span>
+<span>K</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

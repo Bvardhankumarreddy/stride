@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stride | Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-shift {
+            background-color: #f2f4f6;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .ai-shimmer {
+            background: linear-gradient(135deg, #6b38d4 0%, #8455ef 100%);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "error-container": "#ffdad6",
+                "primary-container": "#2170e4",
+                "surface-bright": "#f8f9fb",
+                "primary-fixed-dim": "#adc6ff",
+                "primary-fixed": "#d8e2ff",
+                "on-tertiary-fixed": "#002113",
+                "surface-container": "#edeef0",
+                "tertiary-container": "#00855b",
+                "surface": "#f8f9fb",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed-variant": "#5516be",
+                "on-secondary-fixed": "#23005c",
+                "secondary-fixed": "#e9ddff",
+                "outline-variant": "#c2c6d6",
+                "surface-dim": "#d9dadc",
+                "surface-container-highest": "#e1e2e4",
+                "tertiary-fixed-dim": "#4edea3",
+                "surface-container-low": "#f2f4f6",
+                "on-primary-container": "#fefcff",
+                "outline": "#727785",
+                "surface-container-high": "#e7e8ea",
+                "on-background": "#191c1e",
+                "on-surface": "#191c1e",
+                "secondary-container": "#8455ef",
+                "on-secondary": "#ffffff",
+                "error": "#ba1a1a",
+                "primary": "#0058be",
+                "inverse-surface": "#2e3132",
+                "inverse-primary": "#adc6ff",
+                "on-surface-variant": "#424754",
+                "background": "#f8f9fb",
+                "on-primary-fixed": "#001a42",
+                "surface-tint": "#005ac2",
+                "inverse-on-surface": "#f0f1f3",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed": "#6ffbbe",
+                "surface-variant": "#e1e2e4",
+                "on-secondary-container": "#fffbff",
+                "on-tertiary-container": "#f5fff6",
+                "on-error": "#ffffff",
+                "on-tertiary-fixed-variant": "#005236",
+                "secondary": "#6b38d4",
+                "secondary-fixed-dim": "#d0bcff",
+                "tertiary": "#006947",
+                "on-primary-fixed-variant": "#004395",
+                "on-primary": "#ffffff",
+                "on-error-container": "#93000a"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Newsreader"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label min-h-screen pb-32">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white overflow-hidden">
+<img alt="Logo" class="w-full h-full object-cover" data-alt="Minimalist abstract letter S logo in white on a deep royal blue square background with rounded corners" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEkUzLNorjmMZ22J3a_d2c0pz7xGlggawFbeMJUgWjb__r4JbssE9Ksqtj9wusSnIxzCC1alj-E1hzziMgFXjnxWXTAGWQPMPNc0x1AbjZ9Cm39pfY-0n1KMoEOd_EOvQlFboAS8uYaw1DNsSiR_WogH2sEq4mlaIKFra6E-TP5LwMcodBhBZeEwGNjnBH4UrIoAYh60D6u1WxSyn7o8D-5n9_-2tLzJqTBCvjDUAN1mD6xF_n6aYtRlYd0IWn1GVx5IEgQe9CcLZ2"/>
+</div>
+<span class="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Stride</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-100/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="auto_awesome">auto_awesome</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+<img alt="Alex Rivera" class="w-full h-full object-cover" data-alt="Professional headshot of a young creative professional with short dark hair in a bright studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOcMEcamnEGT98kqpmPM7ghDIx7PK2mh7fne6yFqscLN8yyV1eaDkonvflXGHeMN1RLJpTLBFzEcdyyxgpJZ5CndhCghfKsieYXRRmENM0ZKJy0rHw-wIYnYIRtoP6ZzGEwfqruzox4lOTl5LpYD5lUkwyZOhwgnokF8ySDw-bJfAJOFODrIRC5fiVx9dBoKAfrgJrkVAXXa_efhX93jICPKeHFXCys2JmRLUhCJfRuAp9rJGdgpZI9QZwDSv4CnhNEPkwGuCylmDm"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-5xl mx-auto space-y-10">
+<!-- Welcome Section -->
+<section class="space-y-1">
+<h1 class="text-4xl md:text-5xl font-headline font-black tracking-tight text-on-surface">Good morning, Alex</h1>
+<p class="text-on-surface-variant font-medium text-lg">Thursday, October 24</p>
+</section>
+<!-- AI Digest Card (Bento Pattern) -->
+<section class="relative group">
+<div class="absolute -inset-0.5 bg-gradient-to-r from-secondary/40 to-primary/40 rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+<div class="relative bg-surface-container-lowest p-6 rounded-xl border border-secondary/10 shadow-sm">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="sparkles" style="font-variation-settings: 'FILL' 1;">colors_spark</span>
+<h2 class="font-headline font-bold text-lg tracking-tight">Your AI Digest</h2>
+</div>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mt-2.5"></span>
+<span class="font-body text-lg">3 issues closed yesterday</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mt-2.5"></span>
+<span class="font-body text-lg">Sprint 24 ends in 3 days</span>
+</li>
+<li class="flex items-start gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mt-2.5"></span>
+<span class="font-body text-lg">2 issues waiting on review</span>
+</li>
+</ul>
+<div class="mt-6 flex justify-end">
+<button class="text-sm font-bold text-secondary flex items-center gap-1 group/btn">
+                        View full analysis 
+                        <span class="material-symbols-outlined text-sm transition-transform group-hover/btn:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Recent Docs (Asymmetric Horizontal Scroll) -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline font-extrabold text-xl tracking-tight">Recent Docs</h3>
+<button class="text-primary text-sm font-bold">See all</button>
+</div>
+<div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar -mx-6 px-6">
+<!-- Doc Card 1 -->
+<div class="flex-none w-64 bg-surface-container-low p-5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="article">article</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Engineering</span>
+</div>
+<h4 class="font-body text-xl font-semibold mb-1 group-hover:text-primary transition-colors">V2 API Architecture</h4>
+<p class="text-xs text-on-surface-variant">Edited 2h ago</p>
+</div>
+<!-- Doc Card 2 -->
+<div class="flex-none w-64 bg-surface-container-low p-5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="description">description</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Product</span>
+</div>
+<h4 class="font-body text-xl font-semibold mb-1 group-hover:text-secondary transition-colors">Q4 Roadmap Sync</h4>
+<p class="text-xs text-on-surface-variant">Edited 5h ago</p>
+</div>
+<!-- Doc Card 3 -->
+<div class="flex-none w-64 bg-surface-container-low p-5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="edit_note">edit_note</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Design</span>
+</div>
+<h4 class="font-body text-xl font-semibold mb-1 group-hover:text-tertiary transition-colors">Brand Guidelines</h4>
+<p class="text-xs text-on-surface-variant">Edited 1d ago</p>
+</div>
+</div>
+</section>
+<!-- My Issues Section (Clean List Pattern) -->
+<section class="space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<h3 class="font-headline font-extrabold text-xl tracking-tight">My Issues</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold">12</span>
+</div>
+<div class="flex gap-2 p-1 bg-surface-container-low rounded-lg w-fit">
+<button class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-primary">All</button>
+<button class="px-4 py-1.5 rounded-md text-sm font-medium text-on-surface-variant hover:bg-white/50">In Progress (3)</button>
+<button class="px-4 py-1.5 rounded-md text-sm font-medium text-on-surface-variant hover:bg-white/50">Up Next (5)</button>
+</div>
+</div>
+<div class="space-y-2">
+<!-- Issue Card 1 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-all duration-200 cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"></div>
+<div>
+<p class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">Implement shadow-free surface system</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-on-surface-variant/60">STR-402</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="text-[10px] font-bold uppercase tracking-tight text-primary">Design System</span>
+</div>
+</div>
+</div>
+<div class="flex -space-x-2">
+<img alt="AR" class="w-6 h-6 rounded-full border-2 border-white" data-alt="Small circular avatar of a person with dark hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxt2jDa9Qh_i2iVn4Quxl-Vx04lTK7L1VSPLJ7971NpfMaBtxg6JzTMisQLvDdvpP7_4QrVTpxECcx-rHrs0mMCJ0N22BayD3S0e-RKWX8jaLiFUiIMBm-QUfQXCa2fbTA1mHqh4cnVFFRMFsx5OgstyC3STK84H32fNtjiHtvch9UbltObIUW4IP2HbSEt7af3HiLodbyYqJ5AW8RSJVTxBN6G6WjzQ3lm7WpHlbfVNSH5yIpKj3sfwGJ7KJjGWQxkpr62TGn9lE5"/>
+</div>
+</div>
+<!-- Issue Card 2 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-all duration-200 cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"></div>
+<div>
+<p class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">Fix high-latency in command palette search</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-on-surface-variant/60">STR-389</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="text-[10px] font-bold uppercase tracking-tight text-secondary">Core App</span>
+</div>
+</div>
+</div>
+<div class="flex -space-x-2">
+<img alt="AR" class="w-6 h-6 rounded-full border-2 border-white" data-alt="Small circular avatar of a person with dark hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXm_FuCA6r3X9zXBFQVlYtCDW70bvqoYDqh4OMltTwJs9DboZd_tPSmmMwam1d9ZyrYuNR0SNHVBsmjozgDxwIzdyajPG7wvbKETP-hwpLcb5eECBJexGqpFgw58nG8KSoWz0SQWfzvSr85T1VSe5hBYlGXHeL2S6hKi3sZW7h4EsMOsBgLza_-5uEfv9RT2_BdS6dPJrl81gCU_0frb3BNJykR1gD_OqApmbnatihuPu_jm2FhcMf9z3QsH6eE-JehGWDtz6mCWIm"/>
+</div>
+</div>
+<!-- Issue Card 3 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-all duration-200 cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(0,88,190,0.4)]"></div>
+<div>
+<p class="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">Refactor Newsreader typography tokens</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-on-surface-variant/60">STR-415</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40"></span>
+<span class="text-[10px] font-bold uppercase tracking-tight text-tertiary">Design System</span>
+</div>
+</div>
+</div>
+<div class="flex -space-x-2">
+<img alt="AR" class="w-6 h-6 rounded-full border-2 border-white" data-alt="Small circular avatar of a person with dark hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQ1IFINGaGcPKDGcfJ-AKPrtul0FUxbop3Dylq9PiO-ch_STUaJmKLSxrkv9mT3OFiePaD00ZHdDlKHb-odE5A3euLqmhvyqCf8-MvNYK71nOXoKtUSWMWb7cqxS38EtuLn5AGEhA7FyTkp4x3DNHteE5eJ9UJ0SkmtOlZuHif8ySjqLJAHR1SwvnYIBWRH5mnXhR5_fVg-vLLUrpGl7t0TclcX4zbvorNz177txTQ8gVFc5oH7X8NDYJ1iYtku2cd9OyqxMIFwXBL"/>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed right-6 bottom-24 w-14 h-14 rounded-full ai-shimmer text-white shadow-xl flex items-center justify-center z-50 hover:scale-105 transition-transform active:scale-95">
+<span class="material-symbols-outlined" data-icon="add" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-200/20 dark:border-slate-800/20">
+<!-- Work (Active) -->
+<a class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl px-3 py-1 scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home_app_logo">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Work</span>
+</a>
+<!-- Inbox -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Inbox</span>
+</a>
+<!-- Search -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Search</span>
+</a>
+<!-- Projects -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Projects</span>
+</a>
+<!-- Docs -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="article">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase mt-1">Docs</span>
+</a>
+</nav>
+</body></html>

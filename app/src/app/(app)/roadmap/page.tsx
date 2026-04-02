@@ -1,0 +1,299 @@
+"use client";
+
+import { useState, useEffect, useMemo, useRef } from "react";
+import TopBar from "@/components/TopBar";
+import { useToken } from "@/lib/useToken";
+import { api, ApiSprint } from "@/lib/api";
+import { toast } from "@/components/Toast";
+import clsx from "clsx";
+
+const SPRINT_COLORS = [
+  { bar: "bg-blue-100 text-blue-700 border-blue-200/50", dot: "bg-blue-400" },
+  { bar: "bg-purple-100 text-purple-700 border-purple-200/50", dot: "bg-purple-400" },
+  { bar: "bg-amber-100 text-amber-700 border-amber-200/50", dot: "bg-amber-400" },
+  { bar: "bg-violet-100 text-violet-700 border-violet-200/50", dot: "bg-violet-400" },
+  { bar: "bg-emerald-100 text-emerald-700 border-emerald-200/50", dot: "bg-emerald-400" },
+  { bar: "bg-rose-100 text-rose-700 border-rose-200/50", dot: "bg-rose-400" },
+];
+
+export default function RoadmapPage() {
+  const token = useToken();
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [sprints, setSprints] = useState<ApiSprint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [zoom, setZoom] = useState("Quarter");
+  const [teamOpen, setTeamOpen] = useState(false);
+  const teamRef = useRef<HTMLDivElement>(null);
+
+  // Load projects once
+  useEffect(() => {
+    if (!token) return;
+    api.projects.list(token).then(list => {
+      setProjects(list);
+      if (list[0]) setSelectedProjectId(list[0].id);
+      else setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [token]);
+
+  // Reload sprints whenever selected project changes
+  useEffect(() => {
+    if (!token || !selectedProjectId) return;
+    setLoading(true);
+    api.sprints.list(token, selectedProjectId)
+      .then(s => setSprints(s))
+      .catch(() => setSprints([]))
+      .finally(() => setLoading(false));
+  }, [token, selectedProjectId]);
+
+  // Close team dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (teamRef.current && !teamRef.current.contains(e.target as Node)) setTeamOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedProject = projects.find(p => p.id === selectedProjectId);
+
+  const { columns, getLeft, getWidth, todayPct } = useMemo(() => {
+    const now = new Date();
+    const validSprints = sprints.filter(s => s.startDate && s.endDate);
+
+    let rangeStart: Date;
+    let rangeEnd: Date;
+
+    if (validSprints.length === 0) {
+      rangeStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      rangeEnd = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+    } else {
+      const minMs = Math.min(...validSprints.map(s => new Date(s.startDate!).getTime()));
+      const maxMs = Math.max(...validSprints.map(s => new Date(s.endDate!).getTime()));
+      const minDate = new Date(minMs);
+      const maxDate = new Date(maxMs);
+      rangeStart = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+      rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+    }
+
+    // For Month/Week zoom, narrow the range to current window
+    if (zoom === "Month") {
+      rangeStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      rangeEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (zoom === "Week") {
+      const day = now.getDay();
+      rangeStart = new Date(now); rangeStart.setDate(now.getDate() - day); rangeStart.setHours(0,0,0,0);
+      rangeEnd = new Date(rangeStart); rangeEnd.setDate(rangeStart.getDate() + 6); rangeEnd.setHours(23,59,59,999);
+    }
+
+    const totalMs = Math.max(rangeEnd.getTime() - rangeStart.getTime(), 1);
+
+    const getLeft = (date: Date | null) => {
+      if (!date) return 0;
+      return Math.max(0, Math.min(100, (date.getTime() - rangeStart.getTime()) / totalMs * 100));
+    };
+
+    const getWidth = (start: Date | null, end: Date | null) => {
+      if (!start || !end) return 0;
+      return Math.max(2, Math.min(100 - getLeft(start), (end.getTime() - start.getTime()) / totalMs * 100));
+    };
+
+    const todayPct = getLeft(now);
+
+    // Build column headers based on zoom
+    const columns: { label: string; date: Date }[] = [];
+    if (zoom === "Quarter") {
+      const cur = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+      while (cur <= rangeEnd) {
+        columns.push({ label: cur.toLocaleDateString("en-US", { month: "short", year: columns.length === 0 || cur.getMonth() === 0 ? "2-digit" : undefined }), date: new Date(cur) });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+    } else if (zoom === "Month") {
+      // Weekly columns within the month
+      const cur = new Date(rangeStart);
+      let week = 1;
+      while (cur <= rangeEnd) {
+        columns.push({ label: `W${week}`, date: new Date(cur) });
+        cur.setDate(cur.getDate() + 7);
+        week++;
+      }
+    } else {
+      // Daily columns for the week
+      const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const cur = new Date(rangeStart);
+      while (cur <= rangeEnd) {
+        columns.push({ label: `${DAYS[cur.getDay()]} ${cur.getDate()}`, date: new Date(cur) });
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
+    return { columns, getLeft, getWidth, todayPct };
+  }, [sprints, zoom]);
+
+  return (
+    <div className="bg-surface">
+      <TopBar breadcrumbs={[{ label: "Roadmap" }]} />
+      <main className="pt-24 px-6 pb-32 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <h2 className="text-4xl font-headline font-bold tracking-tight text-on-surface">Roadmap</h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="bg-surface-container-low p-1 rounded-lg flex items-center">
+              {["Quarter", "Month", "Week"].map((z) => (
+                <button
+                  key={z}
+                  onClick={() => setZoom(z)}
+                  className={clsx(
+                    "px-4 py-1.5 text-sm rounded-md font-medium transition-all",
+                    z === zoom ? "bg-white shadow-sm text-primary font-bold" : "text-on-surface-variant hover:text-on-surface"
+                  )}
+                >
+                  {z}
+                </button>
+              ))}
+            </div>
+            <div className="relative" ref={teamRef}>
+              <button
+                onClick={() => setTeamOpen(v => !v)}
+                className={clsx(
+                  "flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium transition-colors",
+                  teamOpen ? "border-primary/30 text-primary bg-primary/5" : "border-outline-variant/20 hover:bg-surface-container-low"
+                )}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>group</span>
+                {selectedProject ? selectedProject.name : "All Projects"}
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>expand_more</span>
+              </button>
+              {teamOpen && projects.length > 0 && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                  {projects.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setSelectedProjectId(p.id); setTeamOpen(false); }}
+                      className={clsx(
+                        "w-full text-left px-4 py-2 text-sm transition-colors",
+                        p.id === selectedProjectId ? "text-primary font-bold bg-primary/5" : "text-on-surface hover:bg-surface-container-low"
+                      )}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => toast("Filters coming soon")}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant/20 rounded-lg text-sm font-medium hover:bg-surface-container-low transition-colors"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>filter_list</span>
+              Filter
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            <div className="h-12 bg-surface-container-low rounded-xl" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-16 bg-surface-container-low rounded-xl" />
+            ))}
+          </div>
+        ) : sprints.length === 0 ? (
+          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-16 text-center">
+            <p className="text-on-surface-variant text-sm">No sprints found. Create a sprint to see your roadmap.</p>
+          </div>
+        ) : (
+          <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10 mb-10">
+            {/* Header */}
+            <div className="flex border-b border-outline-variant/10">
+              <div className="w-52 p-4 border-r border-outline-variant/10 text-xs font-bold uppercase tracking-wider text-on-surface-variant bg-surface-container-low flex-shrink-0">
+                Sprint
+              </div>
+              <div className="flex-1 flex text-center text-xs font-bold uppercase tracking-wider text-on-surface-variant bg-surface-container-low overflow-hidden">
+                {columns.map((col, i) => (
+                  <div
+                    key={col.date.getTime()}
+                    className={clsx("py-4 flex-1 truncate", i < columns.length - 1 && "border-r border-outline-variant/10")}
+                  >
+                    {col.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              {/* TODAY marker */}
+              <div
+                className="absolute top-0 bottom-0 w-px bg-primary z-10 pointer-events-none"
+                style={{ left: `calc(13rem + ${todayPct / 100} * (100% - 13rem))` }}
+              >
+                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-primary/10" />
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">TODAY</div>
+              </div>
+
+              {sprints.map((sprint, idx) => {
+                const color = SPRINT_COLORS[idx % SPRINT_COLORS.length];
+                const start = sprint.startDate ? new Date(sprint.startDate) : null;
+                const end = sprint.endDate ? new Date(sprint.endDate) : null;
+                const left = getLeft(start);
+                const width = getWidth(start, end);
+                return (
+                  <div key={sprint.id} className="flex group hover:bg-surface-container-low/50 transition-colors">
+                    <div className="w-52 p-5 border-r border-outline-variant/10 flex items-center gap-3 flex-shrink-0">
+                      <div className={clsx("w-2 h-2 rounded-full flex-shrink-0", color.dot)} />
+                      <span className="text-sm font-medium text-on-surface truncate">{sprint.name}</span>
+                    </div>
+                    <div className="flex-1 relative h-16">
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundSize: `${columns.length ? 100 / columns.length : 33}% 100%`,
+                          backgroundImage: "linear-gradient(to right, transparent 99%, rgba(114,119,133,0.1) 1%)",
+                        }}
+                      />
+                      {start && end && (
+                        <div
+                          className={clsx("absolute top-4 h-8 rounded-full flex items-center px-4 text-xs font-semibold shadow-sm border overflow-hidden", color.bar)}
+                          style={{ left: `${left}%`, width: `${width}%` }}
+                        >
+                          <span className="truncate">{sprint.name}</span>
+                          {sprint.status === "active" && (
+                            <span className="ml-2 w-1.5 h-1.5 rounded-full bg-current animate-pulse flex-shrink-0" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary-container text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
+          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700" />
+          <div className="flex items-start gap-5 relative z-10">
+            <div className="bg-white/20 p-3 rounded-xl backdrop-blur-md flex-shrink-0">
+              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+            </div>
+            <div>
+              <h4 className="text-lg font-bold mb-1">Predictive Capacity Insight</h4>
+              <p className="text-white/80 max-w-2xl leading-relaxed font-body">
+                AI-powered sprint analysis and capacity forecasting is coming soon.
+              </p>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => toast("AI insights coming soon")}
+                  className="px-5 py-2 bg-white text-secondary text-sm font-bold rounded-lg hover:bg-secondary-fixed transition-colors"
+                >
+                  View Analysis
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

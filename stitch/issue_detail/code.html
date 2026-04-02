@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stride - Issue Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2170e4",
+                        "surface-bright": "#f8f9fb",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container": "#edeef0",
+                        "tertiary-container": "#00855b",
+                        "surface": "#f8f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-secondary-fixed": "#23005c",
+                        "secondary-fixed": "#e9ddff",
+                        "outline-variant": "#c2c6d6",
+                        "surface-dim": "#d9dadc",
+                        "surface-container-highest": "#e1e2e4",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-container": "#fefcff",
+                        "outline": "#727785",
+                        "surface-container-high": "#e7e8ea",
+                        "on-background": "#191c1e",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#8455ef",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary": "#0058be",
+                        "inverse-surface": "#2e3132",
+                        "inverse-primary": "#adc6ff",
+                        "on-surface-variant": "#424754",
+                        "background": "#f8f9fb",
+                        "on-primary-fixed": "#001a42",
+                        "surface-tint": "#005ac2",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#e1e2e4",
+                        "on-secondary-container": "#fffbff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary": "#6b38d4",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "tertiary": "#006947",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tonal-lift { background-color: #ffffff; transition: background-color 0.2s; }
+        .tonal-lift:hover { background-color: #f2f4f6; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation Anchor (Manual Implementation based on System Rules) -->
+<header class="fixed top-0 w-full z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 text-on-surface-variant text-sm font-medium">
+<span>Payments Team</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span>Sprint 24</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface font-semibold">INC-482</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-48 px-6 max-w-4xl mx-auto">
+<!-- Issue Header -->
+<section class="mb-10">
+<h1 class="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface mb-6 leading-tight outline-none focus:ring-2 focus:ring-primary/20 rounded-lg p-1 -ml-1 transition-all" contenteditable="true">
+                Redesign checkout flow for mobile
+            </h1>
+<div class="flex flex-wrap gap-2 items-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold tracking-wide uppercase">
+                    In Progress
+                </span>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-bold tracking-wide uppercase">
+                    High
+                </span>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold tracking-wide uppercase">
+                    Feature
+                </span>
+<div class="ml-auto flex -space-x-2">
+<img alt="Alex Rivera" class="w-8 h-8 rounded-full border-2 border-background" data-alt="minimalist 2d flat avatar profile picture of a young professional with dark hair and glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBsfBdQwCdHm404Pu8RrsvypzAuSwfndS8aqEYQ21BaGLWNgPXeLloOl_IjuO7JwJDfycz0SSwvjawAXxFo1y9DUDBqFx2qpuzAcD2nIhTQNYDCIKT2GlQqMwm5XgOFdwRrb9_vqiZs87A3le4Fn5m9AolbiZPtBgU0uLN2XjkBgoA-5IbIPm9GEDgDGmSszZEBT5LKu6GLzq1-W9ajv3YX7eOVr3Z0c6KPETn2RBCJ4ibC3GIIE0a7d3xNG50AgH8PS1FNJD5nFRC"/>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border-2 border-background flex items-center justify-center text-[10px] font-bold text-on-surface-variant">+2</div>
+</div>
+</div>
+</section>
+<!-- Description Section (The Editorial Engine) -->
+<div class="grid grid-cols-1 gap-12">
+<section class="space-y-6">
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+<h3 class="font-headline text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">description</span> Description
+                    </h3>
+<div class="font-body text-lg leading-relaxed text-on-surface space-y-4">
+<p>The current checkout experience on mobile devices is experiencing a 14% drop-off rate compared to desktop. We need to streamline the payment selection and address entry screens.</p>
+<ul class="list-disc pl-5 space-y-2 marker:text-primary">
+<li>Implement <strong>one-tap</strong> Apple Pay and Google Pay integration.</li>
+<li>Reduce input fields for guest checkout by 30%.</li>
+<li>Add real-time card validation feedback using the Stride-UI library.</li>
+</ul>
+<p>The goal is to bring the "Time to Complete" under 45 seconds for recurring users.</p>
+</div>
+</div>
+<!-- Sub-tasks -->
+<section class="space-y-4">
+<h3 class="font-headline text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">checklist</span> Sub-tasks
+                    </h3>
+<div class="space-y-1">
+<div class="group flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-all">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20" type="checkbox"/>
+<span class="text-on-surface-variant line-through font-medium">Review current analytics for mobile drop-offs</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs font-mono text-outline">⌘1</span>
+</div>
+<div class="group flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-all">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20" type="checkbox"/>
+<span class="text-on-surface font-medium">Design high-fidelity mocks in Figma</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs font-mono text-outline">⌘2</span>
+</div>
+<div class="group flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-all">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20" type="checkbox"/>
+<span class="text-on-surface font-medium">Technical kickoff with Frontend team</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-xs font-mono text-outline">⌘3</span>
+</div>
+</div>
+</section>
+<!-- Activity / Thread -->
+<section class="space-y-6">
+<h3 class="font-headline text-sm font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">forum</span> Activity
+                    </h3>
+<div class="space-y-8 border-l-2 border-surface-container-high ml-4 pl-8 relative">
+<!-- Activity Item 1 -->
+<div class="relative">
+<div class="absolute -left-[37px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-background"></div>
+<div class="flex items-start gap-3">
+<img alt="Jordan" class="w-8 h-8 rounded-full" data-alt="friendly modern illustrated avatar of a designer with short curly hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpElR5tJagoprJ90Tk9NOhs8Mk1aaYikwVz9seWwec1vgTaYHv9jss7CgijvCV5Tb5LlNCMxDn9gngmHr97NZALTvWQaWcIPE9qAuEdGcPpz3uEzmWJAy7U4IjLy8-ZmMBi_1fgQPuJ7DeM9o98LVWtykIVpBlLuqdzzjkIxiU5a9uDqdf4uBPPjpYOivcuRUPpqEzKPbEJDtQTLzvv7Uzg_EHfvzQp26mofwbS30WAVgu6jf2Bk-LVqxsP2Pq7V3tkN9QclNoTLY1"/>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-bold text-sm">Jordan Lee</span>
+<span class="text-xs text-outline">2 hours ago</span>
+</div>
+<div class="text-on-surface-variant text-sm bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/20 shadow-sm">
+<span class="text-primary font-bold">@alex</span> Have we considered the impact on Apple Pay verification for cross-domain requests?
+                                    </div>
+</div>
+</div>
+</div>
+<!-- System Event -->
+<div class="relative">
+<div class="absolute -left-[37px] top-1 w-4 h-4 rounded-full bg-tertiary-container border-4 border-background"></div>
+<div class="flex items-center gap-3 text-sm text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-sm text-tertiary-container" style="font-variation-settings: 'FILL' 1;">commit</span>
+<span>Linked PR <span class="text-primary font-mono bg-primary-fixed/30 px-1.5 py-0.5 rounded">#892</span>: "chore: update stripe-v3-types"</span>
+<span class="text-xs text-outline ml-auto">1 hour ago</span>
+</div>
+</div>
+</div>
+</section>
+</section>
+</div>
+</main>
+<!-- AI Actions Bar (Floating above nav) -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl z-40">
+<div class="bg-surface-container-lowest/80 backdrop-blur-2xl rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-outline-variant/10 flex flex-col md:flex-row items-center gap-4">
+<div class="flex items-center gap-2 text-secondary font-bold text-sm px-2">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span>AI Actions</span>
+</div>
+<div class="h-6 w-px bg-outline-variant/30 hidden md:block"></div>
+<div class="flex flex-wrap gap-2 justify-center">
+<button class="px-4 py-2 bg-secondary text-on-secondary rounded-lg text-xs font-bold flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-secondary/20">
+                    Generate acceptance criteria
+                </button>
+<button class="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-all active:scale-95 border border-outline-variant/20">
+                    Summarize thread
+                </button>
+</div>
+<div class="ml-auto text-on-surface-variant text-[10px] font-mono opacity-50 hidden lg:block">⌘ + J</div>
+</div>
+</div>
+<!-- BottomNavBar (Predicted) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-200/20 dark:border-slate-800/20">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 transition-all scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Work</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 transition-all scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Inbox</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 transition-all scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl px-3 py-1 transition-all scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 transition-all scale-90 duration-150 ease-out" href="#">
+<span class="material-symbols-outlined">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Docs</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stride AI Command Bar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-container": "#ffdad6",
+              "primary-container": "#2170e4",
+              "surface-bright": "#f8f9fb",
+              "primary-fixed-dim": "#adc6ff",
+              "primary-fixed": "#d8e2ff",
+              "on-tertiary-fixed": "#002113",
+              "surface-container": "#edeef0",
+              "tertiary-container": "#00855b",
+              "surface": "#f8f9fb",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed-variant": "#5516be",
+              "on-secondary-fixed": "#23005c",
+              "secondary-fixed": "#e9ddff",
+              "outline-variant": "#c2c6d6",
+              "surface-dim": "#d9dadc",
+              "surface-container-highest": "#e1e2e4",
+              "tertiary-fixed-dim": "#4edea3",
+              "surface-container-low": "#f2f4f6",
+              "on-primary-container": "#fefcff",
+              "outline": "#727785",
+              "surface-container-high": "#e7e8ea",
+              "on-background": "#191c1e",
+              "on-surface": "#191c1e",
+              "secondary-container": "#8455ef",
+              "on-secondary": "#ffffff",
+              "error": "#ba1a1a",
+              "primary": "#0058be",
+              "inverse-surface": "#2e3132",
+              "inverse-primary": "#adc6ff",
+              "on-surface-variant": "#424754",
+              "background": "#f8f9fb",
+              "on-primary-fixed": "#001a42",
+              "surface-tint": "#005ac2",
+              "inverse-on-surface": "#f0f1f3",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed": "#6ffbbe",
+              "surface-variant": "#e1e2e4",
+              "on-secondary-container": "#fffbff",
+              "on-tertiary-container": "#f5fff6",
+              "on-error": "#ffffff",
+              "on-tertiary-fixed-variant": "#005236",
+              "secondary": "#6b38d4",
+              "secondary-fixed-dim": "#d0bcff",
+              "tertiary": "#006947",
+              "on-primary-fixed-variant": "#004395",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Newsreader"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-blur: 8px;
+        }
+        .command-card-shadow {
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 50px -12px rgba(0, 0, 0, 0.3);
+        }
+        .tonal-shift {
+            background-color: #f2f4f6;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-label text-on-surface overflow-hidden">
+<!-- Background Content (Blurred App UI) -->
+<div class="fixed inset-0 z-0 p-8 flex flex-col gap-8 opacity-40 blur-sm select-none pointer-events-none">
+<!-- TopAppBar Placeholder -->
+<header class="flex justify-between items-center h-16 px-6 bg-white rounded-xl">
+<span class="text-xl font-bold tracking-tighter">Stride</span>
+<div class="w-10 h-10 rounded-full bg-slate-200"></div>
+</header>
+<!-- Main Content Canvas -->
+<main class="grid grid-cols-12 gap-6 flex-1">
+<aside class="col-span-3 space-y-4">
+<div class="h-32 bg-white rounded-xl"></div>
+<div class="h-64 bg-white rounded-xl"></div>
+</aside>
+<section class="col-span-9 grid grid-cols-2 gap-6">
+<div class="h-48 bg-white rounded-xl"></div>
+<div class="h-48 bg-white rounded-xl"></div>
+<div class="h-96 bg-white rounded-xl col-span-2"></div>
+</section>
+</main>
+</div>
+<!-- AI Command Bar Overlay Container -->
+<div class="fixed inset-0 z-50 flex flex-col items-center justify-start pt-[132px] glass-overlay p-4">
+<!-- Command Card -->
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl flex flex-col overflow-hidden command-card-shadow border border-white/10">
+<!-- Search Input Section -->
+<div class="flex items-center px-5 h-[64px] border-b border-outline-variant/10">
+<span class="material-symbols-outlined text-secondary text-2xl mr-4" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<input autofocus="" class="flex-1 bg-transparent border-none focus:ring-0 text-lg font-medium text-on-surface placeholder:text-outline/60" placeholder="Search, create, or ask anything..." type="text"/>
+<div class="flex items-center gap-1 ml-4 px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold text-outline uppercase tracking-wider">
+<span>ESC</span>
+</div>
+</div>
+<!-- Scrollable Content Area -->
+<div class="max-h-[530px] overflow-y-auto p-2">
+<!-- Quick Actions Section -->
+<div class="px-3 py-4">
+<h3 class="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-3 px-1">Quick Actions</h3>
+<div class="flex flex-wrap gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-lg">add</span>
+                            New Issue
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined text-lg">description</span>
+                            New Doc
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-secondary-container/10 text-secondary-fixed-dim border border-secondary/20 rounded-lg text-sm font-semibold hover:bg-secondary-container/20 transition-all">
+<span class="text-base">📊</span>
+                            This week's summary
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-secondary-container/10 text-secondary-fixed-dim border border-secondary/20 rounded-lg text-sm font-semibold hover:bg-secondary-container/20 transition-all">
+<span class="text-base">🚀</span>
+                            Generate release notes
+                        </button>
+</div>
+</div>
+<!-- Recent Items Section -->
+<div class="px-3 py-2">
+<h3 class="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-2 px-1">Recent items</h3>
+<div class="space-y-1">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center bg-orange-100 text-orange-600 rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">confirmation_number</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">#INC-482 Redesign navigation</span>
+<span class="text-xs text-outline font-medium font-body italic">In Progress • Updated 2h ago</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline/0 group-hover:text-primary transition-all text-xl">subdirectory_arrow_left</span>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">article</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Mobile App Technical Specs</span>
+<span class="text-xs text-outline font-medium font-body italic">Docs • Shared with 4 people</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline/0 group-hover:text-primary transition-all text-xl">subdirectory_arrow_left</span>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-600 rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">folder</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Q3 Roadmap Presentation</span>
+<span class="text-xs text-outline font-medium font-body italic">Roadmap • Projects</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline/0 group-hover:text-primary transition-all text-xl">subdirectory_arrow_left</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Hint Bar -->
+<div class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/10 flex items-center justify-between">
+<p class="text-[11px] text-outline font-medium">
+                    Tip: Use <span class="text-primary font-bold">@</span> to mention, <span class="text-primary font-bold">#</span> for issues
+                </p>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<kbd class="px-1.5 py-0.5 bg-white border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">TAB</kbd>
+<span class="text-[10px] text-outline font-bold uppercase tracking-tighter">Navigate</span>
+</div>
+<div class="flex items-center gap-1.5">
+<kbd class="px-1.5 py-0.5 bg-white border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">↵</kbd>
+<span class="text-[10px] text-outline font-bold uppercase tracking-tighter">Select</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- BottomNavBar (Shared Component) -->
+<!-- Applying style_shell_layout, style_bg_color, style_separation_logic, style_shadows_and_elevation -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200/20 dark:border-slate-800/20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-[60] rounded-t-2xl">
+<!-- Tab: Work -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 group">
+<span class="material-symbols-outlined mb-1 group-active:scale-90 transition-transform">home_app_logo</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Work</span>
+</button>
+<!-- Tab: Inbox -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 group">
+<span class="material-symbols-outlined mb-1 group-active:scale-90 transition-transform">mail</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Inbox</span>
+</button>
+<!-- Tab: Search (Active State) -->
+<!-- Applying style_active_navigation -->
+<button class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl px-3 py-1 group">
+<span class="material-symbols-outlined mb-0.5" style="font-variation-settings: 'FILL' 1;">search</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Search</span>
+</button>
+<!-- Tab: Projects -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 group">
+<span class="material-symbols-outlined mb-1 group-active:scale-90 transition-transform">grid_view</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Projects</span>
+</button>
+<!-- Tab: Docs -->
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 group">
+<span class="material-symbols-outlined mb-1 group-active:scale-90 transition-transform">article</span>
+<span class="text-[10px] font-medium tracking-wide uppercase">Docs</span>
+</button>
+</nav>
+<!-- Visual Polish: Grainy texture overlay for premium feel -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-[100]" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCr0sReAkgG7wieuSPnWKeUK56BIlr1x2CkfkiSUm41LDwLCVT3Umu8sSw-4jZ0xMn6Q7tDx-p3uIFahCWVnEAd_oPTbuU161LfDVTaMr7wYBxkp2shaHitFIyvGpr0fqvKCThhsTnGngPLlPz8j2oJgz5UKGhwcW3-PlV6wDiVtT1QokYVy2Wozc0I2hzvGHUfj5Mnfys18VBpaUNmNPyN5UVGaB1TKLXc0Me4RzWptNMgG0R6RXlTm1zxEInc38XoghCBuG8XvPqf');"></div>
+</body></html>

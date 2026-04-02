@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Checkout Redesign — Stride</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-dim": "#d9dadc",
+                        "primary": "#0058be",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8f9fb",
+                        "on-secondary-fixed": "#23005c",
+                        "surface-tint": "#005ac2",
+                        "on-primary-container": "#fefcff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary": "#006947",
+                        "outline-variant": "#c2c6d6",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#e1e2e4",
+                        "background": "#f8f9fb",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#fffbff",
+                        "tertiary-container": "#00855b",
+                        "inverse-primary": "#adc6ff",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#f0f1f3",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#6b38d4",
+                        "surface-variant": "#e1e2e4",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-container": "#f5fff6",
+                        "on-background": "#191c1e",
+                        "outline": "#727785",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#424754",
+                        "surface-container": "#edeef0",
+                        "surface-container-high": "#e7e8ea",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f8f9fb",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "surface-container-low": "#f2f4f6",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#8455ef",
+                        "primary-container": "#2170e4",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed-variant": "#004395",
+                        "secondary-fixed": "#e9ddff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#5516be"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Newsreader"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-shift {
+            transition: background-color 0.2s ease;
+        }
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        ::selection {
+            background-color: #d8e2ff;
+            color: #001a42;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-fixed">
+<!-- Top Navigation Bar (Shared Component: TopAppBar + Custom Notion-style logic) -->
+<nav class="fixed top-0 w-full z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label text-sm tracking-tight">
+<span class="material-symbols-outlined text-lg">payments</span>
+<span>Payments Team</span>
+<span class="text-outline-variant">/</span>
+<span class="material-symbols-outlined text-lg">description</span>
+<span>Specs</span>
+<span class="text-outline-variant">/</span>
+<span class="font-semibold text-on-surface">Mobile Checkout Redesign</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-xs font-label text-outline">
+<span class="material-symbols-outlined text-base">cloud_done</span>
+<span>Saved 2 min ago</span>
+</div>
+<div class="flex -space-x-2">
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="Close-up portrait of a woman professional with a neutral expression in high-key studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE6cRKOxJZ7wfGWeWEYH5Wiku5NPcdh6ny-4XeeMLIXtI1ZFNHn15YrmrmqXN2nIDwi4Uu9bpOzq66P3ytJL8n0OVI6MM8Sj8NQUPlBH971Ddbc2TKf-C4yjZA4bWxNxCviiSUtGQHQbISJFwpR54B0zwhdg5I47CbW67CzORfDkxNSoPU02Z19ZJ3NAQ4MuEFPX8FD2WdZayB7qQJCSH_0h2zWUWZnBqLmEfhyqKmvx_5kAMWpwD1zCU2kWY-kpwHNMfdPSdLDavq"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+</div>
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="Close-up portrait of a man smiling in professional attire with soft natural window lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANOwtbfmQKIkzpDMSVhruKsNeyNCXtmOBcrLE88RL8WsJvpgZu8-utb7v41JvhuDCJ6NizDDhZFvFuLPrpxHqZ1VcxzPrOsXDvEyAq-ytwVeT5EYfMRmMCqSK14KpF_RM94k0Bxdgv-IbSmPkjRo4OAtdX5xZDxNPDzhuSgvZwztSus27JHXra1YAb_6kluADL891GrNih0MsfjkhqesFMRWDyaxIvDlKVL8b_haAkEw6BuMG2rOyr8uv5aAxi54IHyKPvpfa0-qgw"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+</div>
+<div class="relative">
+<img class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="Close-up portrait of a woman laughing with warm golden hour lighting and bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVlew6z83_l3W4wJKcO-I_-Vux371Md1771lSnuU44NM5KEgQ2S0cK1mHCJdL14-I6sJQvLltqHecQSGw59hxTjyw7LkGaVIk9c3BWCg50dVPndGzSauPVmSbC2ZjhNiIBMFGkRIo1xh7Yspa76GBme00O9gIsUJJ0wcwtP5kfZSJQRZTODmO-y7NbXCHV5p1960QJvos3MkhwO7TsQTursNNrMik3m0gdXRnQi2RJgB5O7fuCBzB1SVT49m6D2zVP9TuO08BXUyNb"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-orange-400 border-2 border-white rounded-full"></div>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-lg font-label text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
+                Share
+            </button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-lg p-1.5 transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</nav>
+<!-- Side Navigation (Shared Component: NavigationDrawer - Suppressed for focused editing flow per guidelines) -->
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 flex justify-center px-6 relative">
+<!-- Document Canvas -->
+<article class="max-w-[740px] w-full relative">
+<!-- Header Section -->
+<header class="mb-12">
+<h1 class="font-headline text-5xl font-extrabold tracking-tight text-on-surface mb-6">
+                    Mobile Checkout Redesign — Spec v2
+                </h1>
+<div class="flex items-center gap-4 text-on-surface-variant font-label text-sm">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">calendar_today</span> Oct 24, 2023</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-lg">history</span> 12 revisions</span>
+</div>
+</header>
+<!-- Document Content -->
+<div class="space-y-8 text-lg leading-relaxed text-on-surface">
+<p>
+                    The objective of this redesign is to reduce friction during the mobile payment phase. Current metrics show a 14% drop-off at the "Shipping Methods" selection. This spec outlines the structural changes required for the 2.0 implementation.
+                </p>
+<h2 class="font-headline text-2xl font-bold text-on-surface pt-4">Key Objectives</h2>
+<ul class="space-y-3 list-none">
+<li class="flex items-start gap-3">
+<span class="text-primary mt-1 material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Consolidate Guest Checkout and Login into a single streamlined flow.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-primary mt-1 material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Implement Apple Pay / Google Pay as primary "Fast Track" options.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="text-primary mt-1 material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Reduce the number of form fields from 12 to 5 for shipping details.</span>
+</li>
+</ul>
+<!-- Callout Block -->
+<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-xl flex gap-4">
+<span class="material-symbols-outlined text-amber-600 shrink-0">warning</span>
+<div class="space-y-1">
+<p class="font-bold text-amber-900 font-label text-sm uppercase tracking-wider">Warning</p>
+<p class="text-amber-800 text-base">The legacy API for regional tax calculations will be deprecated by Dec 31st. All new checkout components MUST use the <code class="bg-amber-100 px-1 rounded font-mono text-sm">v4/tax-engine</code> endpoint.</p>
+</div>
+</div>
+<h2 class="font-headline text-2xl font-bold text-on-surface pt-4">Tracking Issues</h2>
+<!-- Live Issue Cards (Bento style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-5 bg-surface-container-lowest rounded-xl border border-outline-variant/30 hover:shadow-lg transition-shadow cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<span class="text-xs font-bold font-label px-2 py-0.5 bg-error-container text-on-error-container rounded">STR-442</span>
+<span class="material-symbols-outlined text-outline text-lg">open_in_new</span>
+</div>
+<h4 class="font-semibold text-base mb-2 font-headline">Address Autocomplete Bug</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">API returns 404 for zip codes starting with '9' on mobile carriers.</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">AR</div>
+<span class="text-xs text-outline">Assigned to Alex</span>
+</div>
+</div>
+<div class="p-5 bg-surface-container-lowest rounded-xl border border-outline-variant/30 hover:shadow-lg transition-shadow cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<span class="text-xs font-bold font-label px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed rounded">STR-445</span>
+<span class="material-symbols-outlined text-outline text-lg">open_in_new</span>
+</div>
+<h4 class="font-semibold text-base mb-2 font-headline">Apple Pay Integration</h4>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Validate sandbox certificates for the new staging environment.</p>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-700">MT</div>
+<span class="text-xs text-outline">Assigned to Maria</span>
+</div>
+</div>
+</div>
+<!-- Floating Slash Menu -->
+<div class="relative py-4">
+<div class="flex items-center gap-2 text-outline-variant">
+<span class="text-2xl font-light">/</span>
+<span class="text-on-surface-variant animate-pulse">Type '/' for commands...</span>
+</div>
+<!-- Command Bar (AI-Native / Glassmorphism) -->
+<div class="absolute top-12 left-0 w-72 bg-white/90 glass-effect border border-outline-variant/20 rounded-xl shadow-2xl z-20 p-2">
+<div class="text-[10px] font-bold text-outline px-3 py-1 uppercase tracking-widest">Basic Blocks</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-3 p-2 hover:bg-primary-container/10 rounded-lg cursor-pointer group">
+<div class="w-8 h-8 rounded border border-outline-variant/30 flex items-center justify-center bg-white group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">format_size</span>
+</div>
+<div>
+<div class="text-sm font-semibold">Text</div>
+<div class="text-[10px] text-outline">Start writing with plain text</div>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-primary-container/10 rounded-lg cursor-pointer group">
+<div class="w-8 h-8 rounded border border-outline-variant/30 flex items-center justify-center bg-white group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">format_h1</span>
+</div>
+<div>
+<div class="text-sm font-semibold">Heading 1</div>
+<div class="text-[10px] text-outline">Big section heading</div>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-secondary/10 rounded-lg cursor-pointer group">
+<div class="w-8 h-8 rounded border border-secondary/30 flex items-center justify-center bg-white group-hover:bg-secondary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">auto_awesome</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-secondary">AI Assistant</div>
+<div class="text-[10px] text-secondary/70">Draft, edit, or summarize</div>
+</div>
+<span class="ml-auto text-[10px] font-bold text-outline-variant">⌘J</span>
+</div>
+</div>
+</div>
+</div>
+<p>
+                    Final considerations for the UI team: The transition from the cart to the payment screen must be under 300ms. We are using the Shared Design System tokens for all primary buttons and input fields to ensure consistency across platforms.
+                </p>
+</div>
+<!-- Footer Meta -->
+<footer class="mt-20 pt-8 border-t border-outline-variant/20 flex justify-between items-center text-outline text-sm font-label">
+<div class="flex gap-4">
+<span>1,420 words</span>
+<span>12m reading time</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-base">visibility</span>
+<span>42 views this week</span>
+</div>
+</footer>
+</article>
+<!-- Right Margin Annotations -->
+<aside class="hidden xl:block absolute left-[calc(50%+400px)] top-32 space-y-24 w-64">
+<div class="group cursor-pointer">
+<div class="flex items-center gap-2 mb-2">
+<img class="w-5 h-5 rounded-full object-cover" data-alt="Close-up portrait of professional woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFYiyZ8kFZFUIOTrI6vadb-gKI0p3iunyLmvSaI-xQObyoh1yjaTQjhHrxQ-yHiHFuUgOKGgH5YJufR8OZP3xrJUOourrQruC2Nl3fUfiIoXyzzMws4H51wSM0ntRxPAE-M7o3ekNJcL8r4eFRnyMJNV4FzKX-AOrXmcifjA0tRy-ptHNcjxDQwUlHzgqWJHNXCoZV7Y3DCa9KSfSMWaKYA7hOJhUjDLLvG9TvK4Ja66BIFRq28GrqY5alAbW5ysN8hszpbM_GJAu3"/>
+<span class="text-xs font-bold font-label">Alex Rivera</span>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-transparent group-hover:border-primary/30 transition-all text-sm shadow-sm relative">
+<div class="absolute -left-1.5 top-4 w-3 h-3 bg-surface-container-low border-l border-b border-transparent group-hover:border-primary/30 rotate-45"></div>
+                    "Should we also include the Klarna integration in this sprint?"
+                    <div class="mt-2 text-[10px] font-bold text-primary">Reply</div>
+</div>
+</div>
+<div class="group cursor-pointer opacity-60 hover:opacity-100 transition-opacity">
+<div class="flex items-center gap-2 mb-2">
+<img class="w-5 h-5 rounded-full object-cover" data-alt="Close-up portrait of professional man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqukvdFO4KfDBit-s2Grmlg1PORBueFbhXQqzjSOfhCzlfxomNXnls4dnxwRSBswvrq5sKwjoDZ-krGsqsWNVC4S0Or3ziaW1Wcb-I6R61wqtP53Vbv2CQko4KBt001J-6r27MXdykuQ9SVaTuf-S6J3GBkJpiTxZiJ7Z_rh_4oLLpu6XtXX-axIRwF0TDJVa157yK0qlLURltXAbXomx5w-08cM73ur6VmAmYv2fFT_7sDeZ_j_efapZ6ya8PrTq3kXfRZnimX7jl"/>
+<span class="text-xs font-bold font-label">Maria T.</span>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg text-sm shadow-sm">
+                    "Validated. The v4 tax engine is already live in staging."
+                </div>
+</div>
+</aside>
+</main>
+<!-- Bottom Nav Bar (Shared Component - Conditional Suppression: Hidden on Desktop) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200/20 z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<div class="flex flex-col items-center justify-center text-blue-600 font-label text-[10px] bg-blue-50 px-3 py-1 rounded-xl">
+<span class="material-symbols-outlined">description</span>
+<span class="uppercase font-medium">Doc</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 font-label text-[10px]">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="uppercase font-medium">Comments</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 font-label text-[10px]">
+<span class="material-symbols-outlined">history</span>
+<span class="uppercase font-medium">History</span>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Env — use .env.example as reference
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
+src/generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
