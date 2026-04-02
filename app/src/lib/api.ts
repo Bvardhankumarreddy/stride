@@ -2,6 +2,16 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 // ── Core fetch ────────────────────────────────────────────────────────────────
 
+let _signingOut = false;
+
+function handleSessionExpired() {
+  if (_signingOut || typeof window === "undefined") return;
+  _signingOut = true;
+  import("next-auth/react").then(({ signOut }) =>
+    signOut({ callbackUrl: "/login" })
+  );
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   token: string | undefined,
@@ -15,6 +25,11 @@ export async function apiFetch<T = unknown>(
       ...(options.headers ?? {}),
     },
   });
+
+  if (res.status === 401) {
+    handleSessionExpired();
+    throw new Error("Session expired");
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
