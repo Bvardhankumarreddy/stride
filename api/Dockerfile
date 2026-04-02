@@ -7,7 +7,6 @@ RUN npm ci
 
 # Generate Prisma client
 COPY api/prisma ./prisma
-COPY api/prisma.config.ts ./
 COPY api/tsconfig*.json ./
 RUN npx prisma generate
 
@@ -25,7 +24,6 @@ ENV NODE_ENV=production
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/tsconfig*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
