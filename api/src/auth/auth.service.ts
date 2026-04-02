@@ -44,6 +44,21 @@ export class AuthService {
     return { accessToken: token, user: { ...this.sanitize(user), organizationId: org.id } };
   }
 
+  // Register as an invited member — creates user only, no org (org is assigned on invite accept)
+  async registerMember(dto: RegisterDto) {
+    const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (exists) throw new ConflictException('Email already in use');
+
+    const hash = await bcrypt.hash(dto.password, 12);
+    const initials = dto.initials ?? dto.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const user = await this.prisma.user.create({
+      data: { name: dto.name, email: dto.email, password: hash, initials },
+    });
+
+    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role, organizationId: null });
+    return { accessToken: token, user: this.sanitize(user) };
+  }
+
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user?.password) throw new UnauthorizedException('Invalid credentials');
