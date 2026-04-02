@@ -255,6 +255,11 @@ export const api = {
       apiFetch<ApiInvitation[]>(`/organizations/${orgId}/invitations`, token),
   },
 
+  auth: {
+    changePassword: (token: string, body: { currentPassword: string; newPassword: string }) =>
+      apiFetch<{ accessToken: string }>(`/auth/change-password`, token, { method: 'PATCH', body: JSON.stringify(body) }),
+  },
+
   invitations: {
     preview: (inviteToken: string) =>
       apiFetch<ApiInvitationPreview>(`/invitations/${inviteToken}`, undefined),
