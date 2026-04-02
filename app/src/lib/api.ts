@@ -187,7 +187,7 @@ export const api = {
       apiFetch<ApiDoc>(`/docs/${id}`, token),
     create: (token: string, body: { title: string; emoji?: string; content?: object; status?: string; projectId?: string }) =>
       apiFetch<ApiDoc>(`/docs`, token, { method: "POST", body: JSON.stringify(body) }),
-    update: (token: string, id: string, body: { title?: string; emoji?: string; status?: string; visibility?: string; wordCount?: number }) =>
+    update: (token: string, id: string, body: { title?: string; emoji?: string; status?: string; visibility?: string; wordCount?: number; content?: object }) =>
       apiFetch<ApiDoc>(`/docs/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
   },
 

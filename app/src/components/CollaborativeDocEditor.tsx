@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ClientSideSuspense } from "@liveblocks/react";
 import { useLiveblocksExtension } from "@liveblocks/react-tiptap";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -26,6 +27,7 @@ interface Props {
   docMeta: { author: string; authorInitials: string; created: string; revisions: number };
   visibility?: "private" | "org" | "public";
   onVisibilityChange?: (v: "private" | "org" | "public") => void;
+  onSave?: (content: object, wordCount: number) => Promise<void>;
   children?: React.ReactNode;
 }
 
@@ -75,7 +77,8 @@ const VISIBILITY_CONFIG = {
   public:  { icon: "public", label: "Public", next: "private" as const },
 };
 
-function CollabEditorInner({ initialContent, breadcrumbs, docTitle, docEmoji, docMeta, visibility = "org", onVisibilityChange, children }: Props) {
+function CollabEditorInner({ initialContent, breadcrumbs, docTitle, docEmoji, docMeta, visibility = "org", onVisibilityChange, onSave, children }: Props) {
+  const [saving, setSaving] = useState(false);
   const liveblocks = useLiveblocksExtension({
     initialContent,
     field: "content",
@@ -117,6 +120,21 @@ function CollabEditorInner({ initialContent, breadcrumbs, docTitle, docEmoji, do
           </button>
         );
       })()}
+      {onSave && (
+        <button
+          onClick={async () => {
+            if (!editor) return;
+            setSaving(true);
+            await onSave(editor.getJSON(), wordCount);
+            setSaving(false);
+          }}
+          disabled={saving}
+          className="bg-surface-container-high text-on-surface px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 flex items-center gap-1.5"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span>
+          {saving ? "Saving…" : "Save"}
+        </button>
+      )}
       <button
         onClick={() => { navigator.clipboard.writeText(window.location.href); toast("Link copied to clipboard"); }}
         className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"

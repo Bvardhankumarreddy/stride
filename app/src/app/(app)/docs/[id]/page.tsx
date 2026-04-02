@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import CollaborativeDocEditor from "@/components/CollaborativeDocEditor";
 import { useToken } from "@/lib/useToken";
 import { api, ApiDoc } from "@/lib/api";
+import { toast } from "@/components/Toast";
 
 const FALLBACK_CONTENT = {
   type: "doc",
@@ -29,6 +30,12 @@ export default function DocEditorPage() {
     if (!token || !id) return;
     setVisibility(v);
     await api.docs.update(token, id, { visibility: v }).catch(() => {});
+  }
+
+  async function handleSave(content: object, wordCount: number) {
+    if (!token || !id) return;
+    await api.docs.update(token, id, { content, wordCount }).catch(() => {});
+    toast("Document saved");
   }
 
   if (!doc) {
@@ -56,6 +63,7 @@ export default function DocEditorPage() {
       }}
       visibility={visibility}
       onVisibilityChange={handleVisibilityChange}
+      onSave={handleSave}
     />
   );
 }
