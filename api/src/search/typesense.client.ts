@@ -39,9 +39,12 @@ const DOCS_SCHEMA: CollectionCreateSchema = {
 @Injectable()
 export class TypesenseClient implements OnModuleInit {
   private readonly logger = new Logger(TypesenseClient.name);
+  readonly enabled: boolean;
   client: Client;
 
   constructor(private config: ConfigService) {
+    this.enabled = config.get('SEARCH_ENABLED', 'false').toLowerCase() === 'true';
+
     this.client = new Client({
       nodes: [{
         host: config.get('TYPESENSE_HOST', 'localhost'),
@@ -54,9 +57,18 @@ export class TypesenseClient implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.ensureCollection(ISSUES_SCHEMA);
-    await this.ensureCollection(DOCS_SCHEMA);
-    this.logger.log('Typesense collections ready');
+    if (!this.enabled) {
+      this.logger.log('Search is disabled (SEARCH_ENABLED != true). Skipping Typesense initialization.');
+      return;
+    }
+
+    try {
+      await this.ensureCollection(ISSUES_SCHEMA);
+      await this.ensureCollection(DOCS_SCHEMA);
+      this.logger.log('Typesense collections ready');
+    } catch (err) {
+      this.logger.warn(`Typesense initialization failed — search will be unavailable: ${err.message}`);
+    }
   }
 
   private async ensureCollection(schema: CollectionCreateSchema) {
