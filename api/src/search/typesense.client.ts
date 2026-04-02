@@ -42,7 +42,7 @@ export class TypesenseClient implements OnModuleInit {
   client: Client;
 
   constructor(private config: ConfigService) {
-    const port = config.get<number>('TYPESENSE_PORT', 8108);
+    const port = Number(config.get('TYPESENSE_PORT', '8108'));
     this.client = new Client({
       nodes: [{
         host: config.get('TYPESENSE_HOST', 'localhost'),
