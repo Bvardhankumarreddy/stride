@@ -21,6 +21,8 @@ export class SearchService {
     assignee?: { name: string } | null;
     createdAt: Date;
   }) {
+    if (!this.ts.enabled) return;
+
     const doc = {
       id: issue.id,
       title: issue.title,
@@ -42,6 +44,8 @@ export class SearchService {
   }
 
   async removeIssue(id: string) {
+    if (!this.ts.enabled) return;
+
     try {
       await this.ts.client.collections(ISSUES_COLLECTION).documents(id).delete();
     } catch { /* already gone */ }
@@ -59,6 +63,8 @@ export class SearchService {
     author?: { name: string } | null;
     createdAt: Date;
   }) {
+    if (!this.ts.enabled) return;
+
     const record = {
       id: doc.id,
       title: doc.title,
@@ -78,6 +84,8 @@ export class SearchService {
   }
 
   async removeDoc(id: string) {
+    if (!this.ts.enabled) return;
+
     try {
       await this.ts.client.collections(DOCS_COLLECTION).documents(id).delete();
     } catch { /* already gone */ }
@@ -86,6 +94,8 @@ export class SearchService {
   // ── Multi-search ───────────────────────────────────────────────────────────
 
   async search(query: string, filter?: 'issues' | 'docs') {
+    if (!this.ts.enabled) return [];
+
     const q = query.trim() || '*';
 
     const searches: any[] = [];
