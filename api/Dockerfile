@@ -5,14 +5,13 @@ WORKDIR /app
 COPY api/package*.json ./
 RUN npm ci
 
-# Generate Prisma client
+# Generate Prisma client — falls back to prisma/schema.prisma by convention
 COPY api/prisma ./prisma
-COPY api/prisma.config.ts ./
-COPY api/tsconfig*.json ./
 RUN npx prisma generate
 
-# Build
+# Compile NestJS — only src/ in scope, no prisma.config.ts to confuse tsc
 COPY api/src ./src
+COPY api/tsconfig*.json ./
 COPY api/nest-cli.json ./
 RUN npm run build
 
@@ -25,10 +24,12 @@ ENV NODE_ENV=production
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./
-COPY --from=builder /app/tsconfig*.json ./
 COPY --from=builder /app/node_modules ./node_modules
+
+# prisma.config.ts needed at runtime for prisma db push
+COPY api/prisma.config.ts ./
+COPY api/tsconfig*.json ./
 
 EXPOSE 4000
 
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "echo \"DATABASE_URL=$DATABASE_URL\" > .env && npx prisma db push && node dist/main.js"]
