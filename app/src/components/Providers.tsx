@@ -1,8 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 import CommandBar from "./CommandBar";
+
+const PUBLIC_PATHS = ["/", "/login", "/onboarding"];
+
+function SessionWatcher() {
+  const { status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (status !== "unauthenticated") return;
+    const isPublic =
+      PUBLIC_PATHS.includes(pathname) ||
+      pathname.startsWith("/invite") ||
+      pathname.startsWith("/api/");
+    if (!isPublic) {
+      router.replace("/login");
+    }
+  }, [status, pathname, router]);
+
+  return null;
+}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -30,7 +52,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={true}>
+      <SessionWatcher />
       {children}
       <CommandBar open={cmdOpen} initialQuery={cmdQuery} onClose={() => setCmdOpen(false)} />
     </SessionProvider>
