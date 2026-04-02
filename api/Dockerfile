@@ -26,10 +26,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 
-# prisma.config.ts needed at runtime for prisma db push
-COPY api/prisma.config.ts ./
-COPY api/tsconfig*.json ./
-
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma db push && node dist/main.js"]
+CMD ["node", "dist/main.js"]
