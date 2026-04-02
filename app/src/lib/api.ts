@@ -172,7 +172,7 @@ export const api = {
       apiFetch<ApiIssue>(`/issues/${id}`, token),
     create: (token: string, body: { title: string; status?: string; priority?: string; description?: string; assigneeId?: string; projectId?: string; sprintId?: string }) =>
       apiFetch<ApiIssue>(`/issues`, token, { method: "POST", body: JSON.stringify(body) }),
-    update: (token: string, id: string, body: Partial<ApiIssue>) =>
+    update: (token: string, id: string, body: Partial<ApiIssue> & { assigneeId?: string | null; sprintId?: string | null; dueDate?: string | null }) =>
       apiFetch<ApiIssue>(`/issues/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
   },
 

@@ -62,7 +62,7 @@ export class IssuesService {
     const { labels, dueDate, ...rest } = dto;
     const issue = await this.prisma.issue.update({
       where: { id },
-      data: { ...rest, dueDate: dueDate ? new Date(dueDate) : undefined, ...(labels !== undefined && { labels }) },
+      data: { ...rest, ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }), ...(labels !== undefined && { labels }) },
       include: INCLUDE,
     });
     await this.search.indexIssue(issue);
