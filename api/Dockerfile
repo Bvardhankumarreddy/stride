@@ -14,7 +14,7 @@ RUN npx prisma generate
 # Build
 COPY api/src ./src
 COPY api/nest-cli.json ./
-RUN npm run build
+RUN npm run build && test -f dist/main.js
 
 # ── Production image ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
