@@ -31,10 +31,9 @@ export default function ChangePasswordPage() {
 
     setSaving(true);
     try {
-      const res = await api.auth.changePassword(token!, { currentPassword: current, newPassword: next });
+      await api.auth.changePassword(token!, { currentPassword: current, newPassword: next });
 
-      // Update session: clear mustChangePassword flag + refresh accessToken
-      await update({ mustChangePassword: false, accessToken: res.accessToken });
+      await update({ mustChangePassword: false });
 
       router.push("/dashboard");
       router.refresh();

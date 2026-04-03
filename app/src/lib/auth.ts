@@ -40,7 +40,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             initials: user.initials ?? null,
             role: user.role,
             organizationId: user.organizationId ?? null,
-            accessToken: data.accessToken,
           };
         } catch {
           return null;

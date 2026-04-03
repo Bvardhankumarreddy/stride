@@ -106,7 +106,7 @@ export default function Sidebar() {
     setSwitching(orgId);
     try {
       const res = await api.organizations.switch(token, orgId);
-      await updateSession({ accessToken: res.accessToken, organizationId: res.organizationId });
+      await updateSession({ organizationId: res.organizationId });
       window.location.href = "/dashboard";
     } catch {
       setSwitching(null);
@@ -120,7 +120,7 @@ export default function Sidebar() {
     try {
       const org = await api.organizations.create(token, { name: newWsName.trim(), slug: makeSlug(newWsName.trim()) });
       const res = await api.organizations.switch(token, org.id);
-      await updateSession({ accessToken: res.accessToken, organizationId: res.organizationId });
+      await updateSession({ organizationId: res.organizationId });
       window.location.href = "/dashboard";
     } catch {
       setCreating(false);
