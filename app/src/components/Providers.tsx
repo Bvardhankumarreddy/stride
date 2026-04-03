@@ -52,7 +52,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionProvider refetchOnWindowFocus={true} refetchInterval={5 * 60}>
+    <SessionProvider refetchOnWindowFocus={true} refetchInterval={30}>
       <SessionWatcher />
       {children}
       <CommandBar open={cmdOpen} initialQuery={cmdQuery} onClose={() => setCmdOpen(false)} />
