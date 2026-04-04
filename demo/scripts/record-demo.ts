@@ -1,6 +1,10 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import path from 'path';
 import fs from 'fs';
+import { config as loadEnv } from 'dotenv';
+
+// Load .env from the demo/ directory
+loadEnv({ path: path.resolve(__dirname, '../.env') });
 
 // ─── Config ────────────────────────────────────────────────────────────────
 const CONFIG = {
@@ -98,14 +102,16 @@ async function recordDemo() {
     await page.waitForTimeout(CONFIG.pauseLong);
     await hideTitleCard(page);
 
-    await humanType(page, '#email, input[type="email"]', CONFIG.email);
+    // Use fill() for credentials — reliable, no keystroke delays
+    await page.locator('#email').fill(CONFIG.email);
     await page.waitForTimeout(400);
-    await humanType(page, '#password, input[type="password"]', CONFIG.password);
+    await page.locator('#password').fill(CONFIG.password);
     await page.waitForTimeout(400);
 
     await showTitleCard(page, '🔐 Signing in...');
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL(`${CONFIG.baseUrl}/dashboard`, { timeout: 20000 });
+    // Wait for redirect away from /login (may land on /dashboard or /change-password)
+    await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 20000 });
     await page.waitForTimeout(CONFIG.pauseMedium);
     await hideTitleCard(page);
 

@@ -8,6 +8,7 @@
     "convert": "ffmpeg -i demo-output/stride-demo-$(date +%Y-%m-%d).webm -c:v libx264 -crf 23 demo-output/stride-demo-$(date +%Y-%m-%d).mp4"
   },
   "dependencies": {
+    "dotenv": "^17.4.0",
     "playwright": "^1.43.0"
   },
   "devDependencies": {
