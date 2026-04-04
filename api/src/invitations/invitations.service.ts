@@ -1,14 +1,25 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class InvitationsService {
   private readonly logger = new Logger(InvitationsService.name);
-  private readonly resend = process.env.RESEND_API_KEY
-    ? new Resend(process.env.RESEND_API_KEY)
-    : null;
+
+  private createTransport() {
+    const host = process.env.SMTP_HOST;
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    if (!host || !user || !pass) return null;
+
+    return nodemailer.createTransport({
+      host,
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: process.env.SMTP_SECURE === 'true', // true for port 465
+      auth: { user, pass },
+    });
+  }
 
   constructor(private prisma: PrismaService) {}
 
@@ -20,14 +31,16 @@ export class InvitationsService {
   }) {
     const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
     const inviteUrl = `${appUrl}/invite/${params.token}`;
+    const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
 
-    if (!this.resend) {
-      this.logger.warn(`[INVITE] RESEND_API_KEY not set — invite link: ${inviteUrl}`);
+    const transport = this.createTransport();
+    if (!transport) {
+      this.logger.warn(`[INVITE] SMTP not configured — invite link: ${inviteUrl}`);
       return;
     }
 
-    await this.resend.emails.send({
-      from: 'Stride <onboarding@resend.dev>',
+    await transport.sendMail({
+      from: `Stride <${from}>`,
       to: params.to,
       subject: `You've been invited to join ${params.orgName} on Stride`,
       html: `
