@@ -1,0 +1,18 @@
+{
+  "name": "stride-demo-recorder",
+  "version": "1.0.0",
+  "description": "Automated Playwright demo recorder for Stride",
+  "scripts": {
+    "record": "ts-node scripts/record-demo.ts",
+    "record:ci": "ts-node scripts/record-demo.ts",
+    "convert": "ffmpeg -i demo-output/stride-demo-$(date +%Y-%m-%d).webm -c:v libx264 -crf 23 demo-output/stride-demo-$(date +%Y-%m-%d).mp4"
+  },
+  "dependencies": {
+    "playwright": "^1.43.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  }
+}
