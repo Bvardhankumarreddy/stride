@@ -11,8 +11,8 @@ function LoginForm() {
   const raw = searchParams.get("callbackUrl") ?? "/dashboard";
   const callbackUrl = raw.startsWith("http") ? new URL(raw).pathname : raw;
 
-  const [email, setEmail] = useState("alex@stride.app");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -118,14 +118,6 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Demo hint */}
-          <div className="mt-6 p-3 rounded-xl bg-secondary/5 border border-secondary/10">
-            <p className="text-xs text-on-surface-variant text-center leading-relaxed">
-              <span className="font-bold text-secondary">Demo credentials</span> are pre-filled.
-              <br />
-              Run <code className="bg-surface-container px-1 rounded font-mono">npm run db:seed</code> first.
-            </p>
-          </div>
         </div>
 
         <p className="text-center text-xs text-on-surface-variant mt-6">
