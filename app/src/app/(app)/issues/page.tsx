@@ -334,6 +334,8 @@ export default function IssuesPage() {
   const [colWidths, setColWidths] = useState<Record<string, number>>({ ...DEFAULT_WIDTHS });
   const resizeRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useClickOutside(fieldsRef, () => setFieldsOpen(false));
   useClickOutside(filterRef, () => setFilterOpen(false));
 
@@ -349,7 +351,18 @@ export default function IssuesPage() {
       setUsers(userRes);
       setCustomFields(cfRes);
     }).finally(() => setLoading(false));
-  }, [token]);
+  }, [token, refreshKey]);
+
+  // Refresh when an issue is created or custom fields change (from any page)
+  useEffect(() => {
+    const refresh = () => setRefreshKey(k => k + 1);
+    window.addEventListener("stride:issueCreated", refresh);
+    window.addEventListener("stride:customFieldsChanged", refresh);
+    return () => {
+      window.removeEventListener("stride:issueCreated", refresh);
+      window.removeEventListener("stride:customFieldsChanged", refresh);
+    };
+  }, []);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {

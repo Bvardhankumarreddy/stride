@@ -331,6 +331,7 @@ export default function SettingsPage() {
                           const field = await api.customFields.create(token, { name: newFieldName.trim(), type: newFieldType, options: opts, required: newFieldRequired });
                           setCustomFields(prev => [...prev, field]);
                           setAddingField(false);
+                          window.dispatchEvent(new CustomEvent("stride:customFieldsChanged"));
                         }}
                         className="px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -411,6 +412,7 @@ export default function SettingsPage() {
                                   if (!token) return;
                                   await api.customFields.remove(token, field.id);
                                   setCustomFields(prev => prev.filter(f => f.id !== field.id));
+                                  window.dispatchEvent(new CustomEvent("stride:customFieldsChanged"));
                                 }}
                                 className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
                               >

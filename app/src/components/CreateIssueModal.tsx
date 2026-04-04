@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToken } from "@/lib/useToken";
-import { api, ApiIssue, ApiUser } from "@/lib/api";
+import { api, ApiUser, ApiCustomField } from "@/lib/api";
 import { toast } from "@/components/Toast";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 
@@ -16,6 +16,8 @@ export default function CreateIssueModal() {
   const [assigneeId, setAssigneeId] = useState("");
   const [description, setDescription] = useState("");
   const [users, setUsers] = useState<ApiUser[]>([]);
+  const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
+  const [cfValues, setCfValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -25,7 +27,11 @@ export default function CreateIssueModal() {
     setPriority("medium");
     setAssigneeId("");
     setDescription("");
-    api.users.list(token).then(setUsers).catch(() => {});
+    setCfValues({});
+    Promise.all([
+      api.users.list(token),
+      api.customFields.list(token),
+    ]).then(([u, cf]) => { setUsers(u); setCustomFields(cf); }).catch(() => {});
   }, [open, token, defaultStatus]);
 
   useEffect(() => {
@@ -35,19 +41,25 @@ export default function CreateIssueModal() {
     return () => document.removeEventListener("keydown", handler);
   }, [open, closeModal]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!token || !title.trim()) return;
     setSaving(true);
     try {
-      await api.issues.create(token, {
+      const issue = await api.issues.create(token, {
         title: title.trim(),
         status,
         priority,
         description: description.trim() || undefined,
         assigneeId: assigneeId || undefined,
       });
+      // Save custom field values if any were filled in
+      const entries = Object.entries(cfValues).filter(([, v]) => v.trim() !== "");
+      if (entries.length > 0) {
+        await api.customFields.saveValues(token, issue.id, entries.map(([fieldId, value]) => ({ fieldId, value })));
+      }
       toast("Issue created");
+      window.dispatchEvent(new CustomEvent("stride:issueCreated"));
       closeModal();
     } catch (err: any) {
       toast(err.message ?? "Failed to create issue");
@@ -142,6 +154,44 @@ export default function CreateIssueModal() {
               className="w-full px-4 py-3 text-sm bg-surface-container-low border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-on-surface placeholder:text-outline resize-none"
             />
           </div>
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Custom Fields</label>
+              {customFields.map(cf => (
+                <div key={cf.id} className="space-y-1">
+                  <label className="text-xs text-on-surface-variant">
+                    {cf.name}{cf.required && <span className="text-error ml-0.5">*</span>}
+                  </label>
+                  {cf.type === "select" ? (
+                    <select
+                      value={cfValues[cf.id] ?? ""}
+                      onChange={e => setCfValues(prev => ({ ...prev, [cf.id]: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                    >
+                      <option value="">— select —</option>
+                      {cf.options.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : cf.type === "checkbox" ? (
+                    <input
+                      type="checkbox"
+                      checked={cfValues[cf.id] === "true"}
+                      onChange={e => setCfValues(prev => ({ ...prev, [cf.id]: e.target.checked ? "true" : "false" }))}
+                      className="accent-primary"
+                    />
+                  ) : (
+                    <input
+                      type={cf.type === "number" ? "number" : cf.type === "date" ? "date" : "text"}
+                      value={cfValues[cf.id] ?? ""}
+                      onChange={e => setCfValues(prev => ({ ...prev, [cf.id]: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-1">
