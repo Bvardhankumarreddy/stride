@@ -7,14 +7,16 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: path.resolve(__dirname, '../.env') });
 
 // ─── Config ─────────────────────────────────────────────────────────────────
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || '';
+// ElevenLabs keys are plain hex — strip the "sk_" prefix if present
+const rawKey = process.env.ELEVENLABS_API_KEY || '';
+const ELEVENLABS_API_KEY = rawKey.startsWith('sk_') ? rawKey.slice(3) : rawKey;
+
 const VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // "Adam" — professional male voice
 // Other voices:
 //   "EXAVITQu4vr4xnSDxMaL" — Bella (female, warm)
 //   "ErXwobaYiN019PkySvjV" — Antoni (male, clear)
 //   "MF3mGyEYCl7XYWbV9V6O" — Elli (female, young)
 
-const OUTPUT_DIR = path.resolve('./demo-output');
 const AUDIO_DIR = path.resolve('./demo-output/audio');
 
 // ─── Voiceover Script — One line per scene ───────────────────────────────────
@@ -71,7 +73,7 @@ async function generateAudio(text: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
       text,
-      model_id: 'eleven_monolingual_v1',
+      model_id: 'eleven_turbo_v2_5',   // current fast model (replaces eleven_monolingual_v1)
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,
@@ -92,14 +94,14 @@ async function generateAudio(text: string, outputPath: string): Promise<void> {
     };
 
     const req = https.request(options, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`ElevenLabs API error: ${res.statusCode}`));
-        return;
-      }
-
       const chunks: Buffer[] = [];
-      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
       res.on('end', () => {
+        if (res.statusCode !== 200) {
+          const body = Buffer.concat(chunks).toString('utf8');
+          reject(new Error(`ElevenLabs ${res.statusCode}: ${body}`));
+          return;
+        }
         fs.writeFileSync(outputPath, Buffer.concat(chunks));
         resolve();
       });
