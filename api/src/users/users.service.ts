@@ -11,8 +11,11 @@ export class UsersService {
     return rest;
   }
 
-  findAll() {
-    return this.prisma.user.findMany({ select: { id: true, name: true, email: true, initials: true, image: true, role: true, createdAt: true } });
+  findAll(organizationId: string) {
+    return this.prisma.user.findMany({
+      where: { memberships: { some: { organizationId } } },
+      select: { id: true, name: true, email: true, initials: true, image: true, role: true, createdAt: true },
+    });
   }
 
   async findOne(id: string) {

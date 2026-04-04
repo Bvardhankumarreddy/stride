@@ -5,7 +5,10 @@
   "scripts": {
     "record": "ts-node scripts/record-demo.ts",
     "record:ci": "ts-node scripts/record-demo.ts",
-    "convert": "ffmpeg -i demo-output/stride-demo-$(date +%Y-%m-%d).webm -c:v libx264 -crf 23 demo-output/stride-demo-$(date +%Y-%m-%d).mp4"
+    "convert": "ffmpeg -i demo-output/stride-demo-$(date +%Y-%m-%d).webm -c:v libx264 -crf 23 demo-output/stride-demo-$(date +%Y-%m-%d).mp4",
+    "voiceover": "ts-node scripts/generate-voiceover.ts",
+    "merge-audio": "bash scripts/merge-audio.sh",
+    "demo": "npm run record && npm run voiceover && npm run merge-audio"
   },
   "dependencies": {
     "dotenv": "^17.4.0",
