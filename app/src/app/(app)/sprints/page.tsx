@@ -39,6 +39,13 @@ export default function SprintsPage() {
   const [issues, setIssues] = useState<ApiIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [orgName, setOrgName] = useState("Workspace");
+  const [projectId, setProjectId] = useState<string | null>(null);
+
+  // Create sprint modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -48,16 +55,39 @@ export default function SprintsPage() {
   useEffect(() => {
     if (!token) return;
     api.projects.list(token).then(async (res) => {
-      const projectId = res[0]?.id;
-      if (!projectId) { setLoading(false); return; }
+      const pid = res[0]?.id;
+      if (!pid) { setLoading(false); return; }
+      setProjectId(pid);
       const [sprintsData, issuesData] = await Promise.all([
-        api.sprints.list(token, projectId),
+        api.sprints.list(token, pid),
         api.issues.list(token, { limit: "200" }),
       ]);
       setSprints(sprintsData);
       setIssues(issuesData.data);
     }).finally(() => setLoading(false));
   }, [token]);
+
+  async function handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!token || !projectId) return;
+    if (!form.name.trim()) { setFormError("Sprint name is required"); return; }
+    setSaving(true);
+    setFormError("");
+    try {
+      const sprint = await api.sprints.create(token, projectId, {
+        name: form.name.trim(),
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
+      });
+      setSprints((prev) => [sprint, ...prev]);
+      setShowCreate(false);
+      setForm({ name: "", startDate: "", endDate: "" });
+    } catch {
+      setFormError("Failed to create sprint. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function sprintStats(sprint: ApiSprint) {
     const si = issues.filter((i) => i.sprintId === sprint.id);
@@ -80,7 +110,10 @@ export default function SprintsPage() {
       <TopBar
         breadcrumbs={[{ label: orgName, href: "/board" }, { label: "Sprints" }]}
         actions={
-          <button className="hidden md:flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="hidden md:flex items-center gap-1.5 px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
+          >
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
             New Sprint
           </button>
@@ -231,6 +264,74 @@ export default function SprintsPage() {
       >
         <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add</span>
       </button>
+
+      {/* Create Sprint Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-black text-on-surface">New Sprint</h2>
+              <button onClick={() => setShowCreate(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">Sprint Name *</label>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="e.g. Sprint 1"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">Start Date</label>
+                  <input
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">End Date</label>
+                  <input
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+
+              {formError && <p className="text-xs text-rose-500 font-medium">{formError}</p>}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  className="flex-1 py-2 rounded-lg border border-outline-variant text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || !form.name.trim()}
+                  className="flex-1 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {saving ? "Creating…" : "Create Sprint"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

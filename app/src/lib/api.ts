@@ -227,6 +227,8 @@ export const api = {
       apiFetch<ApiSprint[]>(`/projects/${projectId}/sprints`, token),
     get: (token: string, projectId: string, id: string) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token),
+    create: (token: string, projectId: string, body: { name: string; startDate?: string; endDate?: string; status?: string }) =>
+      apiFetch<ApiSprint>(`/projects/${projectId}/sprints`, token, { method: "POST", body: JSON.stringify(body) }),
   },
 
   projects: {
