@@ -1,10 +1,54 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { Resend } from 'resend';
 
 @Injectable()
 export class InvitationsService {
+  private readonly logger = new Logger(InvitationsService.name);
+  private readonly resend = process.env.RESEND_API_KEY
+    ? new Resend(process.env.RESEND_API_KEY)
+    : null;
+
   constructor(private prisma: PrismaService) {}
+
+  private async sendInviteEmail(params: {
+    to: string;
+    orgName: string;
+    inviterName: string | null;
+    token: string;
+  }) {
+    const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
+    const inviteUrl = `${appUrl}/invite/${params.token}`;
+
+    if (!this.resend) {
+      this.logger.warn(`[INVITE] RESEND_API_KEY not set — invite link: ${inviteUrl}`);
+      return;
+    }
+
+    await this.resend.emails.send({
+      from: 'Stride <onboarding@resend.dev>',
+      to: params.to,
+      subject: `You've been invited to join ${params.orgName} on Stride`,
+      html: `
+        <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
+          <h2 style="margin:0 0 8px;font-size:22px;color:#0f172a">You're invited to Stride</h2>
+          <p style="margin:0 0 24px;color:#475569;font-size:15px">
+            ${params.inviterName ?? 'Someone'} has invited you to join <strong>${params.orgName}</strong>.
+          </p>
+          <a href="${inviteUrl}"
+             style="display:inline-block;padding:12px 24px;background:#6d28d9;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
+            Accept invitation
+          </a>
+          <p style="margin:24px 0 0;color:#94a3b8;font-size:13px">
+            This invite expires in 48 hours. If you didn't expect this, you can ignore it.
+          </p>
+        </div>
+      `,
+    });
+
+    this.logger.log(`[INVITE] Email sent to ${params.to} for org ${params.orgName}`);
+  }
 
   async create(orgId: string, invitedById: string, dto: CreateInvitationDto) {
     // Check requester has permission
@@ -37,8 +81,12 @@ export class InvitationsService {
       include: { organization: true, invitedBy: { select: { name: true, email: true } } },
     });
 
-    // In production: send email via Resend/nodemailer
-    console.log(`[INVITE] ${dto.email} → ${invitation.token} (org: ${orgId})`);
+    await this.sendInviteEmail({
+      to: dto.email,
+      orgName: invitation.organization.name,
+      inviterName: invitation.invitedBy?.name ?? null,
+      token: invitation.token,
+    });
 
     return invitation;
   }
