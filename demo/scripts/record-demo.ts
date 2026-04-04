@@ -27,13 +27,6 @@ async function goto(page: Page, path: string) {
   await page.waitForTimeout(CONFIG.pauseShort);
 }
 
-async function humanType(page: Page, selector: string, text: string) {
-  const el = page.locator(selector).first();
-  await el.click();
-  await page.waitForTimeout(200);
-  await el.pressSequentially(text, { delay: 80 });
-}
-
 async function showTitleCard(page: Page, title: string, subtitle: string = '') {
   await page.evaluate(({ title, subtitle }: { title: string; subtitle: string }) => {
     const existing = document.getElementById('demo-title-card');
@@ -160,8 +153,10 @@ async function recordDemo() {
     await page.waitForTimeout(CONFIG.pauseShort);
     await hideTitleCard(page);
 
-    // Type issue title
-    await humanType(page, 'input[placeholder="Issue title"]', 'Add dark mode support to the dashboard');
+    // Fill issue title — wait for modal input to be ready first
+    const titleInput = page.locator('input[placeholder="Issue title"]');
+    await titleInput.waitFor({ state: 'visible', timeout: 10000 });
+    await titleInput.fill('Add dark mode support to the dashboard');
     await page.waitForTimeout(CONFIG.pauseShort);
 
     // Set priority to High
@@ -181,7 +176,10 @@ async function recordDemo() {
 
     await showTitleCard(page, '⚡ Creating issue...', 'Watch it appear instantly — no page refresh needed');
     await page.waitForTimeout(CONFIG.pauseShort);
-    await page.locator('button', { hasText: /create issue/i }).click();
+    // Wait for submit button to be enabled (title is filled)
+    const submitBtn = page.locator('button[type="submit"]', { hasText: /create issue/i });
+    await submitBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await submitBtn.click();
     await page.waitForTimeout(CONFIG.pauseMedium);
     await hideTitleCard(page);
 
