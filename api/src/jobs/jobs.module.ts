@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
@@ -36,6 +37,7 @@ import { WebhookProcessor } from './webhook.processor';
       { name: QUEUE_WEBHOOK },
     ),
     ConfigModule,
+    HttpModule,
     PrismaModule,
     EmailModule,
   ],
