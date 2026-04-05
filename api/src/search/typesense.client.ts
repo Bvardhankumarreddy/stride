@@ -54,10 +54,18 @@ export class TypesenseClient implements OnModuleInit {
     });
   }
 
+  available = false;
+
   async onModuleInit() {
-    await this.ensureCollection(ISSUES_SCHEMA);
-    await this.ensureCollection(DOCS_SCHEMA);
-    this.logger.log('Typesense collections ready');
+    try {
+      await this.ensureCollection(ISSUES_SCHEMA);
+      await this.ensureCollection(DOCS_SCHEMA);
+      this.available = true;
+      this.logger.log('Typesense collections ready');
+    } catch (err) {
+      this.available = false;
+      this.logger.warn(`Typesense unavailable — search will fall back to DB. (${err.message})`);
+    }
   }
 
   private async ensureCollection(schema: CollectionCreateSchema) {

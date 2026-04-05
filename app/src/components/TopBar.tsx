@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useToken } from "@/lib/useToken";
+import { api } from "@/lib/api";
 
 interface TopBarProps {
   breadcrumbs?: { label: string; href?: string }[];
@@ -16,8 +18,15 @@ function openCommandBar() {
 export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
   const { data: session } = useSession();
   const user = session?.user as any;
+  const token = useToken();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    api.notifications.list(token, { limit: "1" }).then((r) => setUnreadCount(r.unreadCount)).catch(() => {});
+  }, [token]);
 
   const initials = user?.name
     ? user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -68,6 +77,21 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
 
       <div className="flex items-center gap-3">
         {actions}
+
+        {/* Notification bell */}
+        <Link
+          href="/inbox"
+          className="relative p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant"
+          title="Notifications"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>notifications</span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
+
         <button
           onClick={openCommandBar}
           className="p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant"

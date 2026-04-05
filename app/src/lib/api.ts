@@ -140,6 +140,7 @@ export interface ApiOrganization {
   name: string;
   slug: string;
   plan: string;
+  aiSettings: { digest?: boolean; suggestions?: boolean; autoLabel?: boolean };
   createdAt: string;
   updatedAt: string;
 }
@@ -229,6 +230,8 @@ export const api = {
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token),
     create: (token: string, projectId: string, body: { name: string; startDate?: string; endDate?: string; status?: string }) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints`, token, { method: "POST", body: JSON.stringify(body) }),
+    update: (token: string, projectId: string, id: string, body: { name?: string; startDate?: string; endDate?: string; status?: string }) =>
+      apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
   },
 
   projects: {
@@ -271,7 +274,7 @@ export const api = {
       apiFetch<ApiOrgMember>(`/organizations/${orgId}/members/${userId}`, token, { method: 'PATCH', body: JSON.stringify({ role }) }),
     removeMember: (token: string, orgId: string, userId: string) =>
       apiFetch<void>(`/organizations/${orgId}/members/${userId}`, token, { method: 'DELETE' }),
-    update: (token: string, orgId: string, data: { name: string }) =>
+    update: (token: string, orgId: string, data: { name?: string; aiSettings?: Record<string, boolean> }) =>
       apiFetch<ApiOrganization>(`/organizations/${orgId}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (token: string, orgId: string) =>
       apiFetch<void>(`/organizations/${orgId}`, token, { method: 'DELETE' }),

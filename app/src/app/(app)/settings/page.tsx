@@ -135,6 +135,10 @@ export default function SettingsPage() {
       setOrgId(org.id);
       setWorkspaceName(org.name);
       setSavedName(org.name);
+      const ai = (org.aiSettings ?? {}) as { digest?: boolean; suggestions?: boolean; autoLabel?: boolean };
+      setAiDigest(ai.digest ?? true);
+      setAiSuggestions(ai.suggestions ?? true);
+      setAiAutoLabel(ai.autoLabel ?? false);
     }).catch(() => {});
   }, [token]);
 
@@ -602,17 +606,25 @@ export default function SettingsPage() {
 
                 <div className="space-y-5">
                   {[
-                    { id: "digest", label: "Daily AI Digest", description: "Morning summary of team activity, blockers, and sprint health", value: aiDigest, setter: setAiDigest },
-                    { id: "suggestions", label: "AI Issue Suggestions", description: "Suggest related issues, duplicates, and next steps as you type", value: aiSuggestions, setter: setAiSuggestions },
-                    { id: "autolabel", label: "Auto-label Issues", description: "Automatically apply labels based on issue content using AI", value: aiAutoLabel, setter: setAiAutoLabel },
-                  ].map(({ id, label, description, value, setter }) => (
+                    { id: "digest",      key: "digest",      label: "Daily AI Digest",         description: "Morning summary of team activity, blockers, and sprint health",       value: aiDigest,       setter: setAiDigest },
+                    { id: "suggestions", key: "suggestions", label: "AI Issue Suggestions",     description: "Suggest related issues, duplicates, and next steps as you type",    value: aiSuggestions,  setter: setAiSuggestions },
+                    { id: "autolabel",   key: "autoLabel",   label: "Auto-label Issues",        description: "Automatically apply labels based on issue content using AI",         value: aiAutoLabel,    setter: setAiAutoLabel },
+                  ].map(({ id, key, label, description, value, setter }) => (
                     <div key={id} className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-bold text-on-surface">{label}</p>
                         <p className="text-xs text-on-surface-variant mt-0.5">{description}</p>
                       </div>
                       <button
-                        onClick={() => { setter(!value); toast(`${label} ${!value ? "enabled" : "disabled"}`); }}
+                        onClick={async () => {
+                          const next = !value;
+                          setter(next);
+                          if (token && orgId) {
+                            const current = { digest: aiDigest, suggestions: aiSuggestions, autoLabel: aiAutoLabel, [key]: next };
+                            await api.organizations.update(token, orgId, { aiSettings: current }).catch(() => {});
+                          }
+                          toast(`${label} ${next ? "enabled" : "disabled"}`);
+                        }}
                         className={clsx(
                           "relative rounded-full transition-colors flex-shrink-0 mt-0.5",
                           value ? "bg-primary" : "bg-surface-container-high"

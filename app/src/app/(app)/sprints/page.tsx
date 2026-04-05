@@ -7,6 +7,7 @@ import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
 import { api, ApiSprint, ApiIssue } from "@/lib/api";
+import { toast } from "@/components/Toast";
 
 const PRIORITY_DOT: Record<string, string> = {
   urgent: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]",
@@ -16,6 +17,7 @@ const PRIORITY_DOT: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
+  planned: "bg-surface-container-high text-on-surface-variant",
   active: "bg-primary/10 text-primary border border-primary/20",
   upcoming: "bg-surface-container-high text-on-surface-variant",
   completed: "bg-surface-container text-outline",
@@ -93,6 +95,17 @@ export default function SprintsPage() {
       setFormError("Failed to create sprint. Please try again.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleStatusChange(sprint: ApiSprint, newStatus: string) {
+    if (!token || !projectId) return;
+    try {
+      const updated = await api.sprints.update(token, projectId, sprint.id, { status: newStatus });
+      setSprints((prev) => prev.map((s) => (s.id === sprint.id ? { ...s, status: updated.status } : s)));
+      toast(`Sprint ${newStatus === "active" ? "started" : "completed"}`);
+    } catch {
+      toast("Failed to update sprint status");
     }
   }
 
@@ -223,10 +236,32 @@ export default function SprintsPage() {
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                     <div
-                      className={clsx("h-full rounded-full", sprint.status === "upcoming" ? "bg-surface-container-high" : "bg-primary")}
+                      className={clsx("h-full rounded-full", sprint.status === "upcoming" || sprint.status === "planned" ? "bg-surface-container-high" : "bg-primary")}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
+                  {sprint.status !== "completed" && (
+                    <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant/10">
+                      {(sprint.status === "planned" || sprint.status === "upcoming") && (
+                        <button
+                          onClick={() => handleStatusChange(sprint, "active")}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>play_arrow</span>
+                          Start Sprint
+                        </button>
+                      )}
+                      {sprint.status === "active" && (
+                        <button
+                          onClick={() => handleStatusChange(sprint, "completed")}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-surface-container text-on-surface-variant rounded-lg hover:bg-surface-container-high transition-colors"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span>
+                          Complete Sprint
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

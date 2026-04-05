@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { QueryIssueDto } from './dto/query-issue.dto';
@@ -18,6 +19,7 @@ export class IssuesService {
   constructor(
     private prisma: PrismaService,
     private search: SearchService,
+    private notifications: NotificationsService,
   ) {}
 
   async create(dto: CreateIssueDto, creatorId: string, organizationId?: string) {
@@ -58,7 +60,7 @@ export class IssuesService {
   }
 
   async update(id: string, dto: UpdateIssueDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     const { labels, dueDate, ...rest } = dto;
     const issue = await this.prisma.issue.update({
       where: { id },
@@ -66,6 +68,19 @@ export class IssuesService {
       include: INCLUDE,
     });
     await this.search.indexIssue(issue);
+
+    // Notify the new assignee (skip if unchanged or unassigned)
+    const newAssigneeId = dto.assigneeId;
+    if (newAssigneeId && newAssigneeId !== existing.assigneeId) {
+      await this.notifications.create({
+        type: 'assigned',
+        title: 'You were assigned an issue',
+        body: issue.title,
+        userId: newAssigneeId,
+        issueId: id,
+      }).catch(() => {});
+    }
+
     return issue;
   }
 

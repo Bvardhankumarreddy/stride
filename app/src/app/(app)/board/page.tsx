@@ -167,22 +167,36 @@ export default function BoardPage() {
     api.organizations.mine(token).then(org => setOrgName(org.name)).catch(() => {});
   }, [token]);
 
-  useEffect(() => {
-    if (!token || hydrated) return;
-    api.issues.list(token, { limit: "100" }).then((res) => {
+  function fetchAndSetIssues(t: string) {
+    api.issues.list(t, { limit: "100" }).then((res) => {
       setIssues(res.data.map((issue) => ({
         id: issue.id,
         title: issue.title,
         label: Array.isArray(issue.labels) ? issue.labels[0] ?? null : null,
         priority: issue.priority,
-        columnId: issue.status === "in-review" ? "in-review" : issue.status as ColumnId,
+        columnId: issue.status as ColumnId,
         assignee: issue.assignee?.name ?? undefined,
         assigneeInitials: issue.assignee?.initials ?? undefined,
         estimate: issue.estimate,
         done: issue.status === "done",
       })));
     });
-  }, [token, hydrated, setIssues]);
+  }
+
+  useEffect(() => {
+    if (!token || hydrated) return;
+    fetchAndSetIssues(token);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, hydrated]);
+
+  // Re-fetch when a new issue is created anywhere
+  useEffect(() => {
+    if (!token) return;
+    function handler() { fetchAndSetIssues(token!); }
+    window.addEventListener("stride:issueCreated", handler);
+    return () => window.removeEventListener("stride:issueCreated", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   // Close dropdowns on outside click
   useEffect(() => {

@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TypesenseClient, ISSUES_COLLECTION, DOCS_COLLECTION } from './typesense.client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name);
 
-  constructor(private ts: TypesenseClient) {}
+  constructor(
+    private ts: TypesenseClient,
+    private prisma: PrismaService,
+  ) {}
 
   // ── Issues ─────────────────────────────────────────────────────────────────
 
@@ -86,32 +90,24 @@ export class SearchService {
   // ── Multi-search ───────────────────────────────────────────────────────────
 
   async search(query: string, filter?: 'issues' | 'docs') {
-    const q = query.trim() || '*';
+    if (this.ts.available) {
+      return this.typesenseSearch(query, filter);
+    }
+    return this.prismaSearch(query, filter);
+  }
 
+  private async typesenseSearch(query: string, filter?: 'issues' | 'docs'): Promise<SearchResult[]> {
+    const q = query.trim() || '*';
     const searches: any[] = [];
 
     if (!filter || filter === 'issues') {
-      searches.push({
-        collection: ISSUES_COLLECTION,
-        q,
-        query_by: 'title,description,assigneeName',
-        sort_by: 'createdAt:desc',
-        per_page: 10,
-      });
+      searches.push({ collection: ISSUES_COLLECTION, q, query_by: 'title,description,assigneeName', sort_by: 'createdAt:desc', per_page: 10 });
     }
-
     if (!filter || filter === 'docs') {
-      searches.push({
-        collection: DOCS_COLLECTION,
-        q,
-        query_by: 'title,authorName',
-        sort_by: 'createdAt:desc',
-        per_page: 10,
-      });
+      searches.push({ collection: DOCS_COLLECTION, q, query_by: 'title,authorName', sort_by: 'createdAt:desc', per_page: 10 });
     }
 
     const response = await this.ts.client.multiSearch.perform({ searches }, {});
-
     const results: SearchResult[] = [];
 
     response.results.forEach((res: any, idx: number) => {
@@ -119,26 +115,39 @@ export class SearchService {
       (res.hits ?? []).forEach((hit: any) => {
         const doc = hit.document;
         if (type === 'issue') {
-          results.push({
-            type: 'issue',
-            id: doc.id,
-            title: doc.title,
-            meta: `${doc.status} · ${doc.priority}`,
-            href: `/issues/${doc.id}`,
-            highlight: hit.highlights?.[0]?.snippet,
-          });
+          results.push({ type: 'issue', id: doc.id, title: doc.title, meta: `${doc.status} · ${doc.priority}`, href: `/issues/${doc.id}`, highlight: hit.highlights?.[0]?.snippet });
         } else {
-          results.push({
-            type: 'doc',
-            id: doc.id,
-            title: doc.title,
-            meta: `${doc.status} · ${doc.authorName || 'Unknown'}`,
-            href: `/docs/${doc.id}`,
-            highlight: hit.highlights?.[0]?.snippet,
-          });
+          results.push({ type: 'doc', id: doc.id, title: doc.title, meta: `${doc.status} · ${doc.authorName || 'Unknown'}`, href: `/docs/${doc.id}`, highlight: hit.highlights?.[0]?.snippet });
         }
       });
     });
+
+    return results;
+  }
+
+  private async prismaSearch(query: string, filter?: 'issues' | 'docs'): Promise<SearchResult[]> {
+    const q = query.trim();
+    const results: SearchResult[] = [];
+
+    if (!filter || filter === 'issues') {
+      const issues = await this.prisma.issue.findMany({
+        where: { OR: [{ title: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }] },
+        include: { assignee: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      issues.forEach((i) => results.push({ type: 'issue', id: i.id, title: i.title, meta: `${i.status} · ${i.priority}`, href: `/issues/${i.id}` }));
+    }
+
+    if (!filter || filter === 'docs') {
+      const docs = await this.prisma.document.findMany({
+        where: { title: { contains: q, mode: 'insensitive' } },
+        include: { author: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+      docs.forEach((d) => results.push({ type: 'doc', id: d.id, title: d.title, meta: `${d.status} · ${d.author?.name ?? 'Unknown'}`, href: `/docs/${d.id}` }));
+    }
 
     return results;
   }

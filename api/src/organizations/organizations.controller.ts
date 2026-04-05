@@ -33,7 +33,7 @@ export class OrganizationsController {
   }
 
   @Patch(':orgId')
-  update(@Param('orgId') orgId: string, @Body() body: { name?: string }, @Req() req: any) {
+  update(@Param('orgId') orgId: string, @Body() body: { name?: string; aiSettings?: Record<string, boolean> }, @Req() req: any) {
     return this.orgs.update(orgId, body, req.user.sub);
   }
 

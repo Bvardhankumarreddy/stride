@@ -1,27 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import * as nodemailer from 'nodemailer';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class InvitationsService {
   private readonly logger = new Logger(InvitationsService.name);
 
-  private createTransport() {
-    const host = process.env.SMTP_HOST;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    if (!host || !user || !pass) return null;
-
-    return nodemailer.createTransport({
-      host,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === 'true', // true for port 465
-      auth: { user, pass },
-    });
-  }
-
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   private async sendInviteEmail(params: {
     to: string;
@@ -31,40 +20,16 @@ export class InvitationsService {
   }) {
     const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
     const inviteUrl = `${appUrl}/invite/${params.token}`;
-    const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
 
-    const transport = this.createTransport();
-    if (!transport) {
-      this.logger.warn(`[INVITE] SMTP not configured — invite link: ${inviteUrl}`);
-      return;
-    }
-
-    await transport.sendMail({
-      from: `Stride <${from}>`,
-      to: params.to,
-      subject: `You've been invited to join ${params.orgName} on Stride`,
-      html: `
-        <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
-          <h2 style="margin:0 0 8px;font-size:22px;color:#0f172a">You're invited to Stride</h2>
-          <p style="margin:0 0 24px;color:#475569;font-size:15px">
-            ${params.inviterName ?? 'Someone'} has invited you to join <strong>${params.orgName}</strong>.
-          </p>
-          <a href="${inviteUrl}"
-             style="display:inline-block;padding:12px 24px;background:#6d28d9;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
-            Accept invitation
-          </a>
-          <p style="margin:24px 0 0;color:#94a3b8;font-size:13px">
-            This invite expires in 48 hours. If you didn't expect this, you can ignore it.
-          </p>
-        </div>
-      `,
+    await this.emailService.send('stride_invite', {
+      email: params.to,
+      orgName: params.orgName,
+      inviterName: params.inviterName ?? 'Someone',
+      inviteUrl,
     });
-
-    this.logger.log(`[INVITE] Email sent to ${params.to} for org ${params.orgName}`);
   }
 
   async create(orgId: string, invitedById: string, dto: CreateInvitationDto) {
-    // Check requester has permission
     const requester = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId: invitedById, organizationId: orgId } },
     });
@@ -72,7 +37,6 @@ export class InvitationsService {
       throw new ForbiddenException('Insufficient permissions to invite');
     }
 
-    // Check if user is already a member
     const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existingUser) {
       const existingMember = await this.prisma.organizationMember.findUnique({
@@ -81,16 +45,10 @@ export class InvitationsService {
       if (existingMember) throw new BadRequestException('User is already a member');
     }
 
-    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     const invitation = await this.prisma.invitation.create({
-      data: {
-        email: dto.email,
-        role: dto.role ?? 'member',
-        organizationId: orgId,
-        invitedById,
-        expiresAt,
-      },
+      data: { email: dto.email, role: dto.role ?? 'member', organizationId: orgId, invitedById, expiresAt },
       include: { organization: true, invitedBy: { select: { name: true, email: true } } },
     });
 
@@ -117,24 +75,20 @@ export class InvitationsService {
 
   async accept(token: string, userId: string) {
     const invitation = await this.preview(token);
-
     const org = invitation.organization;
 
     await this.prisma.$transaction(async (tx) => {
-      // Add to org
       await tx.organizationMember.upsert({
         where: { userId_organizationId: { userId, organizationId: org.id } },
         create: { userId, organizationId: org.id, role: invitation.role },
         update: { role: invitation.role },
       });
 
-      // Set as user's current org if they don't have one
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user?.organizationId) {
         await tx.user.update({ where: { id: userId }, data: { organizationId: org.id } });
       }
 
-      // Mark accepted
       await tx.invitation.update({ where: { token }, data: { acceptedAt: new Date() } });
     });
 
