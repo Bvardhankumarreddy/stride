@@ -234,6 +234,8 @@ export const api = {
   projects: {
     list: (token: string) =>
       apiFetch<{ id: string; name: string }[]>(`/projects`, token),
+    create: (token: string, body: { name: string; description?: string }) =>
+      apiFetch<{ id: string; name: string }>(`/projects`, token, { method: "POST", body: JSON.stringify(body) }),
   },
 
   notifications: {

@@ -69,12 +69,19 @@ export default function SprintsPage() {
 
   async function handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!token || !projectId) return;
+    if (!token) return;
     if (!form.name.trim()) { setFormError("Sprint name is required"); return; }
     setSaving(true);
     setFormError("");
     try {
-      const sprint = await api.sprints.create(token, projectId, {
+      let pid = projectId;
+      if (!pid) {
+        const org = await api.organizations.mine(token);
+        const project = await api.projects.create(token, { name: org.name });
+        pid = project.id;
+        setProjectId(pid);
+      }
+      const sprint = await api.sprints.create(token, pid, {
         name: form.name.trim(),
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,

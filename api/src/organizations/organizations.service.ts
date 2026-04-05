@@ -16,6 +16,7 @@ export class OrganizationsService {
       const org = await tx.organization.create({ data: { name: dto.name, slug: dto.slug } });
       await tx.organizationMember.create({ data: { userId, organizationId: org.id, role: 'owner' } });
       await tx.user.update({ where: { id: userId }, data: { organizationId: org.id } });
+      await tx.project.create({ data: { name: dto.name, organizationId: org.id } });
       return org;
     });
 
