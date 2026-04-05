@@ -19,6 +19,7 @@ export default function CreateIssueModal() {
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [cfValues, setCfValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !token) return;
@@ -31,7 +32,12 @@ export default function CreateIssueModal() {
     Promise.all([
       api.users.list(token),
       api.customFields.list(token),
-    ]).then(([u, cf]) => { setUsers(u); setCustomFields(cf); }).catch(() => {});
+      api.projects.list(token),
+    ]).then(([u, cf, projects]) => {
+      setUsers(u);
+      setCustomFields(cf);
+      setDefaultProjectId(projects[0]?.id ?? null);
+    }).catch(() => {});
   }, [open, token, defaultStatus]);
 
   useEffect(() => {
@@ -52,6 +58,7 @@ export default function CreateIssueModal() {
         priority,
         description: description.trim() || undefined,
         assigneeId: assigneeId || undefined,
+        projectId: defaultProjectId || undefined,
       });
       // Save custom field values if any were filled in
       const entries = Object.entries(cfValues).filter(([, v]) => v.trim() !== "");

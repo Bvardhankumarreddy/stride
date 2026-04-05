@@ -96,9 +96,14 @@ export default function IssueDetailPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!token || !issue?.projectId) return;
-    api.sprints.list(token, issue.projectId).then(setSprints).catch(() => {});
-  }, [token, issue?.projectId]);
+    if (!token || !issue) return;
+    // Use issue.projectId if set, otherwise fall back to the org's first project
+    const fetchSprints = async () => {
+      const pid = issue.projectId ?? (await api.projects.list(token))[0]?.id;
+      if (pid) api.sprints.list(token, pid).then(setSprints).catch(() => {});
+    };
+    fetchSprints();
+  }, [token, issue?.id]);
 
   useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
   useEffect(() => { if (editingDesc)  descRef.current?.focus(); }, [editingDesc]);
