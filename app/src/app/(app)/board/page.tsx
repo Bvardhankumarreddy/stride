@@ -26,6 +26,7 @@ import {
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useIssueStore, Issue, ColumnId } from "@/store/useIssueStore";
+import { toast } from "@/components/Toast";
 
 const STATUS_COLUMNS: {
   id: ColumnId;
@@ -215,26 +216,50 @@ export default function BoardPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const activeIssue = activeId ? issues.find((i) => i.id === activeId) ?? null : null;
+  const originalColumnRef = useRef<string | null>(null);
 
-  function handleDragStart({ active }: DragStartEvent) { setActiveId(active.id as string); }
+  function handleDragStart({ active }: DragStartEvent) {
+    setActiveId(active.id as string);
+    const iss = useIssueStore.getState().issues.find((i) => i.id === active.id);
+    originalColumnRef.current = iss?.columnId ?? null;
+  }
 
   function handleDragOver({ active, over }: DragOverEvent) {
     if (!over) return;
-    const activeIssue = issues.find((i) => i.id === active.id);
+    const activeIssue = useIssueStore.getState().issues.find((i) => i.id === active.id);
     if (!activeIssue) return;
     const isColumn = STATUS_COLUMNS.some((c) => c.id === over.id);
     if (isColumn && activeIssue.columnId !== over.id) moveIssue(active.id as string, over.id as ColumnId);
   }
 
-  function handleDragEnd({ active, over }: DragEndEvent) {
+  async function handleDragEnd({ active, over }: DragEndEvent) {
     setActiveId(null);
+    const originalColumn = originalColumnRef.current;
+    originalColumnRef.current = null;
+
     if (!over || active.id === over.id) return;
-    const activeIssue = issues.find((i) => i.id === active.id);
-    const overIssue = issues.find((i) => i.id === over.id);
+
+    const issueId = active.id as string;
+    const stateIssues = useIssueStore.getState().issues;
+    const activeIssue = stateIssues.find((i) => i.id === issueId);
+    const overIssue   = stateIssues.find((i) => i.id === over.id);
+
     if (activeIssue && overIssue && activeIssue.columnId !== overIssue.columnId) {
-      moveIssue(active.id as string, overIssue.columnId as ColumnId);
+      moveIssue(issueId, overIssue.columnId as ColumnId);
     } else if (overIssue) {
-      reorderIssue(active.id as string, over.id as string);
+      reorderIssue(issueId, over.id as string);
+    }
+
+    // Persist status change to backend
+    const newColumn = useIssueStore.getState().issues.find((i) => i.id === issueId)?.columnId;
+    if (newColumn && newColumn !== originalColumn && token) {
+      try {
+        await api.issues.update(token, issueId, { status: newColumn });
+      } catch {
+        // Revert optimistic update on failure
+        if (originalColumn) moveIssue(issueId, originalColumn as ColumnId);
+        toast("Failed to update issue status");
+      }
     }
   }
 
