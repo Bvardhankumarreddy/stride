@@ -18,9 +18,80 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stride-app.up.railway.app";
+
 export const metadata: Metadata = {
-  title: "Stride",
-  description: "Project management, docs, and AI — in one workspace.",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "Stride — AI-Native Project Management",
+    template: "%s | Stride",
+  },
+  description:
+    "Stride is an AI-powered project management tool that combines issue tracking, sprint planning, docs, and team collaboration in one workspace. The smarter alternative to Jira.",
+  keywords: [
+    "project management",
+    "AI project management",
+    "Jira alternative",
+    "sprint planning",
+    "issue tracker",
+    "agile tool",
+    "team collaboration",
+    "kanban board",
+    "roadmap tool",
+    "AI productivity",
+    "software development tool",
+    "scrum tool",
+  ],
+  authors: [{ name: "Stride" }],
+  creator: "Stride",
+  publisher: "Stride",
+  category: "productivity",
+  applicationName: "Stride",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: APP_URL,
+    siteName: "Stride",
+    title: "Stride — AI-Native Project Management",
+    description:
+      "Ship faster with AI-powered issue tracking, sprint planning, and team docs — all in one workspace. The smarter alternative to Jira and Confluence.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Stride — AI-Native Project Management",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Stride — AI-Native Project Management",
+    description:
+      "Ship faster with AI-powered issue tracking, sprint planning, and team docs — all in one workspace.",
+    images: ["/og-image.png"],
+    creator: "@strideapp",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  alternates: {
+    canonical: APP_URL,
+  },
 };
 
 export default function RootLayout({
@@ -36,7 +107,39 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <body className="min-h-dvh flex flex-col"><Providers>{children}</Providers></body>
+      <body className="min-h-dvh flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "Stride",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              description:
+                "AI-powered project management tool combining issue tracking, sprint planning, docs, and team collaboration in one workspace.",
+              url: APP_URL,
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+                description: "Free plan available",
+              },
+              featureList: [
+                "AI-powered issue tracking",
+                "Sprint planning and management",
+                "Kanban board",
+                "Team wiki and docs",
+                "Real-time collaboration",
+                "Roadmap and timeline view",
+                "GitHub and Slack integrations",
+              ],
+            }),
+          }}
+        />
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
