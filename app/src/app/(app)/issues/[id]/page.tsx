@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
 import { useSession } from "next-auth/react";
-import { api, ApiIssue, ApiCustomField, ApiUser, apiFetch } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, apiFetch } from "@/lib/api";
 import { toast } from "@/components/Toast";
 
 const STATUSES = [
@@ -68,6 +68,7 @@ export default function IssueDetailPage() {
   const [fieldValues, setFieldValues]   = useState<Record<string, string>>({});
   const [users, setUsers]               = useState<ApiUser[]>([]);
   const [sprints, setSprints]           = useState<{ id: string; name: string }[]>([]);
+  const [activity, setActivity]         = useState<ApiIssueActivity[]>([]);
 
   // Inline title / description editing
   const [editingTitle, setEditingTitle]       = useState(false);
@@ -87,6 +88,7 @@ export default function IssueDetailPage() {
       (iss.customFieldValues ?? []).forEach((v) => { initial[v.customFieldId] = v.value; });
       setFieldValues(initial);
     }).finally(() => setLoading(false));
+    api.issues.activity(token, id).then(setActivity).catch(() => {});
   }, [token, id]);
 
   useEffect(() => {
@@ -273,6 +275,27 @@ export default function IssueDetailPage() {
                   )}
                 </h3>
                 <div className="space-y-8">
+                  {activity.map((a) => (
+                    <div key={a.id} className="flex gap-3 items-start">
+                      <div className="w-6 h-6 rounded-full bg-surface-container flex-shrink-0 flex items-center justify-center mt-0.5">
+                        <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 12 }}>
+                          {a.type === "created" ? "add_circle" : a.type === "status_changed" ? "swap_horiz" : a.type === "assignee_changed" ? "person" : a.type === "priority_changed" ? "priority_high" : "edit"}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          <span className="font-semibold text-on-surface">{a.user?.name ?? "Someone"}</span>
+                          {" "}
+                          {a.type === "created" && "created this issue"}
+                          {a.type === "status_changed" && <><span>changed status from </span><span className="font-semibold text-on-surface">{a.from}</span><span> to </span><span className="font-semibold text-on-surface">{a.to}</span></>}
+                          {a.type === "assignee_changed" && <><span>reassigned from </span><span className="font-semibold text-on-surface">{a.from}</span><span> to </span><span className="font-semibold text-on-surface">{a.to}</span></>}
+                          {a.type === "priority_changed" && <><span>changed priority from </span><span className="font-semibold text-on-surface">{a.from}</span><span> to </span><span className="font-semibold text-on-surface">{a.to}</span></>}
+                        </p>
+                        <p className="text-[10px] text-outline mt-0.5">{timeAgo(a.createdAt)}</p>
+                      </div>
+                    </div>
+                  ))}
+
                   {(issue.comments ?? []).map((c) => (
                     <div key={c.id} className="flex gap-4">
                       <div className="w-10 h-10 rounded-full bg-surface-container flex-shrink-0 flex items-center justify-center">

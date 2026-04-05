@@ -14,6 +14,7 @@ export class SprintsController {
 
   @Post() create(@Param('projectId') projectId: string, @Body() dto: CreateSprintDto) { return this.sprints.create(projectId, dto); }
   @Get() findAll(@Param('projectId') projectId: string) { return this.sprints.findAll(projectId); }
+  @Get('velocity') velocity(@Param('projectId') projectId: string) { return this.sprints.velocity(projectId); }
   @Get(':id') findOne(@Param('projectId') projectId: string, @Param('id') id: string) { return this.sprints.findOne(projectId, id); }
   @Patch(':id') update(@Param('projectId') projectId: string, @Param('id') id: string, @Body() dto: UpdateSprintDto) { return this.sprints.update(projectId, id, dto); }
   @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('projectId') projectId: string, @Param('id') id: string) { return this.sprints.remove(projectId, id); }

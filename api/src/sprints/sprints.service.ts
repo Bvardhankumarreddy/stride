@@ -79,4 +79,18 @@ export class SprintsService {
     await this.findOne(projectId, id);
     await this.prisma.sprint.delete({ where: { id } });
   }
+
+  async velocity(projectId: string) {
+    const completed = await this.prisma.sprint.findMany({
+      where: { projectId, status: 'completed' },
+      include: { issues: { select: { estimate: true, status: true } } },
+      orderBy: { endDate: 'asc' },
+      take: 10,
+    });
+    return completed.map(s => ({
+      sprint: s.name,
+      committed: s.issues.reduce((sum, i) => sum + (i.estimate ?? 0), 0),
+      completed: s.issues.filter(i => i.status === 'done').reduce((sum, i) => sum + (i.estimate ?? 0), 0),
+    }));
+  }
 }

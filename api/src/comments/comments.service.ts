@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
@@ -11,6 +12,7 @@ export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private notifications: NotificationsService,
+    private email: EmailService,
   ) {}
 
   async create(issueId: string, dto: CreateCommentDto, authorId: string) {
@@ -26,17 +28,55 @@ export class CommentsService {
     });
     if (issue) {
       const authorName = (comment.author as any)?.name ?? 'Someone';
+      const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
+      const issueUrl = `${appUrl}/issues/${issueId}`;
+
       const notifyIds = [...new Set([issue.assigneeId, issue.creatorId])]
         .filter((uid): uid is string => !!uid && uid !== authorId);
-      await Promise.all(notifyIds.map((userId) =>
-        this.notifications.create({
-          type: 'comment',
-          title: `New comment on "${issue.title}"`,
-          body: `${authorName}: ${dto.body.slice(0, 120)}`,
-          userId,
-          issueId,
-        }).catch(() => {}),
-      ));
+
+      // Fetch emails for notified users in one query
+      const users = notifyIds.length
+        ? await this.prisma.user.findMany({ where: { id: { in: notifyIds } }, select: { id: true, email: true, name: true } })
+        : [];
+
+      await Promise.all(notifyIds.flatMap((userId) => {
+        const user = users.find((u) => u.id === userId);
+        return [
+          this.notifications.create({
+            type: 'comment',
+            title: `New comment on "${issue.title}"`,
+            body: `${authorName}: ${dto.body.slice(0, 120)}`,
+            userId,
+            issueId,
+          }).catch(() => {}),
+          user && this.email.send('stride_comment', {
+            email: user.email,
+            name: user.name ?? user.email,
+            issueTitle: issue.title,
+            issueUrl,
+            authorName,
+            commentBody: dto.body,
+          }).catch(() => {}),
+        ];
+      }));
+
+      // Parse @mentions
+      const mentionRegex = /@(\w[\w\s]*?\w|\w)/g;
+      const mentionedNames = [...dto.body.matchAll(mentionRegex)].map(m => m[1].trim());
+      if (mentionedNames.length > 0) {
+        const mentionedUsers = await this.prisma.user.findMany({
+          where: { name: { in: mentionedNames }, memberships: { some: { organizationId: { not: undefined } } } },
+          select: { id: true, email: true, name: true },
+        });
+        const alreadyNotified = new Set(notifyIds);
+        await Promise.all(mentionedUsers
+          .filter(u => u.id !== authorId && !alreadyNotified.has(u.id))
+          .map(u => Promise.all([
+            this.notifications.create({ type: 'mention', title: `${authorName} mentioned you`, body: dto.body.slice(0, 120), userId: u.id, issueId }).catch(() => {}),
+            this.email.send('stride_comment', { email: u.email, name: u.name ?? u.email, issueTitle: issue?.title ?? '', issueUrl, authorName, commentBody: dto.body }).catch(() => {}),
+          ]))
+        );
+      }
     }
 
     return comment;

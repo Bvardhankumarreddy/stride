@@ -17,7 +17,10 @@ export const authConfig: NextAuthConfig = {
         nextUrl.pathname.startsWith("/login") ||
         nextUrl.pathname.startsWith("/onboarding") ||
         nextUrl.pathname.startsWith("/invite") ||
-        nextUrl.pathname.startsWith("/api/auth");
+        nextUrl.pathname.startsWith("/api/auth") ||
+        nextUrl.pathname.startsWith("/auth/callback") ||
+        nextUrl.pathname.startsWith("/forgot-password") ||
+        nextUrl.pathname.startsWith("/reset-password");
 
       if (isPublic) return true;
       if (!isLoggedIn) return false;

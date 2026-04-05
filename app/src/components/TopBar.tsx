@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useToken } from "@/lib/useToken";
+import { useTheme } from "@/lib/useTheme";
 import { api } from "@/lib/api";
 
 interface TopBarProps {
@@ -19,6 +20,7 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
   const { data: session } = useSession();
   const user = session?.user as any;
   const token = useToken();
+  const { dark, toggle: toggleDark } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -91,6 +93,16 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
             </span>
           )}
         </Link>
+
+        <button
+          onClick={toggleDark}
+          className="p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant"
+          title={dark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+            {dark ? "light_mode" : "dark_mode"}
+          </span>
+        </button>
 
         <button
           onClick={openCommandBar}

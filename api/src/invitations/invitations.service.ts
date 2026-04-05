@@ -77,6 +77,8 @@ export class InvitationsService {
     const invitation = await this.preview(token);
     const org = invitation.organization;
 
+    let userName: string | null = null;
+
     await this.prisma.$transaction(async (tx) => {
       await tx.organizationMember.upsert({
         where: { userId_organizationId: { userId, organizationId: org.id } },
@@ -85,12 +87,22 @@ export class InvitationsService {
       });
 
       const user = await tx.user.findUnique({ where: { id: userId } });
+      userName = user?.name ?? null;
       if (!user?.organizationId) {
         await tx.user.update({ where: { id: userId }, data: { organizationId: org.id } });
       }
 
       await tx.invitation.update({ where: { token }, data: { acceptedAt: new Date() } });
     });
+
+    // Send welcome email (non-fatal)
+    const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
+    await this.emailService.send('stride_welcome', {
+      email: invitation.email,
+      name: userName ?? invitation.email,
+      orgName: org.name,
+      appUrl,
+    }).catch(() => {});
 
     return { organizationId: org.id, organizationSlug: org.slug };
   }

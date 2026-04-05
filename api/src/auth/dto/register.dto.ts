@@ -6,4 +6,5 @@ export class RegisterDto {
   @ApiProperty() @IsEmail() email: string;
   @ApiProperty() @IsString() @MinLength(8) password: string;
   @ApiPropertyOptional() @IsOptional() @IsString() initials?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() inviteToken?: string;
 }

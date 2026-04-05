@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { QueryIssueDto } from './dto/query-issue.dto';
@@ -20,6 +21,7 @@ export class IssuesService {
     private prisma: PrismaService,
     private search: SearchService,
     private notifications: NotificationsService,
+    private email: EmailService,
   ) {}
 
   async create(dto: CreateIssueDto, creatorId: string, organizationId?: string) {
@@ -29,6 +31,7 @@ export class IssuesService {
       include: INCLUDE,
     });
     await this.search.indexIssue(issue);
+    await this.prisma.issueActivity.create({ data: { issueId: issue.id, userId: creatorId, type: 'created' } }).catch(() => {});
     return issue;
   }
 
@@ -69,19 +72,60 @@ export class IssuesService {
     });
     await this.search.indexIssue(issue);
 
-    // Notify the new assignee (skip if unchanged or unassigned)
+    // Log activity for field changes
+    if (dto.status && dto.status !== existing.status) {
+      await this.prisma.issueActivity.create({ data: { issueId: id, type: 'status_changed', from: existing.status, to: dto.status } }).catch(() => {});
+    }
+    if (dto.assigneeId !== undefined && dto.assigneeId !== existing.assigneeId) {
+      const toName = (issue.assignee as any)?.name ?? dto.assigneeId ?? 'Unassigned';
+      const fromName = (existing.assignee as any)?.name ?? 'Unassigned';
+      await this.prisma.issueActivity.create({ data: { issueId: id, type: 'assignee_changed', from: fromName, to: toName } }).catch(() => {});
+    }
+    if (dto.priority && dto.priority !== existing.priority) {
+      await this.prisma.issueActivity.create({ data: { issueId: id, type: 'priority_changed', from: existing.priority, to: dto.priority } }).catch(() => {});
+    }
+
+    // Notify + email the new assignee (skip if unchanged or unassigned)
     const newAssigneeId = dto.assigneeId;
     if (newAssigneeId && newAssigneeId !== existing.assigneeId) {
-      await this.notifications.create({
-        type: 'assigned',
-        title: 'You were assigned an issue',
-        body: issue.title,
-        userId: newAssigneeId,
-        issueId: id,
-      }).catch(() => {});
+      const assignee = await this.prisma.user.findUnique({
+        where: { id: newAssigneeId },
+        select: { email: true, name: true },
+      });
+      const assigner = issue.creator?.name ?? 'A teammate';
+      const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
+
+      await Promise.all([
+        this.notifications.create({
+          type: 'assigned',
+          title: 'You were assigned an issue',
+          body: issue.title,
+          userId: newAssigneeId,
+          issueId: id,
+        }).catch(() => {}),
+        assignee && this.email.send('stride_assigned', {
+          email: assignee.email,
+          name: assignee.name ?? assignee.email,
+          issueTitle: issue.title,
+          issueUrl: `${appUrl}/issues/${id}`,
+          assignerName: assigner,
+        }).catch(() => {}),
+      ]);
     }
 
     return issue;
+  }
+
+  async getActivity(id: string) {
+    return this.prisma.issueActivity.findMany({
+      where: { issueId: id },
+      orderBy: { createdAt: 'asc' },
+      include: { user: { select: { id: true, name: true, initials: true } } },
+    });
+  }
+
+  async bulkUpdate(ids: string[], data: { status?: string; assigneeId?: string; priority?: string }) {
+    await this.prisma.issue.updateMany({ where: { id: { in: ids } }, data });
   }
 
   async remove(id: string) {

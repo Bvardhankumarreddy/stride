@@ -49,8 +49,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        token: { label: "Token", type: "text" },
       },
       async authorize(credentials) {
+        // OAuth callback: validate an existing NestJS access token via /auth/me
+        if (credentials?.token) {
+          try {
+            const res = await fetch(`${API}/auth/me`, {
+              headers: { Authorization: `Bearer ${credentials.token}` },
+            });
+            if (!res.ok) return null;
+            const user = await res.json();
+            return {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              image: user.image ?? null,
+              initials: user.initials ?? null,
+              role: user.role,
+              organizationId: user.organizationId ?? null,
+            };
+          } catch {
+            return null;
+          }
+        }
+
         if (!credentials?.email || !credentials?.password) return null;
 
         try {

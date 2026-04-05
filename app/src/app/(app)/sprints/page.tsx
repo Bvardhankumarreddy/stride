@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api, ApiSprint, ApiIssue } from "@/lib/api";
+import { api, ApiSprint, ApiIssue, ApiVelocity } from "@/lib/api";
 import { toast } from "@/components/Toast";
 
 const PRIORITY_DOT: Record<string, string> = {
@@ -39,6 +39,7 @@ export default function SprintsPage() {
   const token = useToken();
   const [sprints, setSprints] = useState<ApiSprint[]>([]);
   const [issues, setIssues] = useState<ApiIssue[]>([]);
+  const [velocity, setVelocity] = useState<ApiVelocity[]>([]);
   const [loading, setLoading] = useState(true);
   const [orgName, setOrgName] = useState("Workspace");
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -60,12 +61,14 @@ export default function SprintsPage() {
       const pid = res[0]?.id;
       if (!pid) { setLoading(false); return; }
       setProjectId(pid);
-      const [sprintsData, issuesData] = await Promise.all([
+      const [sprintsData, issuesData, velocityData] = await Promise.all([
         api.sprints.list(token, pid),
         api.issues.list(token, { limit: "200" }),
+        api.sprints.velocity(token, pid).catch(() => [] as ApiVelocity[]),
       ]);
       setSprints(sprintsData);
       setIssues(issuesData.data);
+      setVelocity(velocityData);
     }).finally(() => setLoading(false));
   }, [token]);
 
@@ -298,6 +301,39 @@ export default function SprintsPage() {
             </div>
           </div>
         </div>
+
+        {velocity.length > 0 && (() => {
+          const maxPts = Math.max(1, ...velocity.map(v => v.committed));
+          return (
+            <section className="px-6 py-6 border-t border-outline-variant/10">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Sprint Velocity</h2>
+              <div className="space-y-3">
+                {velocity.map(v => (
+                  <div key={v.sprint} className="flex items-end gap-1 text-xs">
+                    <span className="w-20 text-on-surface-variant truncate">{v.sprint}</span>
+                    <div className="flex-1 flex items-end gap-1 h-12">
+                      <div
+                        title={`Committed: ${v.committed}`}
+                        style={{ height: `${Math.min(100, (v.committed / maxPts) * 100)}%` }}
+                        className="w-4 bg-surface-container-high rounded-t"
+                      />
+                      <div
+                        title={`Completed: ${v.completed}`}
+                        style={{ height: `${Math.min(100, (v.completed / maxPts) * 100)}%` }}
+                        className="w-4 bg-primary rounded-t"
+                      />
+                    </div>
+                    <span className="text-on-surface-variant">{v.completed}/{v.committed}p</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-4 mt-3 text-xs text-on-surface-variant">
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-surface-container-high inline-block" /> Committed</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-primary inline-block" /> Completed</span>
+              </div>
+            </section>
+          );
+        })()}
       </main>
 
       <button

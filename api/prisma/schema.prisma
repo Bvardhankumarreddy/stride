@@ -66,6 +66,8 @@ model User {
   role               String    @default("member")
   mustChangePassword Boolean   @default(false)
   passwordChangedAt  DateTime?
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -79,6 +81,12 @@ model User {
   documents      Document[]
   notifications  Notification[]
   comments       Comment[]
+
+  refreshTokens            RefreshToken[]
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  auditLogs                AuditLog[]
+  issueActivities          IssueActivity[]
 }
 
 model Project {
@@ -136,6 +144,7 @@ model Issue {
 
   comments          Comment[]
   customFieldValues CustomFieldValue[]
+  activities        IssueActivity[]
 }
 
 model Document {
@@ -222,4 +231,59 @@ model Notification {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  targetId  String?
+  metadata  Json     @default("{}")
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model IssueActivity {
+  id        String   @id @default(cuid())
+  issueId   String
+  userId    String?
+  type      String
+  from      String?
+  to        String?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
 }

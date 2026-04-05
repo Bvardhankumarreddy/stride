@@ -124,6 +124,24 @@ export interface ApiSprint {
   _count?: { issues: number };
 }
 
+export interface ApiIssueActivity {
+  id: string;
+  issueId: string;
+  userId: string | null;
+  type: string;
+  from: string | null;
+  to: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  user: Pick<ApiUser, "id" | "name" | "initials"> | null;
+}
+
+export interface ApiVelocity {
+  sprint: string;
+  committed: number;
+  completed: number;
+}
+
 export interface ApiNotification {
   id: string;
   type: string;
@@ -193,6 +211,25 @@ export const api = {
       apiFetch<ApiIssue>(`/issues`, token, { method: "POST", body: JSON.stringify(body) }),
     update: (token: string, id: string, body: Partial<ApiIssue> & { assigneeId?: string | null; sprintId?: string | null; dueDate?: string | null }) =>
       apiFetch<ApiIssue>(`/issues/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    activity: (token: string, id: string) =>
+      apiFetch<ApiIssueActivity[]>(`/issues/${id}/activity`, token),
+    bulkUpdate: (token: string, ids: string[], data: { status?: string; assigneeId?: string; priority?: string }) =>
+      apiFetch<{ updated: number }>(`/issues/bulk`, token, { method: "PATCH", body: JSON.stringify({ ids, ...data }) }),
+    downloadCsv: (token: string) => {
+      const a = document.createElement("a");
+      a.href = `${API}/issues/export`;
+      // Fetch with auth header and trigger blob download
+      fetch(`${API}/issues/export`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          a.href = url;
+          a.download = "issues.csv";
+          a.click();
+          URL.revokeObjectURL(url);
+        })
+        .catch(() => {});
+    },
   },
 
   docs: {
@@ -232,6 +269,8 @@ export const api = {
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints`, token, { method: "POST", body: JSON.stringify(body) }),
     update: (token: string, projectId: string, id: string, body: { name?: string; startDate?: string; endDate?: string; status?: string }) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    velocity: (token: string, projectId: string) =>
+      apiFetch<ApiVelocity[]>(`/projects/${projectId}/sprints/velocity`, token),
   },
 
   projects: {

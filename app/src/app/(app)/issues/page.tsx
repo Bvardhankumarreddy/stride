@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
 import { api, ApiIssue, ApiCustomField, ApiUser } from "@/lib/api";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
+import { toast } from "@/components/Toast";
 
 const LABEL_COLOR: Record<string, string> = {
   Backend:    "bg-blue-50 text-blue-600 border-blue-100",
@@ -335,6 +336,31 @@ export default function IssuesPage() {
   const resizeRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [bulkAssigneeOpen, setBulkAssigneeOpen] = useState(false);
+  const bulkStatusRef = useRef<HTMLDivElement>(null);
+  const bulkAssigneeRef = useRef<HTMLDivElement>(null);
+  useClickOutside(bulkStatusRef, () => setBulkStatusOpen(false));
+  useClickOutside(bulkAssigneeRef, () => setBulkAssigneeOpen(false));
+
+  async function bulkApply(data: { status?: string; assigneeId?: string; priority?: string }) {
+    if (!token || selected.size === 0) return;
+    const ids = [...selected];
+    try {
+      await api.issues.bulkUpdate(token, ids, data);
+      setAllIssues(prev => prev.map(i => {
+        if (!selected.has(i.id)) return i;
+        const next = { ...i, ...data };
+        if ("assigneeId" in data) {
+          next.assignee = data.assigneeId ? (users.find(u => u.id === data.assigneeId) as any ?? null) : null;
+        }
+        return next;
+      }));
+      setSelected(new Set());
+    } catch {
+      toast("Bulk update failed");
+    }
+  }
 
   useClickOutside(fieldsRef, () => setFieldsOpen(false));
   useClickOutside(filterRef, () => setFilterOpen(false));
@@ -591,11 +617,53 @@ export default function IssuesPage() {
                 Selected
               </span>
               <div className="h-4 w-px bg-white/20" />
-              {["check_circle", "person_add", "label", "calendar_month"].map(ic => (
-                <button key={ic} className="p-2 rounded-lg hover:bg-white/10">
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{ic}</span>
+
+              {/* Bulk status */}
+              <div className="relative" ref={bulkStatusRef}>
+                <button onClick={() => { setBulkStatusOpen(v => !v); setBulkAssigneeOpen(false); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 text-xs font-semibold">
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>swap_horiz</span>
+                  Status
                 </button>
-              ))}
+                {bulkStatusOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[150px] z-50">
+                    {STATUSES.map(s => (
+                      <button key={s} onClick={() => { bulkApply({ status: s }); setBulkStatusOpen(false); }}
+                        className="w-full text-left px-3 py-1.5 hover:bg-surface-container-low flex items-center">
+                        <span className={clsx("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold", STATUS_BADGE[s] ?? STATUS_BADGE.todo)}>
+                          {STATUS_LABEL[s]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Bulk assignee */}
+              <div className="relative" ref={bulkAssigneeRef}>
+                <button onClick={() => { setBulkAssigneeOpen(v => !v); setBulkStatusOpen(false); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 text-xs font-semibold">
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>person</span>
+                  Assignee
+                </button>
+                {bulkAssigneeOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[180px] max-h-52 overflow-y-auto z-50">
+                    <button onClick={() => { bulkApply({ assigneeId: "" }); setBulkAssigneeOpen(false); }}
+                      className="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-container-low flex items-center gap-2 text-on-surface-variant">
+                      <div className="w-5 h-5 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center text-outline text-[10px]">—</div>
+                      Unassigned
+                    </button>
+                    {users.map(u => (
+                      <button key={u.id} onClick={() => { bulkApply({ assigneeId: u.id }); setBulkAssigneeOpen(false); }}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-container-low flex items-center gap-2 text-on-surface-variant">
+                        <div className="w-5 h-5 rounded-full bg-primary-fixed flex items-center justify-center text-[8px] font-bold text-on-primary-fixed">{u.initials}</div>
+                        {u.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
             <button onClick={() => setSelected(new Set())}>
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
