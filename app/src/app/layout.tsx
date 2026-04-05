@@ -55,21 +55,12 @@ export const metadata: Metadata = {
     title: "Stride — AI-Native Project Management",
     description:
       "Ship faster with AI-powered issue tracking, sprint planning, and team docs — all in one workspace. The smarter alternative to Jira and Confluence.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Stride — AI-Native Project Management",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stride — AI-Native Project Management",
     description:
       "Ship faster with AI-powered issue tracking, sprint planning, and team docs — all in one workspace.",
-    images: ["/og-image.png"],
     creator: "@strideapp",
   },
   robots: {
@@ -83,12 +74,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
   alternates: {
     canonical: APP_URL,
   },
