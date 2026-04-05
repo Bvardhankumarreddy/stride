@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { InvitationsService } from './invitations.service';
@@ -37,5 +37,13 @@ export class InvitationsController {
   @UseGuards(JwtAuthGuard)
   accept(@Param('token') token: string, @Req() req: any) {
     return this.invitations.accept(token, req.user.sub);
+  }
+
+  // Revoke/delete a pending invite
+  @Delete('organizations/:orgId/invitations/:invitationId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  revoke(@Param('orgId') orgId: string, @Param('invitationId') invitationId: string, @Req() req: any) {
+    return this.invitations.revoke(orgId, invitationId, req.user.sub);
   }
 }

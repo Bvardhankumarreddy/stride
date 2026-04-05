@@ -69,6 +69,12 @@ export default function MembersPage() {
     setMembers((prev) => prev.filter((m) => m.userId !== userId));
   }
 
+  async function revokeInvitation(invitationId: string) {
+    if (!token || !orgId) return;
+    await api.organizations.revokeInvitation(token, orgId, invitationId);
+    setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
+  }
+
   const myMembership = members.find((m) => m.userId === me?.id);
   const canManage = myMembership && ["owner", "admin"].includes(myMembership.role);
 
@@ -193,6 +199,15 @@ export default function MembersPage() {
                   <span className={clsx("text-[10px] font-bold px-2 py-1 rounded-full capitalize", ROLE_BADGE[inv.role] ?? ROLE_BADGE.member)}>
                     {inv.role}
                   </span>
+                  {canManage && (
+                    <button
+                      onClick={() => revokeInvitation(inv.id)}
+                      className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
+                      title="Cancel invite"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

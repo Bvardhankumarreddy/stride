@@ -282,6 +282,8 @@ export const api = {
       apiFetch<ApiInvitation>(`/organizations/${orgId}/invitations`, token, { method: 'POST', body: JSON.stringify(data) }),
     invitations: (token: string, orgId: string) =>
       apiFetch<ApiInvitation[]>(`/organizations/${orgId}/invitations`, token),
+    revokeInvitation: (token: string, orgId: string, invitationId: string) =>
+      apiFetch<void>(`/organizations/${orgId}/invitations/${invitationId}`, token, { method: 'DELETE' }),
   },
 
   auth: {

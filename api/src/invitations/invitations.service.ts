@@ -95,6 +95,18 @@ export class InvitationsService {
     return { organizationId: org.id, organizationSlug: org.slug };
   }
 
+  async revoke(orgId: string, invitationId: string, requesterId: string) {
+    const requester = await this.prisma.organizationMember.findUnique({
+      where: { userId_organizationId: { userId: requesterId, organizationId: orgId } },
+    });
+    if (!requester || !['owner', 'admin'].includes(requester.role)) {
+      throw new ForbiddenException('Insufficient permissions to revoke invite');
+    }
+    const invitation = await this.prisma.invitation.findUnique({ where: { id: invitationId } });
+    if (!invitation || invitation.organizationId !== orgId) throw new NotFoundException('Invitation not found');
+    await this.prisma.invitation.delete({ where: { id: invitationId } });
+  }
+
   async listForOrg(orgId: string) {
     return this.prisma.invitation.findMany({
       where: { organizationId: orgId, acceptedAt: null },
