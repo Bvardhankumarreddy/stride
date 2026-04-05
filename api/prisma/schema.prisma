@@ -21,6 +21,7 @@ model Organization {
   issues       Issue[]
   documents    Document[]
   customFields CustomField[]
+  integrations Integration[]
 }
 
 model OrganizationMember {
@@ -193,6 +194,20 @@ model CustomFieldValue {
   customField CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
 
   @@unique([issueId, customFieldId])
+}
+
+model Integration {
+  id             String   @id @default(cuid())
+  type           String
+  token          String
+  config         Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type])
 }
 
 model Notification {

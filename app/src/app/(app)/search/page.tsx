@@ -7,7 +7,6 @@ import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
 import { api } from "@/lib/api";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 interface SearchResult {
   type: "issue" | "doc";
@@ -65,29 +64,17 @@ export default function SearchPage() {
   }, [token]);
 
   const doSearch = useCallback(async (q: string, filter: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    if (!q.trim() || !token) { setResults([]); return; }
     setLoading(true);
     try {
-      const params = new URLSearchParams({ q });
-      if (FILTER_MAP[filter]) params.set("filter", FILTER_MAP[filter]);
-
-      const res = await fetch(`${API}/search?${params}`, {
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.results ?? []);
-      } else {
-        setResults([]);
-      }
+      const data = await api.search.query(token, q, FILTER_MAP[filter]);
+      setResults((data.results ?? []) as SearchResult[]);
     } catch {
       setResults([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const t = setTimeout(() => doSearch(query, activeFilter), 250);

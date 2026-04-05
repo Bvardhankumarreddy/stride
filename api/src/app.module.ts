@@ -14,6 +14,7 @@ import { SearchModule } from './search/search.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { CustomFieldsModule } from './custom-fields/custom-fields.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CustomFieldsModule } from './custom-fields/custom-fields.module';
     OrganizationsModule,
     InvitationsModule,
     CustomFieldsModule,
+    IntegrationsModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,

@@ -290,4 +290,23 @@ export const api = {
     accept: (token: string, inviteToken: string) =>
       apiFetch<{ organizationId: string; organizationSlug: string }>(`/invitations/${inviteToken}/accept`, token, { method: 'POST' }),
   },
+
+  search: {
+    query: (token: string, q: string, filter?: string) => {
+      const params = new URLSearchParams({ q });
+      if (filter) params.set("filter", filter);
+      return apiFetch<{ results: { type: string; id: string; title: string; meta: string; href: string; highlight?: string }[]; total: number }>(
+        `/search?${params}`, token,
+      );
+    },
+  },
+
+  integrations: {
+    list: (token: string) =>
+      apiFetch<{ id: string; type: string; config: Record<string, string>; createdAt: string }[]>(`/integrations`, token),
+    save: (token: string, body: { type: string; token: string; config?: Record<string, string> }) =>
+      apiFetch<{ id: string; type: string }>(`/integrations`, token, { method: "POST", body: JSON.stringify(body) }),
+    remove: (token: string, type: string) =>
+      apiFetch<void>(`/integrations/${encodeURIComponent(type)}`, token, { method: "DELETE" }),
+  },
 };

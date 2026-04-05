@@ -103,6 +103,8 @@ export default function SettingsPage() {
   const [aiDigest, setAiDigest] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState(true);
   const [aiAutoLabel, setAiAutoLabel] = useState(false);
+  const [connectedIntegrations, setConnectedIntegrations] = useState<Set<string>>(new Set());
+  const [savingIntegration, setSavingIntegration] = useState(false);
 
   // Custom fields state
   const [customFields, setCustomFields] = useState<import("@/lib/api").ApiCustomField[]>([]);
@@ -118,6 +120,13 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!token || activeTab !== "fields") return;
     api.customFields.list(token).then(setCustomFields).catch(() => {});
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "integrations") return;
+    api.integrations.list(token).then((list) => {
+      setConnectedIntegrations(new Set(list.map((i) => i.type)));
+    }).catch(() => {});
   }, [token, activeTab]);
 
   useEffect(() => {
@@ -432,23 +441,47 @@ export default function SettingsPage() {
           {/* Integrations */}
           {activeTab === "integrations" && (
             <div className="grid md:grid-cols-2 gap-4">
-              {INTEGRATIONS.map((integration) => (
-                <div key={integration.name} className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex items-start gap-4">
-                  <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", integration.color)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>{integration.icon}</span>
+              {INTEGRATIONS.map((integration) => {
+                const intType = integration.name.toLowerCase().replace(/\s+/g, "_");
+                const isConnected = connectedIntegrations.has(intType);
+                return (
+                  <div key={integration.name} className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex items-start gap-4">
+                    <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", integration.color)}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>{integration.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-on-surface text-sm">{integration.name}</h3>
+                        {isConnected && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Connected</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed mb-3">{integration.description}</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setConnectingTo(integration); setTokenValue(""); setExtraValues(integration.extraFields.map(() => "")); }}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all bg-primary text-white shadow-sm hover:shadow-md active:scale-95"
+                        >
+                          {isConnected ? "Reconnect" : "Connect"}
+                        </button>
+                        {isConnected && (
+                          <button
+                            onClick={async () => {
+                              if (!token) return;
+                              await api.integrations.remove(token, intType);
+                              setConnectedIntegrations((prev) => { const s = new Set(prev); s.delete(intType); return s; });
+                              toast(`${integration.name} disconnected`);
+                            }}
+                            className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all border border-outline-variant text-on-surface-variant hover:bg-error/10 hover:text-error hover:border-error/30"
+                          >
+                            Disconnect
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-on-surface text-sm mb-1">{integration.name}</h3>
-                    <p className="text-xs text-on-surface-variant leading-relaxed mb-3">{integration.description}</p>
-                    <button
-                      onClick={() => { setConnectingTo(integration); setTokenValue(""); setExtraValues(integration.extraFields.map(() => "")); }}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all bg-primary text-white shadow-sm hover:shadow-md active:scale-95"
-                    >
-                      Connect
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -530,11 +563,27 @@ export default function SettingsPage() {
                     Cancel
                   </button>
                   <button
-                    disabled={!tokenValue.trim()}
-                    onClick={() => { toast(`${connectingTo.name} connected successfully`); setConnectingTo(null); }}
+                    disabled={!tokenValue.trim() || savingIntegration}
+                    onClick={async () => {
+                      if (!token || !connectingTo) return;
+                      setSavingIntegration(true);
+                      try {
+                        const intType = connectingTo.name.toLowerCase().replace(/\s+/g, "_");
+                        const config: Record<string, string> = {};
+                        connectingTo.extraFields.forEach((f, i) => { if (extraValues[i]) config[f.label] = extraValues[i]; });
+                        await api.integrations.save(token, { type: intType, token: tokenValue, config });
+                        setConnectedIntegrations((prev) => new Set([...prev, intType]));
+                        toast(`${connectingTo.name} connected successfully`);
+                        setConnectingTo(null);
+                      } catch {
+                        toast("Failed to save integration. Please check your token.");
+                      } finally {
+                        setSavingIntegration(false);
+                      }
+                    }}
                     className="px-4 py-2 text-sm font-bold text-white bg-primary rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save & Connect
+                    {savingIntegration ? "Saving…" : "Save & Connect"}
                   </button>
                 </div>
               </div>

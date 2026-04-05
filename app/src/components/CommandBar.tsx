@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
+import { useToken } from "@/lib/useToken";
+import { api } from "@/lib/api";
 
 interface CommandBarProps {
   open: boolean;
@@ -11,11 +13,13 @@ interface CommandBarProps {
   initialQuery?: string;
 }
 
-const RECENT_ITEMS = [
-  { icon: "confirmation_number", iconBg: "bg-orange-100 text-orange-600", title: "#INC-482 Redesign navigation", subtitle: "In Progress · Updated 2h ago", href: "/issues/INC-482" },
-  { icon: "article", iconBg: "bg-blue-100 text-blue-600", title: "Mobile App Technical Specs", subtitle: "Docs · Shared with 4 people", href: "/docs/mobile-specs" },
-  { icon: "folder", iconBg: "bg-slate-100 text-slate-600", title: "Q3 Roadmap Presentation", subtitle: "Roadmap · Projects", href: "/roadmap" },
-];
+interface RecentItem {
+  icon: string;
+  iconBg: string;
+  title: string;
+  subtitle: string;
+  href: string;
+}
 
 const QUICK_ACTIONS = [
   { label: "New Issue", icon: "add", variant: "primary", href: "/board" },
@@ -28,7 +32,35 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { openModal } = useCreateIssueStore();
+  const token = useToken();
   const [query, setQuery] = useState("");
+  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
+
+  useEffect(() => {
+    if (!open || !token) return;
+    Promise.all([
+      api.issues.list(token, { limit: "3" }),
+      api.docs.list(token, { limit: "2" }),
+    ]).then(([issuesRes, docsRes]) => {
+      const items: RecentItem[] = [
+        ...issuesRes.data.map(i => ({
+          icon: "confirmation_number",
+          iconBg: "bg-orange-100 text-orange-600",
+          title: i.title,
+          subtitle: `${i.status} · ${i.priority}`,
+          href: `/issues/${i.id}`,
+        })),
+        ...docsRes.data.map(d => ({
+          icon: "article",
+          iconBg: "bg-blue-100 text-blue-600",
+          title: d.title,
+          subtitle: `Doc · ${d.status}`,
+          href: `/docs/${d.id}`,
+        })),
+      ];
+      setRecentItems(items);
+    }).catch(() => {});
+  }, [open, token]);
 
   useEffect(() => {
     if (open) {
@@ -117,7 +149,7 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
               Recent
             </h3>
             <div className="space-y-0.5">
-              {RECENT_ITEMS.map((item) => (
+              {recentItems.map((item) => (
                 <button
                   key={item.href}
                   onClick={() => { router.push(item.href); onClose(); }}
