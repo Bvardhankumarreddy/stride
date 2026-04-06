@@ -109,9 +109,10 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const initials = dto.initials ?? dto.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
+    // emailVerified is set immediately — they proved ownership by clicking the invite link in their email
     // mustChangePassword = true so they are prompted to set their own password after first login
     const user = await this.prisma.user.create({
-      data: { name: dto.name, email: dto.email, password: passwordHash, initials, mustChangePassword: true },
+      data: { name: dto.name, email: dto.email, password: passwordHash, initials, mustChangePassword: true, emailVerified: new Date() },
     });
 
     const accessToken = this.signToken(user, null, true);
