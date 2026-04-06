@@ -73,6 +73,14 @@ export default function IssueDetailPage() {
   const [editCommentDraft, setEditCommentDraft] = useState("");
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
+  // AI state
+  const [aiPanel, setAiPanel]         = useState<"criteria" | "similar" | "summary" | null>(null);
+  const [aiLoading, setAiLoading]     = useState(false);
+  const [aiCriteria, setAiCriteria]   = useState<string[] | null>(null);
+  const [aiSimilar, setAiSimilar]     = useState<{ id: string; title: string; reason: string; similarityScore: number }[] | null>(null);
+  const [aiSummary, setAiSummary]     = useState<{ summary: string; keyDecisions: string[]; openQuestions: string[] } | null>(null);
+  const [allIssues, setAllIssues]     = useState<{ id: string; title: string; description?: string }[]>([]);
+
   // Inline title / description editing
   const [editingTitle, setEditingTitle]       = useState(false);
   const [titleDraft, setTitleDraft]           = useState("");
@@ -566,16 +574,197 @@ export default function IssueDetailPage() {
                   AI Intelligence
                 </h3>
                 <div className="space-y-2">
-                  {["Generate acceptance criteria", "Summarize thread", "Find similar issues"].map((action) => (
-                    <button
-                      key={action}
-                      onClick={() => document.dispatchEvent(new CustomEvent("stride:openCommandBar", { detail: { query: action } }))}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group"
-                    >
-                      {action}
-                      <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>arrow_forward</span>
-                    </button>
-                  ))}
+
+                  {/* Acceptance Criteria */}
+                  <button
+                    disabled={aiLoading}
+                    onClick={async () => {
+                      if (aiPanel === "criteria") { setAiPanel(null); return; }
+                      setAiPanel("criteria");
+                      if (aiCriteria) return;
+                      setAiLoading(true);
+                      try {
+                        const res = await api.ai.acceptanceCriteria(token!, {
+                          title: issue.title,
+                          description: issue.description ?? undefined,
+                          priority: issue.priority,
+                          labels: labels,
+                        });
+                        setAiCriteria(res.criteria);
+                      } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
+                      finally { setAiLoading(false); }
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>checklist</span>
+                      Generate acceptance criteria
+                    </span>
+                    {aiLoading && aiPanel === "criteria"
+                      ? <span className="w-3.5 h-3.5 border-2 border-secondary/40 border-t-secondary rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>{aiPanel === "criteria" ? "expand_less" : "arrow_forward"}</span>
+                    }
+                  </button>
+                  {aiPanel === "criteria" && aiCriteria && (
+                    <div className="bg-white rounded-xl p-4 space-y-2 border border-secondary/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Acceptance Criteria</p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(aiCriteria.map((c, i) => `${i + 1}. ${c}`).join("\n"));
+                            toast("Copied to clipboard");
+                          }}
+                          className="text-[10px] font-bold text-on-surface-variant hover:text-secondary flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 12 }}>content_copy</span>
+                          Copy all
+                        </button>
+                      </div>
+                      <ul className="space-y-2">
+                        {aiCriteria.map((c, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-on-surface-variant leading-relaxed">
+                            <span className="w-4 h-4 rounded-full bg-secondary/10 text-secondary flex-shrink-0 flex items-center justify-center text-[9px] font-black mt-0.5">{i + 1}</span>
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={async () => {
+                          const text = aiCriteria.map((c, i) => `${i + 1}. ${c}`).join("\n");
+                          const newDesc = issue.description ? `${issue.description}\n\n**Acceptance Criteria:**\n${text}` : `**Acceptance Criteria:**\n${text}`;
+                          await patch({ description: newDesc });
+                          toast("Added to description");
+                        }}
+                        className="mt-2 w-full py-1.5 text-[11px] font-bold text-secondary border border-secondary/20 rounded-lg hover:bg-secondary/5 transition-colors"
+                      >
+                        Add to description
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Similar Issues */}
+                  <button
+                    disabled={aiLoading}
+                    onClick={async () => {
+                      if (aiPanel === "similar") { setAiPanel(null); return; }
+                      setAiPanel("similar");
+                      if (aiSimilar) return;
+                      setAiLoading(true);
+                      try {
+                        let candidates = allIssues;
+                        if (candidates.length === 0) {
+                          const res = await api.issues.list(token!, { limit: "50" });
+                          candidates = res.data.filter(i => i.id !== id).map(i => ({ id: i.id, title: i.title, description: i.description ?? undefined }));
+                          setAllIssues(candidates);
+                        }
+                        const res = await api.ai.similarIssues(token!, {
+                          target: { id: issue.id, title: issue.title, description: issue.description ?? undefined },
+                          candidates: candidates.slice(0, 30),
+                        });
+                        setAiSimilar(res.similar);
+                      } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
+                      finally { setAiLoading(false); }
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>content_copy</span>
+                      Find similar issues
+                    </span>
+                    {aiLoading && aiPanel === "similar"
+                      ? <span className="w-3.5 h-3.5 border-2 border-secondary/40 border-t-secondary rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>{aiPanel === "similar" ? "expand_less" : "arrow_forward"}</span>
+                    }
+                  </button>
+                  {aiPanel === "similar" && aiSimilar && (
+                    <div className="bg-white rounded-xl p-4 border border-secondary/10">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-3">Similar Issues</p>
+                      {aiSimilar.length === 0 ? (
+                        <p className="text-xs text-on-surface-variant italic">No similar issues found.</p>
+                      ) : (
+                        <ul className="space-y-3">
+                          {aiSimilar.map((s) => (
+                            <li key={s.id}>
+                              <a href={`/issues/${s.id}`} className="block hover:bg-surface-container-low rounded-lg p-2 -mx-2 transition-colors">
+                                <div className="flex items-center justify-between gap-2 mb-0.5">
+                                  <span className="text-xs font-bold text-on-surface truncate">{s.title}</span>
+                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary/10 text-secondary flex-shrink-0">
+                                    {Math.round(s.similarityScore * 100)}%
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-on-surface-variant leading-snug">{s.reason}</p>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Summarize thread */}
+                  <button
+                    disabled={aiLoading || !issue.comments?.length}
+                    onClick={async () => {
+                      if (aiPanel === "summary") { setAiPanel(null); return; }
+                      setAiPanel("summary");
+                      if (aiSummary) return;
+                      setAiLoading(true);
+                      try {
+                        const res = await api.ai.summarizeComments(token!, {
+                          issueTitle: issue.title,
+                          comments: (issue.comments ?? []).map(c => ({ author: c.author?.name ?? "Unknown", body: c.body })),
+                        });
+                        setAiSummary(res);
+                      } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
+                      finally { setAiLoading(false); }
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                    title={!issue.comments?.length ? "No comments to summarize" : undefined}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>summarize</span>
+                      Summarize thread
+                    </span>
+                    {aiLoading && aiPanel === "summary"
+                      ? <span className="w-3.5 h-3.5 border-2 border-secondary/40 border-t-secondary rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>{aiPanel === "summary" ? "expand_less" : "arrow_forward"}</span>
+                    }
+                  </button>
+                  {aiPanel === "summary" && aiSummary && (
+                    <div className="bg-white rounded-xl p-4 space-y-3 border border-secondary/10">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Summary</p>
+                        <p className="text-xs text-on-surface-variant leading-relaxed">{aiSummary.summary}</p>
+                      </div>
+                      {aiSummary.keyDecisions.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Key Decisions</p>
+                          <ul className="space-y-1">
+                            {aiSummary.keyDecisions.map((d, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-on-surface-variant">
+                                <span className="material-symbols-outlined text-emerald-500 flex-shrink-0 mt-0.5" style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                {d}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {aiSummary.openQuestions.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Open Questions</p>
+                          <ul className="space-y-1">
+                            {aiSummary.openQuestions.map((q, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-on-surface-variant">
+                                <span className="material-symbols-outlined text-amber-500 flex-shrink-0 mt-0.5" style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>help</span>
+                                {q}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               </section>
             </>

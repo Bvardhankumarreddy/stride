@@ -354,6 +354,15 @@ export const api = {
     },
   },
 
+  ai: {
+    acceptanceCriteria: (token: string, body: { title: string; description?: string; priority?: string; labels?: string[] }) =>
+      apiFetch<{ criteria: string[] }>(`/ai/acceptance-criteria`, token, { method: "POST", body: JSON.stringify(body) }),
+    similarIssues: (token: string, body: { target: { id: string; title: string; description?: string }; candidates: { id: string; title: string; description?: string }[] }) =>
+      apiFetch<{ similar: { id: string; title: string; reason: string; similarityScore: number }[] }>(`/ai/similar-issues`, token, { method: "POST", body: JSON.stringify(body) }),
+    summarizeComments: (token: string, body: { issueTitle: string; comments: { author: string; body: string }[] }) =>
+      apiFetch<{ summary: string; keyDecisions: string[]; openQuestions: string[] } | null>(`/ai/summarize-comments`, token, { method: "POST", body: JSON.stringify(body) }),
+  },
+
   billing: {
     checkout: (token: string, plan: 'pro' | 'business') =>
       apiFetch<{ url: string }>(`/billing/checkout`, token, { method: 'POST', body: JSON.stringify({ plan }) }),
