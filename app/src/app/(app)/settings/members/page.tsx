@@ -75,8 +75,6 @@ export default function MembersPage() {
     setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
   }
 
-  const myMembership = members.find((m) => m.userId === me?.id);
-  const canManage = myMembership && ["owner", "admin"].includes(myMembership.role);
 
   return (
     <div className="bg-background min-h-screen">
@@ -89,8 +87,7 @@ export default function MembersPage() {
         </div>
 
         {/* Invite form */}
-        {canManage && (
-          <section className="mb-8 p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
+        <section className="mb-8 p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-on-surface">Invite a teammate</h2>
               {org && (
@@ -127,7 +124,6 @@ export default function MembersPage() {
             </div>
             {inviteError && <p className="text-xs text-red-500 mt-2">{inviteError}</p>}
           </section>
-        )}
 
         {/* Members list */}
         <section className="mb-6">
@@ -149,7 +145,7 @@ export default function MembersPage() {
                   <p className="text-xs text-on-surface-variant">{m.user.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {canManage && m.userId !== me?.id ? (
+                  {m.userId !== me?.id ? (
                     <select
                       value={m.role}
                       onChange={(e) => changeRole(m.userId, e.target.value)}
@@ -164,7 +160,7 @@ export default function MembersPage() {
                       {m.role}
                     </span>
                   )}
-                  {canManage && m.userId !== me?.id && (
+                  {m.userId !== me?.id && (
                     <button
                       onClick={() => removeMember(m.userId)}
                       className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
@@ -199,15 +195,13 @@ export default function MembersPage() {
                   <span className={clsx("text-[10px] font-bold px-2 py-1 rounded-full capitalize", ROLE_BADGE[inv.role] ?? ROLE_BADGE.member)}>
                     {inv.role}
                   </span>
-                  {canManage && (
-                    <button
-                      onClick={() => revokeInvitation(inv.id)}
-                      className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
-                      title="Cancel invite"
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => revokeInvitation(inv.id)}
+                    className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
+                    title="Cancel invite"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                  </button>
                 </div>
               ))}
             </div>
