@@ -113,6 +113,39 @@ export interface ApiCustomFieldValue {
   customField: ApiCustomField;
 }
 
+export interface ApiTeamMember {
+  id: string;
+  role: string;
+  teamId: string;
+  userId: string;
+  user: Pick<ApiUser, "id" | "name" | "initials" | "image" | "email">;
+}
+
+export interface ApiTeam {
+  id: string;
+  name: string;
+  identifier: string;
+  description: string | null;
+  organizationId: string;
+  createdAt: string;
+  members: ApiTeamMember[];
+  projects?: { id: string; name: string; _count: { issues: number; sprints: number } }[];
+  _count?: { projects: number; members: number };
+}
+
+export interface ApiWebhook {
+  id: string;
+  name: string;
+  url: string;
+  secret: string | null;
+  events: string[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { deliveries: number };
+  deliveries?: { id: string; event: string; success: boolean; statusCode: number | null; createdAt: string }[];
+}
+
 export interface ApiSprint {
   id: string;
   name: string;
@@ -387,6 +420,33 @@ export const api = {
       apiFetch<{ url: string }>(`/billing/checkout`, token, { method: 'POST', body: JSON.stringify({ plan }) }),
     portal: (token: string) =>
       apiFetch<{ url: string }>(`/billing/portal`, token),
+  },
+
+  teams: {
+    list: (token: string) => apiFetch<ApiTeam[]>(`/teams`, token),
+    get: (token: string, id: string) => apiFetch<ApiTeam>(`/teams/${id}`, token),
+    create: (token: string, body: { name: string; identifier: string; description?: string }) =>
+      apiFetch<ApiTeam>(`/teams`, token, { method: "POST", body: JSON.stringify(body) }),
+    update: (token: string, id: string, body: { name?: string; description?: string }) =>
+      apiFetch<ApiTeam>(`/teams/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    remove: (token: string, id: string) => apiFetch<void>(`/teams/${id}`, token, { method: "DELETE" }),
+    addMember: (token: string, id: string, body: { userId: string; role?: string }) =>
+      apiFetch<ApiTeamMember>(`/teams/${id}/members`, token, { method: "POST", body: JSON.stringify(body) }),
+    updateMember: (token: string, id: string, userId: string, role: string) =>
+      apiFetch<ApiTeamMember>(`/teams/${id}/members/${userId}`, token, { method: "PATCH", body: JSON.stringify({ role }) }),
+    removeMember: (token: string, id: string, userId: string) =>
+      apiFetch<void>(`/teams/${id}/members/${userId}`, token, { method: "DELETE" }),
+  },
+
+  webhooks: {
+    list: (token: string) => apiFetch<ApiWebhook[]>(`/webhooks`, token),
+    get: (token: string, id: string) => apiFetch<ApiWebhook>(`/webhooks/${id}`, token),
+    create: (token: string, body: { name: string; url: string; secret?: string; events: string[]; active?: boolean }) =>
+      apiFetch<ApiWebhook>(`/webhooks`, token, { method: "POST", body: JSON.stringify(body) }),
+    update: (token: string, id: string, body: Partial<{ name: string; url: string; secret: string; events: string[]; active: boolean }>) =>
+      apiFetch<ApiWebhook>(`/webhooks/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    remove: (token: string, id: string) => apiFetch<void>(`/webhooks/${id}`, token, { method: "DELETE" }),
+    test: (token: string, id: string) => apiFetch<{ message: string }>(`/webhooks/${id}/test`, token, { method: "POST" }),
   },
 
   integrations: {

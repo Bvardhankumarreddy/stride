@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../email/email.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { QueryIssueDto } from './dto/query-issue.dto';
@@ -22,6 +23,7 @@ export class IssuesService {
     private search: SearchService,
     private notifications: NotificationsService,
     private email: EmailService,
+    private webhooks: WebhooksService,
   ) {}
 
   async create(dto: CreateIssueDto, creatorId: string, organizationId?: string) {
@@ -32,6 +34,9 @@ export class IssuesService {
     });
     await this.search.indexIssue(issue);
     await this.prisma.issueActivity.create({ data: { issueId: issue.id, userId: creatorId, type: 'created' } }).catch(() => {});
+    if (organizationId) {
+      this.webhooks.dispatch(organizationId, 'issue.created', { id: issue.id, title: issue.title, status: issue.status, priority: issue.priority }).catch(() => {});
+    }
     return issue;
   }
 
@@ -113,6 +118,9 @@ export class IssuesService {
       ]);
     }
 
+    if (issue.organizationId) {
+      this.webhooks.dispatch(issue.organizationId, 'issue.updated', { id: issue.id, title: issue.title, status: issue.status, priority: issue.priority }).catch(() => {});
+    }
     return issue;
   }
 
@@ -129,8 +137,11 @@ export class IssuesService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const issue = await this.findOne(id);
     await this.prisma.issue.delete({ where: { id } });
     await this.search.removeIssue(id);
+    if (issue.organizationId) {
+      this.webhooks.dispatch(issue.organizationId, 'issue.deleted', { id: issue.id, title: issue.title }).catch(() => {});
+    }
   }
 }

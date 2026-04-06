@@ -12,6 +12,7 @@ import { useTheme } from "@/components/ThemeProvider";
 const TABS = [
   { id: "workspace", label: "Workspace", icon: "business" },
   { id: "members", label: "Members & Roles", icon: "group" },
+  { id: "teams", label: "Teams", icon: "groups" },
   { id: "fields", label: "Custom Fields", icon: "tune" },
   { id: "integrations", label: "Integrations", icon: "extension" },
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
@@ -146,6 +147,30 @@ function SettingsInner() {
   const [editFieldName, setEditFieldName] = useState("");
   const [editFieldOptions, setEditFieldOptions] = useState("");
 
+  // Invite state
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("member");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSent, setInviteSent] = useState(false);
+
+  // Teams state
+  const [teams, setTeams] = useState<import("@/lib/api").ApiTeam[]>([]);
+  const [allUsers, setAllUsers] = useState<import("@/lib/api").ApiUser[]>([]);
+  const [showCreateTeam, setShowCreateTeam] = useState(false);
+  const [teamForm, setTeamForm] = useState({ name: "", identifier: "", description: "" });
+  const [savingTeam, setSavingTeam] = useState(false);
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [addingMemberTeamId, setAddingMemberTeamId] = useState<string | null>(null);
+  const [memberUserId, setMemberUserId] = useState("");
+
+  // Webhooks state
+  const [webhooks, setWebhooks] = useState<import("@/lib/api").ApiWebhook[]>([]);
+  const [showCreateWebhook, setShowCreateWebhook] = useState(false);
+  const [webhookForm, setWebhookForm] = useState({ name: "", url: "", secret: "", events: [] as string[] });
+  const [savingWebhook, setSavingWebhook] = useState(false);
+  const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
+
   useEffect(() => { setNotifPrefs(loadNotifPrefs()); }, []);
 
   useEffect(() => {
@@ -170,6 +195,13 @@ function SettingsInner() {
     api.integrations.list(token).then((list) => {
       setConnectedIntegrations(new Set(list.map((i) => i.type)));
     }).catch(() => {});
+    api.webhooks.list(token).then(setWebhooks).catch(() => {});
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "teams") return;
+    api.teams.list(token).then(setTeams).catch(() => {});
+    api.users.list(token).then(setAllUsers).catch(() => {});
   }, [token, activeTab]);
 
   useEffect(() => {
@@ -185,6 +217,21 @@ function SettingsInner() {
       setAiAutoLabel(ai.autoLabel ?? false);
     }).catch(() => {});
   }, [token]);
+
+  async function sendInvite() {
+    if (!token || !orgId || !inviteEmail.trim()) return;
+    setSendingInvite(true);
+    setInviteError("");
+    try {
+      await api.organizations.invite(token, orgId, { email: inviteEmail.trim(), role: inviteRole });
+      setInviteEmail("");
+      setInviteSent(true);
+    } catch (e: any) {
+      setInviteError(e.message ?? "Failed to send invite");
+    } finally {
+      setSendingInvite(false);
+    }
+  }
 
   async function saveWorkspace() {
     if (!token || !orgId) return;
@@ -336,15 +383,250 @@ function SettingsInner() {
 
           {/* Members */}
           {activeTab === "members" && (
-            <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 flex flex-col items-start gap-4">
-              <p className="text-sm text-on-surface-variant">Manage your team members and their roles from the Members page.</p>
-              <button
-                onClick={() => router.push("/settings/members")}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>group</span>
-                Go to Members
-              </button>
+            <div className="space-y-4">
+              {/* Invite form */}
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>person_add</span>
+                  <h2 className="font-bold text-on-surface">Invite a teammate</h2>
+                </div>
+                <p className="text-xs text-on-surface-variant mb-5">They'll receive an email with a link to join your workspace.</p>
+                <div className="flex gap-2">
+                  <input
+                    value={inviteEmail}
+                    onChange={e => { setInviteEmail(e.target.value); setInviteError(""); setInviteSent(false); }}
+                    onKeyDown={e => { if (e.key === "Enter") sendInvite(); }}
+                    placeholder="colleague@company.com"
+                    type="email"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-on-surface"
+                  />
+                  <select
+                    value={inviteRole}
+                    onChange={e => setInviteRole(e.target.value)}
+                    className="px-3 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm focus:outline-none text-on-surface"
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button
+                    onClick={sendInvite}
+                    disabled={sendingInvite || !inviteEmail.trim()}
+                    className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {sendingInvite ? "Sending…" : "Invite"}
+                  </button>
+                </div>
+                {inviteError && <p className="text-xs text-error mt-2">{inviteError}</p>}
+                {inviteSent && <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: 13 }}>check_circle</span> Invite sent!</p>}
+              </div>
+
+              {/* Link to full members management */}
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-on-surface">Manage members & roles</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">View all members, change roles, remove members, and see pending invites.</p>
+                </div>
+                <button
+                  onClick={() => router.push("/settings/members")}
+                  className="flex items-center gap-2 px-4 py-2 bg-surface-container-low border border-outline-variant/20 text-sm font-bold rounded-xl hover:bg-surface-container-high transition-colors text-on-surface flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
+                  Go to Members
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Teams */}
+          {activeTab === "teams" && (
+            <div className="space-y-4">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="font-bold text-on-surface">Teams</h2>
+                  <button
+                    onClick={() => { setShowCreateTeam(true); setTeamForm({ name: "", identifier: "", description: "" }); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                    New team
+                  </button>
+                </div>
+                <p className="text-xs text-on-surface-variant mb-5">Organize members into teams to group projects and control access.</p>
+
+                {/* Create team form */}
+                {showCreateTeam && (
+                  <div className="mb-5 p-4 rounded-xl bg-surface-container-low border border-outline-variant/10 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Team Name</label>
+                        <input
+                          autoFocus
+                          value={teamForm.name}
+                          onChange={e => setTeamForm(f => ({ ...f, name: e.target.value }))}
+                          placeholder="e.g. Frontend"
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Identifier (2–10 chars)</label>
+                        <input
+                          value={teamForm.identifier}
+                          onChange={e => setTeamForm(f => ({ ...f, identifier: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") }))}
+                          placeholder="FE"
+                          maxLength={10}
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface font-mono"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Description (optional)</label>
+                      <input
+                        value={teamForm.description}
+                        onChange={e => setTeamForm(f => ({ ...f, description: e.target.value }))}
+                        placeholder="What does this team work on?"
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        disabled={!teamForm.name.trim() || !teamForm.identifier.trim() || savingTeam}
+                        onClick={async () => {
+                          if (!token) return;
+                          setSavingTeam(true);
+                          try {
+                            const team = await api.teams.create(token, teamForm);
+                            setTeams(prev => [team, ...prev]);
+                            setShowCreateTeam(false);
+                            toast("Team created");
+                          } catch {
+                            toast("Failed to create team");
+                          } finally {
+                            setSavingTeam(false);
+                          }
+                        }}
+                        className="px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {savingTeam ? "Creating…" : "Create team"}
+                      </button>
+                      <button onClick={() => setShowCreateTeam(false)} className="px-4 py-1.5 text-sm font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Team list */}
+                {teams.length === 0 && !showCreateTeam ? (
+                  <p className="text-sm text-on-surface-variant italic">No teams yet. Create one to get started.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {teams.map(team => {
+                      const isExpanded = expandedTeam === team.id;
+                      const isAddingMember = addingMemberTeamId === team.id;
+                      return (
+                        <div key={team.id} className="rounded-xl border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
+                          <div className="flex items-center gap-3 p-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs font-black text-primary">{team.identifier}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-on-surface">{team.name}</p>
+                              {team.description && <p className="text-xs text-on-surface-variant truncate">{team.description}</p>}
+                            </div>
+                            <span className="text-xs text-on-surface-variant mr-2">{team._count?.members ?? team.members?.length ?? 0} members</span>
+                            <button
+                              onClick={() => setExpandedTeam(isExpanded ? null : team.id)}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{isExpanded ? "expand_less" : "expand_more"}</span>
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!token) return;
+                                await api.teams.remove(token, team.id);
+                                setTeams(prev => prev.filter(t => t.id !== team.id));
+                                if (expandedTeam === team.id) setExpandedTeam(null);
+                                toast("Team deleted");
+                              }}
+                              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                            </button>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="border-t border-outline-variant/10 px-3 pb-3 pt-2">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Members</p>
+                              {(team.members ?? []).length === 0 ? (
+                                <p className="text-xs text-on-surface-variant italic mb-2">No members yet.</p>
+                              ) : (
+                                <div className="space-y-1 mb-2">
+                                  {(team.members ?? []).map(m => (
+                                    <div key={m.userId} className="flex items-center gap-2 py-1">
+                                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-[10px] font-black text-primary">{m.user.initials ?? "?"}</span>
+                                      </div>
+                                      <span className="text-xs font-semibold text-on-surface flex-1">{m.user.name ?? m.user.email}</span>
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant uppercase tracking-wide">{m.role}</span>
+                                      <button
+                                        onClick={async () => {
+                                          if (!token) return;
+                                          await api.teams.removeMember(token, team.id, m.userId);
+                                          setTeams(prev => prev.map(t => t.id === team.id ? { ...t, members: t.members.filter(x => x.userId !== m.userId) } : t));
+                                          toast("Member removed");
+                                        }}
+                                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
+                                      >
+                                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>close</span>
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {isAddingMember ? (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <select
+                                    value={memberUserId}
+                                    onChange={e => setMemberUserId(e.target.value)}
+                                    className="flex-1 px-2 py-1.5 text-xs bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                                  >
+                                    <option value="">Select member…</option>
+                                    {allUsers.filter(u => !(team.members ?? []).some(m => m.userId === u.id)).map(u => (
+                                      <option key={u.id} value={u.id}>{u.name ?? u.email}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    disabled={!memberUserId}
+                                    onClick={async () => {
+                                      if (!token || !memberUserId) return;
+                                      const added = await api.teams.addMember(token, team.id, { userId: memberUserId });
+                                      setTeams(prev => prev.map(t => t.id === team.id ? { ...t, members: [...(t.members ?? []), added] } : t));
+                                      setAddingMemberTeamId(null);
+                                      setMemberUserId("");
+                                      toast("Member added");
+                                    }}
+                                    className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-50"
+                                  >Add</button>
+                                  <button onClick={() => { setAddingMemberTeamId(null); setMemberUserId(""); }} className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg">Cancel</button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => { setAddingMemberTeamId(team.id); setMemberUserId(""); }}
+                                  className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>add</span>
+                                  Add member
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -513,6 +795,7 @@ function SettingsInner() {
 
           {/* Integrations */}
           {activeTab === "integrations" && (
+            <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               {INTEGRATIONS.map((integration) => {
                 const intType = integration.name.toLowerCase().replace(/\s+/g, "_");
@@ -555,6 +838,171 @@ function SettingsInner() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Outgoing Webhooks */}
+            <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>webhook</span>
+                  <h2 className="font-bold text-on-surface">Outgoing Webhooks</h2>
+                </div>
+                <button
+                  onClick={() => { setShowCreateWebhook(true); setWebhookForm({ name: "", url: "", secret: "", events: [] }); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                  New webhook
+                </button>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-5">Send real-time event payloads to your own endpoints when things happen in Stride.</p>
+
+              {/* Create webhook form */}
+              {showCreateWebhook && (
+                <div className="mb-5 p-4 rounded-xl bg-surface-container-low border border-outline-variant/10 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Name</label>
+                      <input
+                        autoFocus
+                        value={webhookForm.name}
+                        onChange={e => setWebhookForm(f => ({ ...f, name: e.target.value }))}
+                        placeholder="e.g. Slack alerts"
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Signing Secret (optional)</label>
+                      <input
+                        value={webhookForm.secret}
+                        onChange={e => setWebhookForm(f => ({ ...f, secret: e.target.value }))}
+                        placeholder="Used for HMAC-SHA256 signature"
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Endpoint URL</label>
+                    <input
+                      value={webhookForm.url}
+                      onChange={e => setWebhookForm(f => ({ ...f, url: e.target.value }))}
+                      placeholder="https://your-server.com/webhook"
+                      className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-2">Events</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(["issue.created","issue.updated","issue.deleted","sprint.started","sprint.completed","comment.created","member.joined"] as const).map(ev => {
+                        const checked = webhookForm.events.includes(ev);
+                        return (
+                          <button
+                            key={ev}
+                            onClick={() => setWebhookForm(f => ({ ...f, events: checked ? f.events.filter(e => e !== ev) : [...f.events, ev] }))}
+                            className={clsx("px-2.5 py-1 rounded-lg text-xs font-bold transition-all border", checked ? "bg-primary/10 text-primary border-primary/30" : "bg-surface-container text-on-surface-variant border-outline-variant/20 hover:border-primary/20")}
+                          >
+                            {ev}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      disabled={!webhookForm.name.trim() || !webhookForm.url.trim() || webhookForm.events.length === 0 || savingWebhook}
+                      onClick={async () => {
+                        if (!token) return;
+                        setSavingWebhook(true);
+                        try {
+                          const wh = await api.webhooks.create(token, { name: webhookForm.name, url: webhookForm.url, secret: webhookForm.secret || undefined, events: webhookForm.events });
+                          setWebhooks(prev => [wh, ...prev]);
+                          setShowCreateWebhook(false);
+                          toast("Webhook created");
+                        } catch {
+                          toast("Failed to create webhook");
+                        } finally {
+                          setSavingWebhook(false);
+                        }
+                      }}
+                      className="px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingWebhook ? "Saving…" : "Create webhook"}
+                    </button>
+                    <button onClick={() => setShowCreateWebhook(false)} className="px-4 py-1.5 text-sm font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Webhook list */}
+              {webhooks.length === 0 && !showCreateWebhook ? (
+                <p className="text-sm text-on-surface-variant italic">No webhooks yet. Add one to receive real-time events.</p>
+              ) : (
+                <div className="space-y-2">
+                  {webhooks.map(wh => (
+                    <div key={wh.id} className="flex items-start gap-3 p-3 rounded-xl border border-outline-variant/10 bg-surface-container-lowest">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm font-bold text-on-surface">{wh.name}</span>
+                          <span className={clsx("text-[10px] font-bold px-1.5 py-0.5 rounded-full", wh.active ? "bg-emerald-100 text-emerald-700" : "bg-surface-container-high text-on-surface-variant")}>
+                            {wh.active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-on-surface-variant font-mono truncate mb-1">{wh.url}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {(wh.events as string[]).map(ev => (
+                            <span key={ev} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">{ev}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          disabled={testingWebhookId === wh.id}
+                          onClick={async () => {
+                            if (!token) return;
+                            setTestingWebhookId(wh.id);
+                            try {
+                              await api.webhooks.test(token, wh.id);
+                              toast("Test payload sent");
+                            } catch {
+                              toast("Test delivery failed");
+                            } finally {
+                              setTestingWebhookId(null);
+                            }
+                          }}
+                          className="px-2.5 py-1.5 text-xs font-bold border border-outline-variant/30 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors disabled:opacity-50"
+                        >
+                          {testingWebhookId === wh.id ? "Sending…" : "Test"}
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!token) return;
+                            await api.webhooks.update(token, wh.id, { active: !wh.active });
+                            setWebhooks(prev => prev.map(w => w.id === wh.id ? { ...w, active: !w.active } : w));
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                          title={wh.active ? "Disable" : "Enable"}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{wh.active ? "pause" : "play_arrow"}</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!token) return;
+                            await api.webhooks.remove(token, wh.id);
+                            setWebhooks(prev => prev.filter(w => w.id !== wh.id));
+                            toast("Webhook deleted");
+                          }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             </div>
           )}
 

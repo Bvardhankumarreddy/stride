@@ -11,11 +11,12 @@ export class ProjectsService {
     return this.prisma.project.create({ data: { ...dto, organizationId } as any });
   }
 
-  findAll(organizationId?: string) {
+  findAll(organizationId?: string, teamId?: string) {
     const where: any = organizationId ? { organizationId } : {};
+    if (teamId) where.teamId = teamId;
     return this.prisma.project.findMany({
       where,
-      include: { _count: { select: { issues: true, sprints: true, documents: true } } },
+      include: { _count: { select: { issues: true, sprints: true, documents: true } }, team: { select: { id: true, name: true, identifier: true } } },
       orderBy: { createdAt: 'desc' },
     });
   }

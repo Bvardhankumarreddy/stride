@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { CreateSprintDto } from './dto/create-sprint.dto';
 import { UpdateSprintDto } from './dto/update-sprint.dto';
 
@@ -9,6 +10,7 @@ export class SprintsService {
   constructor(
     private prisma: PrismaService,
     private jobs: JobsService,
+    private webhooks: WebhooksService,
   ) {}
 
   create(projectId: string, dto: CreateSprintDto) {
@@ -70,6 +72,16 @@ export class SprintsService {
           assignee: issue.assignee?.name,
         })),
       });
+    }
+
+    // Fire webhook on sprint status transitions
+    const project = await this.prisma.project.findUnique({ where: { id: projectId }, select: { organizationId: true } });
+    if (project?.organizationId) {
+      if (dto.status === 'active' && existing.status !== 'active') {
+        this.webhooks.dispatch(project.organizationId, 'sprint.started', { id: updated.id, name: updated.name }).catch(() => {});
+      } else if (dto.status === 'completed' && existing.status !== 'completed') {
+        this.webhooks.dispatch(project.organizationId, 'sprint.completed', { id: updated.id, name: updated.name }).catch(() => {});
+      }
     }
 
     return updated;

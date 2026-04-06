@@ -20,6 +20,8 @@ import { CustomFieldsModule } from './custom-fields/custom-fields.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { BillingModule } from './billing/billing.module';
 import { AiModule } from './ai/ai.module';
+import { TeamsModule } from './teams/teams.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { AiModule } from './ai/ai.module';
     IntegrationsModule,
     BillingModule,
     AiModule,
+    TeamsModule,
+    WebhooksModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,
