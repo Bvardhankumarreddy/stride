@@ -337,6 +337,13 @@ export const api = {
       apiFetch<{ organizationId: string; organizationSlug: string }>(`/invitations/${inviteToken}/accept`, token, { method: 'POST' }),
   },
 
+  comments: {
+    update: (token: string, issueId: string, commentId: string, body: { body: string }) =>
+      apiFetch<ApiComment>(`/issues/${issueId}/comments/${commentId}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    remove: (token: string, issueId: string, commentId: string) =>
+      apiFetch<void>(`/issues/${issueId}/comments/${commentId}`, token, { method: "DELETE" }),
+  },
+
   search: {
     query: (token: string, q: string, filter?: string) => {
       const params = new URLSearchParams({ q });

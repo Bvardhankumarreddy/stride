@@ -16,6 +16,7 @@ import { EmailDigestProcessor } from './email-digest.processor';
 import { AiSummaryProcessor } from './ai-summary.processor';
 import { NotificationFanoutProcessor } from './notification-fanout.processor';
 import { WebhookProcessor } from './webhook.processor';
+import { DueDateScheduler } from './due-date.scheduler';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { WebhookProcessor } from './webhook.processor';
     AiSummaryProcessor,
     NotificationFanoutProcessor,
     WebhookProcessor,
+    DueDateScheduler,
   ],
   exports: [JobsService],
 })

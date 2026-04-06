@@ -302,6 +302,54 @@ export default function SprintsPage() {
           </div>
         </div>
 
+        {/* Burndown Chart for active sprint */}
+        {active && activeStats && activeStats.points.total > 0 && (() => {
+          const start = active.startDate ? new Date(active.startDate) : null;
+          const end   = active.endDate   ? new Date(active.endDate)   : null;
+          if (!start || !end) return null;
+          const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86_400_000));
+          const daysPassed = Math.min(totalDays, Math.ceil((Date.now() - start.getTime()) / 86_400_000));
+          const remaining = activeStats.points.total - activeStats.points.completed;
+          const W = 100;
+          const H = 80;
+          const pts = activeStats.points.total;
+          // SVG y=0 is top; y=H is bottom
+          // ideal line: (0, H) [all points remaining] → (W, 0) [zero remaining]
+          // actual point: x = progress along sprint, y = remaining fraction of H
+          const ax = (daysPassed / totalDays) * W;
+          const ay = (remaining / pts) * H;
+          return (
+            <section className="px-6 py-6 border-t border-outline-variant/10">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Burndown — {active.name}</h2>
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }} preserveAspectRatio="none">
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map(t => (
+                    <line key={t} x1={0} y1={t * H} x2={W} y2={t * H} stroke="rgba(0,0,0,0.05)" strokeWidth={0.5} />
+                  ))}
+                  {/* Ideal burndown: all points remaining → zero remaining */}
+                  <line x1={0} y1={H} x2={W} y2={0} stroke="rgba(124,58,237,0.2)" strokeWidth={1} strokeDasharray="2 2" />
+                  {/* Actual: from sprint start (full points) to current remaining */}
+                  <line x1={0} y1={H} x2={ax} y2={ay} stroke="#7c3aed" strokeWidth={1.5} strokeLinecap="round" />
+                  {/* Current dot */}
+                  <circle cx={ax} cy={ay} r={2.5} fill="#7c3aed" />
+                </svg>
+                <div className="flex items-center justify-between text-xs text-on-surface-variant mt-2">
+                  <span>{formatDate(active.startDate)}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-primary/40" /> Ideal</span>
+                    <span className="flex items-center gap-1"><span className="inline-block w-4 border-t-2 border-primary" /> Actual</span>
+                  </div>
+                  <span>{formatDate(active.endDate)}</span>
+                </div>
+                <p className="text-xs text-center text-on-surface-variant mt-1">
+                  <span className="font-bold text-on-surface">{remaining}</span> pts remaining · <span className="font-bold text-on-surface">{daysPassed}</span> / {totalDays} days
+                </p>
+              </div>
+            </section>
+          );
+        })()}
+
         {velocity.length > 0 && (() => {
           const maxPts = Math.max(1, ...velocity.map(v => v.committed));
           return (

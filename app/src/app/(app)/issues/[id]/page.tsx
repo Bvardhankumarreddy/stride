@@ -69,6 +69,9 @@ export default function IssueDetailPage() {
   const [users, setUsers]               = useState<ApiUser[]>([]);
   const [sprints, setSprints]           = useState<{ id: string; name: string }[]>([]);
   const [activity, setActivity]         = useState<ApiIssueActivity[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentDraft, setEditCommentDraft] = useState("");
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   // Inline title / description editing
   const [editingTitle, setEditingTitle]       = useState(false);
@@ -297,19 +300,97 @@ export default function IssueDetailPage() {
                   ))}
 
                   {(issue.comments ?? []).map((c) => (
-                    <div key={c.id} className="flex gap-4">
+                    <div key={c.id} className="flex gap-4 group/comment">
                       <div className="w-10 h-10 rounded-full bg-surface-container flex-shrink-0 flex items-center justify-center">
                         <span className="text-xs font-bold text-on-surface-variant">{c.author?.initials ?? "?"}</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-bold text-on-surface">{c.author?.name ?? "Unknown"}</span>
-                          <span className="text-[11px] text-on-surface-variant">{timeAgo(c.createdAt)}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-on-surface-variant">{timeAgo(c.createdAt)}</span>
+                            {c.author?.id === me?.id && editingCommentId !== c.id && (
+                              <div className="flex items-center gap-0.5 opacity-0 group-hover/comment:opacity-100 transition-opacity ml-2">
+                                <button
+                                  onClick={() => { setEditingCommentId(c.id); setEditCommentDraft(c.body); }}
+                                  className="p-1 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+                                  title="Edit comment"
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>
+                                </button>
+                                <button
+                                  onClick={() => setDeletingCommentId(c.id)}
+                                  className="p-1 rounded hover:bg-red-50 text-on-surface-variant hover:text-red-500 transition-colors"
+                                  title="Delete comment"
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="font-body text-lg text-on-surface-variant leading-relaxed">{c.body}</p>
+                        {editingCommentId === c.id ? (
+                          <div>
+                            <textarea
+                              value={editCommentDraft}
+                              onChange={(e) => setEditCommentDraft(e.target.value)}
+                              autoFocus
+                              rows={3}
+                              className="w-full bg-surface-container-low border border-primary/30 rounded-xl px-3 py-2 font-body text-lg text-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={async () => {
+                                  if (!editCommentDraft.trim() || !token) return;
+                                  try {
+                                    await api.comments.update(token, id, c.id, { body: editCommentDraft.trim() });
+                                    const updated = await api.issues.get(token, id);
+                                    setIssue(updated);
+                                    setEditingCommentId(null);
+                                  } catch { toast("Failed to update comment"); }
+                                }}
+                                className="text-xs font-bold px-3 py-1.5 bg-primary text-white rounded-lg hover:opacity-90"
+                              >Save</button>
+                              <button
+                                onClick={() => setEditingCommentId(null)}
+                                className="text-xs font-bold px-3 py-1.5 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container"
+                              >Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="font-body text-lg text-on-surface-variant leading-relaxed">{c.body}</p>
+                        )}
                       </div>
                     </div>
                   ))}
+
+                  {/* Delete confirmation */}
+                  {deletingCommentId && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <h3 className="text-lg font-bold text-on-surface mb-2">Delete comment?</h3>
+                        <p className="text-sm text-on-surface-variant mb-6">This cannot be undone.</p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setDeletingCommentId(null)}
+                            className="flex-1 py-2 rounded-lg border border-outline-variant text-sm font-bold text-on-surface-variant hover:bg-surface-container"
+                          >Cancel</button>
+                          <button
+                            onClick={async () => {
+                              if (!token) return;
+                              try {
+                                await api.comments.remove(token, id, deletingCommentId);
+                                const updated = await api.issues.get(token, id);
+                                setIssue(updated);
+                                setDeletingCommentId(null);
+                              } catch { toast("Failed to delete comment"); }
+                            }}
+                            className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600"
+                          >Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex gap-4">
                     <div className="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">

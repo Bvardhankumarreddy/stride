@@ -24,7 +24,10 @@ export default function RoadmapPage() {
   const [loading, setLoading] = useState(true);
   const [zoom, setZoom] = useState("Quarter");
   const [teamOpen, setTeamOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("All");
   const teamRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   // Load projects once
   useEffect(() => {
@@ -46,20 +49,22 @@ export default function RoadmapPage() {
       .finally(() => setLoading(false));
   }, [token, selectedProjectId]);
 
-  // Close team dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (teamRef.current && !teamRef.current.contains(e.target as Node)) setTeamOpen(false);
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
+  const filteredSprints = filterStatus === "All" ? sprints : sprints.filter(s => s.status === filterStatus.toLowerCase());
 
   const { columns, getLeft, getWidth, todayPct } = useMemo(() => {
     const now = new Date();
-    const validSprints = sprints.filter(s => s.startDate && s.endDate);
+    const validSprints = filteredSprints.filter(s => s.startDate && s.endDate);
 
     let rangeStart: Date;
     let rangeEnd: Date;
@@ -128,7 +133,7 @@ export default function RoadmapPage() {
     }
 
     return { columns, getLeft, getWidth, todayPct };
-  }, [sprints, zoom]);
+  }, [filteredSprints, zoom]);
 
   return (
     <div className="bg-surface">
@@ -182,13 +187,34 @@ export default function RoadmapPage() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => toast("Filters coming soon")}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant/20 rounded-lg text-sm font-medium hover:bg-surface-container-low transition-colors"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>filter_list</span>
-              Filter
-            </button>
+            <div className="relative" ref={filterRef}>
+              <button
+                onClick={() => setFilterOpen(v => !v)}
+                className={clsx(
+                  "flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium transition-colors",
+                  filterOpen || filterStatus !== "All" ? "border-primary/30 text-primary bg-primary/5" : "border-outline-variant/20 hover:bg-surface-container-low"
+                )}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>filter_list</span>
+                {filterStatus === "All" ? "Filter" : filterStatus}
+              </button>
+              {filterOpen && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                  {["All", "Active", "Planned", "Completed"].map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => { setFilterStatus(opt); setFilterOpen(false); }}
+                      className={clsx(
+                        "w-full text-left px-4 py-2 text-sm transition-colors",
+                        opt === filterStatus ? "text-primary font-bold bg-primary/5" : "text-on-surface hover:bg-surface-container-low"
+                      )}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -199,7 +225,7 @@ export default function RoadmapPage() {
               <div key={i} className="h-16 bg-surface-container-low rounded-xl" />
             ))}
           </div>
-        ) : sprints.length === 0 ? (
+        ) : filteredSprints.length === 0 ? (
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-16 text-center">
             <p className="text-on-surface-variant text-sm">No sprints found. Create a sprint to see your roadmap.</p>
           </div>
@@ -232,7 +258,7 @@ export default function RoadmapPage() {
                 <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">TODAY</div>
               </div>
 
-              {sprints.map((sprint, idx) => {
+              {filteredSprints.map((sprint, idx) => {
                 const color = SPRINT_COLORS[idx % SPRINT_COLORS.length];
                 const start = sprint.startDate ? new Date(sprint.startDate) : null;
                 const end = sprint.endDate ? new Date(sprint.endDate) : null;

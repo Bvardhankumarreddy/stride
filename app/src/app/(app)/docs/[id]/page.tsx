@@ -17,12 +17,15 @@ export default function DocEditorPage() {
   const token = useToken();
   const [doc, setDoc] = useState<ApiDoc | null>(null);
   const [visibility, setVisibility] = useState<"private" | "org" | "public">("org");
+  const [revisions, setRevisions] = useState(1);
 
   useEffect(() => {
     if (!token || !id) return;
     api.docs.get(token, id).then((d) => {
       setDoc(d);
       setVisibility((d.visibility as "private" | "org" | "public") ?? "org");
+      const saved = localStorage.getItem(`stride:doc:${id}:revisions`);
+      if (saved) setRevisions(parseInt(saved, 10));
     }).catch(() => {});
   }, [token, id]);
 
@@ -36,6 +39,11 @@ export default function DocEditorPage() {
     if (!token || !id) return;
     try {
       await api.docs.update(token, id, { content, wordCount });
+      setRevisions(prev => {
+        const next = prev + 1;
+        localStorage.setItem(`stride:doc:${id}:revisions`, String(next));
+        return next;
+      });
       toast("Document saved");
     } catch {
       toast("Failed to save document");
@@ -63,7 +71,7 @@ export default function DocEditorPage() {
         author: doc.author?.name ?? "Unknown",
         authorInitials: doc.author?.initials ?? "?",
         created,
-        revisions: 1,
+        revisions,
       }}
       visibility={visibility}
       onVisibilityChange={handleVisibilityChange}

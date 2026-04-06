@@ -33,10 +33,10 @@ const STATUS_COLUMNS: {
   label: string;
   dotClass: string;
   countClass: string;
-  wipLimit?: string;
+  wipMax?: number;
 }[] = [
   { id: "todo", label: "To Do", dotClass: "bg-slate-400", countClass: "bg-surface-container-high text-on-surface-variant" },
-  { id: "in-progress", label: "In Progress", dotClass: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]", countClass: "bg-blue-50 text-blue-600 border border-blue-100", wipLimit: "/ 5" },
+  { id: "in-progress", label: "In Progress", dotClass: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]", countClass: "bg-blue-50 text-blue-600 border border-blue-100", wipMax: 5 },
   { id: "in-review", label: "In Review", dotClass: "bg-secondary shadow-[0_0_8px_rgba(107,56,212,0.6)]", countClass: "bg-surface-container-high text-on-surface-variant" },
   { id: "done", label: "Done", dotClass: "bg-tertiary-container shadow-[0_0_8px_rgba(0,133,91,0.6)]", countClass: "bg-surface-container-high text-on-surface-variant" },
 ];
@@ -121,8 +121,8 @@ function DroppableColumn({ col, cards, onAdd }: { col: (typeof STATUS_COLUMNS)[n
         <div className="flex items-center gap-2.5">
           <span className={clsx("w-2 h-2 rounded-full", col.dotClass)} />
           <h2 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{col.label}</h2>
-          <span className={clsx("text-xs font-bold px-2 py-0.5 rounded-full", col.countClass)}>
-            {col.wipLimit ? `${cards.length} ${col.wipLimit}` : cards.length}
+          <span className={clsx("text-xs font-bold px-2 py-0.5 rounded-full", col.wipMax && cards.length >= col.wipMax ? "bg-red-50 text-red-600 border border-red-200" : col.countClass)}>
+            {col.wipMax ? `${cards.length} / ${col.wipMax}` : cards.length}
           </span>
         </div>
         <button onClick={onAdd} className="text-on-surface-variant hover:text-primary transition-colors">
@@ -264,8 +264,17 @@ export default function BoardPage() {
       reorderIssue(issueId, over.id as string);
     }
 
-    // Persist status change to backend
+    // Enforce WIP limit before persisting
     const newColumn = useIssueStore.getState().issues.find((i) => i.id === issueId)?.columnId;
+    if (newColumn && newColumn !== originalColumn) {
+      const col = STATUS_COLUMNS.find(c => c.id === newColumn);
+      const colCount = useIssueStore.getState().issues.filter(i => i.columnId === newColumn).length;
+      if (col?.wipMax && colCount > col.wipMax) {
+        if (originalColumn) moveIssue(issueId, originalColumn as ColumnId);
+        toast(`WIP limit reached for "${col.label}" (max ${col.wipMax})`);
+        return;
+      }
+    }
     if (newColumn && newColumn !== originalColumn && token) {
       try {
         await api.issues.update(token, issueId, { status: newColumn });

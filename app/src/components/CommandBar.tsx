@@ -35,6 +35,8 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
   const token = useToken();
   const [query, setQuery] = useState("");
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
+  const [searchResults, setSearchResults] = useState<{ type: string; id: string; title: string; meta: string; href: string; highlight?: string }[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!open || !token) return;
@@ -63,11 +65,24 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
   }, [open, token]);
 
   useEffect(() => {
+    if (!token || query.length < 2) { setSearchResults([]); return; }
+    const timer = setTimeout(() => {
+      setSearching(true);
+      api.search.query(token, query)
+        .then(r => setSearchResults(r.results))
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, token]);
+
+  useEffect(() => {
     if (open) {
       setQuery(initialQuery);
       setTimeout(() => inputRef.current?.focus(), 0);
     } else {
       setQuery("");
+      setSearchResults([]);
     }
   }, [open, initialQuery]);
 
@@ -115,67 +130,100 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
 
         {/* Content */}
         <div className="max-h-[480px] overflow-y-auto hide-scrollbar p-2">
-          {/* Quick Actions */}
-          <div className="px-3 py-3">
-            <h3 className="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-3 px-1">
-              Quick Actions
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_ACTIONS.map((action) => (
-                <button
-                  key={action.label}
-                  onClick={() => { if (action.label === "New Issue") { openModal(); onClose(); } else { router.push(action.href); onClose(); } }}
-                  className={clsx(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
-                    action.variant === "primary" && "bg-primary text-white hover:opacity-90",
-                    action.variant === "surface" && "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest",
-                    action.variant === "ai" && "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20"
-                  )}
-                >
-                  {action.icon ? (
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{action.icon}</span>
-                  ) : (
-                    <span>{action.emoji}</span>
-                  )}
-                  {action.label}
-                </button>
-              ))}
+          {query.length >= 2 ? (
+            /* Search Results */
+            <div className="px-3 py-3">
+              <h3 className="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-2 px-1 flex items-center gap-2">
+                Results
+                {searching && <span className="w-3 h-3 border-2 border-outline/30 border-t-primary rounded-full animate-spin inline-block" />}
+              </h3>
+              {searchResults.length === 0 && !searching ? (
+                <p className="px-1 py-4 text-sm text-outline text-center">No results for "{query}"</p>
+              ) : (
+                <div className="space-y-0.5">
+                  {searchResults.map((item) => (
+                    <button
+                      key={`${item.type}-${item.id}`}
+                      onClick={() => { router.push(item.href); onClose(); }}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={clsx("w-10 h-10 flex items-center justify-center rounded-lg", item.type === "issue" ? "bg-orange-100 text-orange-600" : "bg-blue-100 text-blue-600")}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
+                            {item.type === "issue" ? "confirmation_number" : "article"}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-on-surface truncate">{item.title}</p>
+                          <p className="text-xs text-outline font-body italic">{item.meta}</p>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ fontSize: 20 }}>subdirectory_arrow_left</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Quick Actions */}
+              <div className="px-3 py-3">
+                <h3 className="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-3 px-1">
+                  Quick Actions
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => { if (action.label === "New Issue") { openModal(); onClose(); } else { router.push(action.href); onClose(); } }}
+                      className={clsx(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
+                        action.variant === "primary" && "bg-primary text-white hover:opacity-90",
+                        action.variant === "surface" && "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest",
+                        action.variant === "ai" && "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20"
+                      )}
+                    >
+                      {action.icon ? (
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{action.icon}</span>
+                      ) : (
+                        <span>{action.emoji}</span>
+                      )}
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Recent Items */}
-          <div className="px-3 py-2">
-            <h3 className="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-2 px-1">
-              Recent
-            </h3>
-            <div className="space-y-0.5">
-              {recentItems.map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => { router.push(item.href); onClose(); }}
-                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={clsx("w-10 h-10 flex items-center justify-center rounded-lg", item.iconBg)}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
-                        {item.icon}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-on-surface">{item.title}</p>
-                      <p className="text-xs text-outline font-body italic">{item.subtitle}</p>
-                    </div>
-                  </div>
-                  <span
-                    className="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ fontSize: 20 }}
-                  >
-                    subdirectory_arrow_left
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+              {/* Recent Items */}
+              <div className="px-3 py-2">
+                <h3 className="text-[11px] font-bold text-outline uppercase tracking-[0.1em] mb-2 px-1">
+                  Recent
+                </h3>
+                <div className="space-y-0.5">
+                  {recentItems.map((item) => (
+                    <button
+                      key={item.href}
+                      onClick={() => { router.push(item.href); onClose(); }}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 group cursor-pointer transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={clsx("w-10 h-10 flex items-center justify-center rounded-lg", item.iconBg)}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
+                            {item.icon}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-on-surface">{item.title}</p>
+                          <p className="text-xs text-outline font-body italic">{item.subtitle}</p>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 20 }}>subdirectory_arrow_left</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}

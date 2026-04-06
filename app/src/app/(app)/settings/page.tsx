@@ -14,7 +14,28 @@ const TABS = [
   { id: "fields", label: "Custom Fields", icon: "tune" },
   { id: "integrations", label: "Integrations", icon: "extension" },
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
+  { id: "notifications", label: "Notifications", icon: "notifications" },
 ];
+
+const NOTIF_EVENTS = [
+  { id: "issue_assigned", label: "Issue assigned to me" },
+  { id: "issue_comment", label: "Comment on my issue" },
+  { id: "issue_status", label: "Issue status changed" },
+  { id: "sprint_start", label: "Sprint started / completed" },
+  { id: "due_date", label: "Due date reminders" },
+  { id: "mention", label: "@mention in comment" },
+];
+
+const NOTIF_STORAGE_KEY = "stride:notif_prefs";
+
+function loadNotifPrefs(): Record<string, { email: boolean; inApp: boolean }> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) ?? "{}"); } catch { return {}; }
+}
+
+function saveNotifPrefs(prefs: Record<string, { email: boolean; inApp: boolean }>) {
+  localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(prefs));
+}
 
 const FIELD_TYPES = [
   { id: "text",     label: "Text",     icon: "text_fields" },
@@ -100,6 +121,7 @@ export default function SettingsPage() {
   const [connectingTo, setConnectingTo] = useState<Integration | null>(null);
   const [tokenValue, setTokenValue] = useState("");
   const [extraValues, setExtraValues] = useState<string[]>([]);
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, { email: boolean; inApp: boolean }>>({});
   const [aiDigest, setAiDigest] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState(true);
   const [aiAutoLabel, setAiAutoLabel] = useState(false);
@@ -116,6 +138,8 @@ export default function SettingsPage() {
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [editFieldName, setEditFieldName] = useState("");
   const [editFieldOptions, setEditFieldOptions] = useState("");
+
+  useEffect(() => { setNotifPrefs(loadNotifPrefs()); }, []);
 
   useEffect(() => {
     if (!token || activeTab !== "fields") return;
@@ -595,6 +619,54 @@ export default function SettingsPage() {
           )}
 
           {/* AI Settings */}
+          {activeTab === "notifications" && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>notifications</span>
+                  <h2 className="font-bold text-on-surface">Notification Preferences</h2>
+                </div>
+                <p className="text-xs text-on-surface-variant mb-6">Choose how you want to be notified for each event type.</p>
+
+                <div className="grid grid-cols-[1fr_80px_80px] gap-x-4 gap-y-0 text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-3 px-1">
+                  <span>Event</span>
+                  <span className="text-center">In-App</span>
+                  <span className="text-center">Email</span>
+                </div>
+
+                <div className="space-y-1">
+                  {NOTIF_EVENTS.map((ev) => {
+                    const pref = notifPrefs[ev.id] ?? { email: true, inApp: true };
+                    function toggle(channel: "email" | "inApp") {
+                      const next = { ...pref, [channel]: !pref[channel] };
+                      const updated = { ...notifPrefs, [ev.id]: next };
+                      setNotifPrefs(updated);
+                      saveNotifPrefs(updated);
+                    }
+                    return (
+                      <div key={ev.id} className="grid grid-cols-[1fr_80px_80px] gap-x-4 items-center py-3 border-b border-outline-variant/10 last:border-0 px-1">
+                        <span className="text-sm text-on-surface">{ev.label}</span>
+                        {(["inApp", "email"] as const).map((ch) => (
+                          <div key={ch} className="flex justify-center">
+                            <button
+                              onClick={() => toggle(ch)}
+                              className={clsx("relative rounded-full transition-colors flex-shrink-0", pref[ch] ? "bg-primary" : "bg-surface-container-high")}
+                              style={{ height: 22, width: 40 }}
+                            >
+                              <span className={clsx("absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform", pref[ch] ? "translate-x-5" : "translate-x-0.5")} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-xs text-on-surface-variant mt-4 italic">Preferences are saved locally on this device.</p>
+              </div>
+            </div>
+          )}
+
           {activeTab === "ai" && (
             <div className="space-y-4">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
