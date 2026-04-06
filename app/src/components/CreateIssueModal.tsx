@@ -49,6 +49,9 @@ export default function CreateIssueModal() {
   const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
   const [customTemplates, setCustomTemplates] = useState<ApiIssueTemplate[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [aiDraft, setAiDraft] = useState("");
+  const [aiWriting, setAiWriting] = useState(false);
+  const [showAiDraft, setShowAiDraft] = useState(false);
 
   useEffect(() => {
     if (!open || !token) return;
@@ -85,6 +88,23 @@ export default function CreateIssueModal() {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [open, closeModal]);
+
+  async function handleWriteWithAi() {
+    if (!token || !aiDraft.trim()) return;
+    setAiWriting(true);
+    try {
+      const result = await api.ai.writeIssue(token, { roughDescription: aiDraft.trim() });
+      if (result.title) setTitle(result.title);
+      if (result.description) setDescription(result.description);
+      if (result.priority) setPriority(result.priority);
+      setShowAiDraft(false);
+      setAiDraft("");
+    } catch (err: any) {
+      toast(err.message ?? "AI write failed");
+    } finally {
+      setAiWriting(false);
+    }
+  }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -164,6 +184,39 @@ export default function CreateIssueModal() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* AI Issue Writer */}
+          <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowAiDraft(v => !v)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-violet-400 hover:bg-violet-500/10 transition-colors"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>auto_awesome</span>
+              Write with AI
+              <span className="material-symbols-outlined ml-auto" style={{ fontSize: 13 }}>{showAiDraft ? "expand_less" : "expand_more"}</span>
+            </button>
+            {showAiDraft && (
+              <div className="px-4 pb-4 space-y-2 border-t border-violet-500/15">
+                <textarea
+                  value={aiDraft}
+                  onChange={e => setAiDraft(e.target.value)}
+                  placeholder="Describe the issue roughly — AI will write a proper title, description, and priority…"
+                  rows={3}
+                  className="w-full mt-3 px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 text-on-surface placeholder:text-outline resize-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleWriteWithAi}
+                  disabled={aiWriting || !aiDraft.trim()}
+                  className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-lg hover:bg-violet-500 disabled:opacity-40 transition-colors flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>auto_awesome</span>
+                  {aiWriting ? "Writing…" : "Generate issue"}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Title */}
           <input
             autoFocus

@@ -15,6 +15,7 @@ const TABS = [
   { id: "teams", label: "Teams", icon: "groups" },
   { id: "fields", label: "Custom Fields", icon: "tune" },
   { id: "templates", label: "Templates", icon: "description" },
+  { id: "labels", label: "Labels", icon: "label" },
   { id: "integrations", label: "Integrations", icon: "extension" },
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
   { id: "notifications", label: "Notifications", icon: "notifications" },
@@ -154,6 +155,12 @@ function SettingsInner() {
   const [templateForm, setTemplateForm] = useState({ name: "", description: "", titlePrefix: "", body: "", priority: "medium" });
   const [savingTemplate, setSavingTemplate] = useState(false);
 
+  // Labels state
+  const [labelDefs, setLabelDefs] = useState<{ name: string; color: string }[]>([]);
+  const [labelName, setLabelName] = useState("");
+  const [labelColor, setLabelColor] = useState("#6366f1");
+  const [savingLabels, setSavingLabels] = useState(false);
+
   // Invite state
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
@@ -227,6 +234,7 @@ function SettingsInner() {
       setAiDigest(ai.digest ?? true);
       setAiSuggestions(ai.suggestions ?? true);
       setAiAutoLabel(ai.autoLabel ?? false);
+      setLabelDefs(Array.isArray(org.labelDefs) ? org.labelDefs : []);
     }).catch(() => {});
   }, [token]);
 
@@ -257,6 +265,30 @@ function SettingsInner() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function addLabel() {
+    if (!token || !orgId || !labelName.trim()) return;
+    const next = [...labelDefs, { name: labelName.trim(), color: labelColor }];
+    setSavingLabels(true);
+    try {
+      const updated = await api.organizations.update(token, orgId, { labelDefs: next });
+      setLabelDefs(Array.isArray(updated.labelDefs) ? updated.labelDefs : next);
+      setLabelName("");
+      setLabelColor("#6366f1");
+    } catch { toast("Failed to save label"); }
+    finally { setSavingLabels(false); }
+  }
+
+  async function removeLabel(name: string) {
+    if (!token || !orgId) return;
+    const next = labelDefs.filter(l => l.name !== name);
+    setSavingLabels(true);
+    try {
+      const updated = await api.organizations.update(token, orgId, { labelDefs: next });
+      setLabelDefs(Array.isArray(updated.labelDefs) ? updated.labelDefs : next);
+    } catch { toast("Failed to remove label"); }
+    finally { setSavingLabels(false); }
   }
 
   return (
@@ -961,6 +993,70 @@ function SettingsInner() {
                 )}
                 {orgTemplates.length === 0 && !showCreateTemplate && (
                   <p className="text-sm text-on-surface-variant italic">No custom templates yet. Create one to extend the built-ins.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Labels */}
+          {activeTab === "labels" && (
+            <div className="space-y-4">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <h2 className="font-bold text-on-surface mb-1">Label Definitions</h2>
+                <p className="text-xs text-on-surface-variant mb-5">Define org-wide labels that members can apply to issues.</p>
+
+                {/* Existing labels */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {labelDefs.length === 0 && (
+                    <p className="text-sm text-on-surface-variant italic">No labels defined yet.</p>
+                  )}
+                  {labelDefs.map(l => (
+                    <span key={l.name} className="flex items-center gap-1.5 pl-2.5 pr-1 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: l.color }}>
+                      {l.name}
+                      <button
+                        onClick={() => removeLabel(l.name)}
+                        disabled={savingLabels}
+                        className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-black/20 transition-colors"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>close</span>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Add label form */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={labelColor}
+                    onChange={e => setLabelColor(e.target.value)}
+                    className="w-9 h-9 rounded-lg border border-outline-variant/20 cursor-pointer bg-transparent p-0.5"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Label name (e.g. bug, feature, backend)"
+                    value={labelName}
+                    onChange={e => setLabelName(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && addLabel()}
+                    className="flex-1 px-3 py-2 text-sm border border-outline-variant/20 rounded-xl bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <button
+                    onClick={addLabel}
+                    disabled={savingLabels || !labelName.trim()}
+                    className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* Preview */}
+                {labelName.trim() && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant">
+                    Preview:
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: labelColor }}>
+                      {labelName}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

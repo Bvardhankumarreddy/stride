@@ -12,6 +12,7 @@ model Organization {
   slug       String   @unique
   plan       String   @default("free")
   aiSettings Json     @default("{}")
+  labelDefs  Json     @default("[]")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -26,6 +27,7 @@ model Organization {
   teams        Team[]
   webhooks     Webhook[]
   templates    IssueTemplate[]
+  savedViews   SavedView[]
 }
 
 model OrganizationMember {
@@ -92,6 +94,7 @@ model User {
   issueActivities          IssueActivity[]
   teamMemberships          TeamMember[]
   createdTemplates         IssueTemplate[] @relation("CreatedTemplates")
+  createdViews             SavedView[]     @relation("CreatedViews")
 }
 
 model Project {
@@ -114,6 +117,7 @@ model Project {
 model Sprint {
   id        String    @id @default(cuid())
   name      String
+  goal      String?
   startDate DateTime?
   endDate   DateTime?
   status    String    @default("planned")
@@ -142,16 +146,48 @@ model Issue {
   assigneeId     String?
   creatorId      String?
   organizationId String?
+  parentId       String?
 
   project      Project?      @relation(fields: [projectId], references: [id])
   sprint       Sprint?       @relation(fields: [sprintId], references: [id])
   assignee     User?         @relation("AssignedIssues", fields: [assigneeId], references: [id])
   creator      User?         @relation("CreatedIssues", fields: [creatorId], references: [id])
   organization Organization? @relation(fields: [organizationId], references: [id])
+  parent       Issue?        @relation("SubTasks", fields: [parentId], references: [id])
+  children     Issue[]       @relation("SubTasks")
 
   comments          Comment[]
   customFieldValues CustomFieldValue[]
   activities        IssueActivity[]
+  blocking          IssueDependency[]  @relation("BlockingIssue")
+  blockedBy         IssueDependency[]  @relation("BlockedIssue")
+}
+
+model IssueDependency {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+
+  blockingIssueId String
+  blockedIssueId  String
+
+  blockingIssue Issue @relation("BlockingIssue", fields: [blockingIssueId], references: [id], onDelete: Cascade)
+  blockedIssue  Issue @relation("BlockedIssue",  fields: [blockedIssueId],  references: [id], onDelete: Cascade)
+
+  @@unique([blockingIssueId, blockedIssueId])
+}
+
+model SavedView {
+  id             String   @id @default(cuid())
+  name           String
+  filters        Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  createdById    String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("CreatedViews", fields: [createdById], references: [id])
 }
 
 model Document {

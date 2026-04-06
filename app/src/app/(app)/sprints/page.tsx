@@ -66,9 +66,18 @@ export default function SprintsPage() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
+  // AI standup state
+  const [standup, setStandup] = useState<{ yesterday: string[]; today: string[]; blockers: string[]; summary: string } | null>(null);
+  const [standupLoading, setStandupLoading] = useState(false);
+  const [showStandup, setShowStandup] = useState(false);
+
+  // Sprint goal edit state
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState("");
+
   // Create sprint modal state
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [form, setForm] = useState({ name: "", goal: "", startDate: "", endDate: "" });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -110,12 +119,13 @@ export default function SprintsPage() {
       }
       const sprint = await api.sprints.create(token, pid, {
         name: form.name.trim(),
+        goal: form.goal.trim() || undefined,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
       });
       setSprints((prev) => [sprint, ...prev]);
       setShowCreate(false);
-      setForm({ name: "", startDate: "", endDate: "" });
+      setForm({ name: "", goal: "", startDate: "", endDate: "" });
     } catch {
       setFormError("Failed to create sprint. Please try again.");
     } finally {
@@ -149,6 +159,42 @@ export default function SprintsPage() {
       setShowAnalysis(false);
     } finally {
       setAnalysisLoading(false);
+    }
+  }
+
+  async function handleStandup() {
+    if (!token || !active) return;
+    setStandupLoading(true);
+    setShowStandup(true);
+    setStandup(null);
+    try {
+      const sprintIssues = issues.filter(i => i.sprintId === active.id);
+      const result = await api.ai.standup(token, {
+        sprintName: active.name,
+        issues: sprintIssues.map(i => ({
+          title: i.title,
+          status: i.status,
+          priority: i.priority,
+          assignee: i.assignee?.name ?? undefined,
+        })),
+      });
+      setStandup(result);
+    } catch {
+      toast("Standup generation failed. Please try again.");
+      setShowStandup(false);
+    } finally {
+      setStandupLoading(false);
+    }
+  }
+
+  async function handleSaveGoal() {
+    if (!token || !active || !projectId) return;
+    try {
+      const updated = await api.sprints.update(token, projectId, active.id, { goal: goalDraft });
+      setSprints(prev => prev.map(s => s.id === active.id ? { ...s, goal: updated.goal } : s));
+      setEditingGoal(false);
+    } catch {
+      toast("Failed to save sprint goal");
     }
   }
 
@@ -213,21 +259,58 @@ export default function SprintsPage() {
                 </div>
                 <h1 className="text-2xl font-black tracking-tight text-on-surface font-headline">{active.name}</h1>
                 <p className="text-sm text-on-surface-variant mt-0.5">{formatDate(active.startDate)} – {formatDate(active.endDate)}</p>
+                {/* Sprint Goal */}
+                <div className="mt-2">
+                  {editingGoal ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        value={goalDraft}
+                        onChange={e => setGoalDraft(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") handleSaveGoal(); if (e.key === "Escape") setEditingGoal(false); }}
+                        placeholder="Sprint goal…"
+                        className="text-sm px-3 py-1 border border-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 bg-surface-container-low text-on-surface w-64"
+                      />
+                      <button onClick={handleSaveGoal} className="text-xs font-bold text-primary hover:underline">Save</button>
+                      <button onClick={() => setEditingGoal(false)} className="text-xs text-on-surface-variant hover:underline">Cancel</button>
+                    </div>
+                  ) : active.goal ? (
+                    <button onClick={() => { setGoalDraft(active.goal ?? ""); setEditingGoal(true); }} className="flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface group">
+                      <span className="material-symbols-outlined text-primary/60" style={{ fontSize: 14 }}>flag</span>
+                      <span className="italic">{active.goal}</span>
+                      <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 13 }}>edit</span>
+                    </button>
+                  ) : (
+                    <button onClick={() => { setGoalDraft(""); setEditingGoal(true); }} className="flex items-center gap-1 text-xs text-outline hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: 13 }}>add</span>
+                      Set sprint goal
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {daysLeft(active.endDate) !== null && (
                   <div className="text-right">
                     <p className="text-3xl font-black text-on-surface font-headline">{daysLeft(active.endDate)}</p>
                     <p className="text-xs text-on-surface-variant font-medium">days left</p>
                   </div>
                 )}
-                <button
-                  onClick={handleAnalyzeSprint}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                  Analyze
-                </button>
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    onClick={handleAnalyzeSprint}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                    Analyze
+                  </button>
+                  <button
+                    onClick={handleStandup}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-bold hover:bg-violet-500/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>record_voice_over</span>
+                    Standup
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -375,10 +458,95 @@ export default function SprintsPage() {
               )}
             </div>
           )}
+
+          {/* AI Standup */}
+          {showStandup && (
+            <div className="mt-4 bg-surface-container-lowest rounded-2xl border border-violet-500/15 shadow-sm overflow-hidden">
+              {standupLoading ? (
+                <div className="flex items-center gap-3 px-6 py-6">
+                  <div className="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin flex-shrink-0" />
+                  <p className="text-sm text-on-surface-variant">Generating standup…</p>
+                </div>
+              ) : standup ? (
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-violet-500" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>record_voice_over</span>
+                      <span className="text-xs font-bold text-violet-600 uppercase tracking-widest">AI Standup</span>
+                    </div>
+                    <button onClick={() => setShowStandup(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                    </button>
+                  </div>
+                  <p className="text-sm text-on-surface leading-relaxed italic border-l-2 border-violet-400 pl-3">{standup.summary}</p>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Yesterday</p>
+                      <ul className="space-y-1.5">
+                        {standup.yesterday.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                            <span className="material-symbols-outlined text-emerald-500 mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Today</p>
+                      <ul className="space-y-1.5">
+                        {standup.today.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                            <span className="material-symbols-outlined text-primary mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>arrow_circle_right</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">Blockers</p>
+                      {standup.blockers.length === 0 ? (
+                        <p className="text-sm text-on-surface-variant italic">No blockers 🎉</p>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {standup.blockers.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                              <span className="material-symbols-outlined text-amber-500 mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>warning</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-outline-variant/10">
+                    <button onClick={handleStandup} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-600 text-xs font-bold hover:bg-violet-500/20 transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                      Regenerate
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between px-6 py-5">
+                  <p className="text-sm text-on-surface-variant">Failed to generate standup. Try again.</p>
+                  <button onClick={handleStandup} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-600 text-xs font-bold hover:bg-violet-500/20 transition-colors">
+                    <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                    Retry
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           </section>
         ) : (
-          <section className="px-6 py-8 border-b border-outline-variant/10">
-            <p className="text-on-surface-variant text-sm">No active sprint.</p>
+          <section className="px-6 py-16 border-b border-outline-variant/10 flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center mb-1">
+              <span className="material-symbols-outlined text-outline" style={{ fontSize: 28 }}>sprint</span>
+            </div>
+            <p className="text-base font-bold text-on-surface">No active sprint</p>
+            <p className="text-sm text-on-surface-variant max-w-xs">Start a sprint to begin tracking progress and running AI analysis.</p>
+            <button onClick={() => setShowCreate(true)} className="mt-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
+              New Sprint
+            </button>
           </section>
         )}
 
@@ -436,7 +604,14 @@ export default function SprintsPage() {
               );
             })}
             {!loading && sprints.length === 0 && (
-              <p className="text-sm text-on-surface-variant">No sprints found.</p>
+              <div className="py-12 flex flex-col items-center text-center gap-2">
+                <span className="material-symbols-outlined text-outline" style={{ fontSize: 40 }}>view_timeline</span>
+                <p className="text-sm font-bold text-on-surface mt-1">No sprints yet</p>
+                <p className="text-xs text-on-surface-variant">Create your first sprint to start planning work.</p>
+                <button onClick={() => setShowCreate(true)} className="mt-3 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity">
+                  New Sprint
+                </button>
+              </div>
             )}
           </div>
 
@@ -579,6 +754,17 @@ export default function SprintsPage() {
                   placeholder="e.g. Sprint 1"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">Sprint Goal <span className="normal-case font-normal opacity-60">(optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="What should this sprint achieve?"
+                  value={form.goal}
+                  onChange={(e) => setForm((f) => ({ ...f, goal: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-outline-variant bg-surface text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>

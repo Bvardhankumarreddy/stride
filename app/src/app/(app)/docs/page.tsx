@@ -180,8 +180,23 @@ export default function DocsPage() {
               <div key={i} className="h-28 bg-surface-container-low rounded-2xl animate-pulse" />
             ))
           ) : displayDocs.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-on-surface-variant text-sm">No documents match your filter.</p>
+            <div className="py-20 flex flex-col items-center text-center gap-2">
+              {docs.length === 0 ? (
+                <>
+                  <span className="material-symbols-outlined text-outline" style={{ fontSize: 44 }}>description</span>
+                  <p className="text-base font-bold text-on-surface mt-1">No docs yet</p>
+                  <p className="text-sm text-on-surface-variant max-w-xs">Write specs, decisions, and runbooks — all in one place.</p>
+                  <button onClick={() => router.push("/docs/new")} className="mt-3 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity">
+                    Create your first doc
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-outline" style={{ fontSize: 36 }}>filter_list_off</span>
+                  <p className="text-sm font-bold text-on-surface">No documents match your filter</p>
+                  <button onClick={() => setFilterStatus("all")} className="mt-1 text-xs text-primary font-semibold hover:underline">Clear filter</button>
+                </>
+              )}
             </div>
           ) : displayDocs.map((doc) => (
             <Link

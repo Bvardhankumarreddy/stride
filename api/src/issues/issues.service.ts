@@ -14,6 +14,9 @@ const INCLUDE = {
   sprint: { select: { id: true, name: true, status: true } },
   project: { select: { id: true, name: true } },
   customFieldValues: { include: { customField: true } },
+  children: { select: { id: true, title: true, status: true, priority: true } },
+  blocking: { include: { blockedIssue: { select: { id: true, title: true, status: true } } } },
+  blockedBy: { include: { blockingIssue: { select: { id: true, title: true, status: true } } } },
 };
 
 @Injectable()
@@ -143,5 +146,34 @@ export class IssuesService {
     if (issue.organizationId) {
       this.webhooks.dispatch(issue.organizationId, 'issue.deleted', { id: issue.id, title: issue.title }).catch(() => {});
     }
+  }
+
+  async createSubTask(parentId: string, dto: { title: string }, creatorId: string, organizationId?: string) {
+    const parent = await this.findOne(parentId);
+    return this.prisma.issue.create({
+      data: {
+        title: dto.title,
+        status: 'todo',
+        priority: 'medium',
+        parentId,
+        creatorId,
+        organizationId: organizationId ?? parent.organizationId ?? undefined,
+        projectId: parent.projectId ?? undefined,
+        labels: [],
+      } as any,
+      include: { assignee: { select: { id: true, name: true, initials: true, image: true } } },
+    });
+  }
+
+  async addDependency(blockingIssueId: string, blockedIssueId: string) {
+    return this.prisma.issueDependency.upsert({
+      where: { blockingIssueId_blockedIssueId: { blockingIssueId, blockedIssueId } },
+      create: { blockingIssueId, blockedIssueId },
+      update: {},
+    });
+  }
+
+  async removeDependency(blockingIssueId: string, blockedIssueId: string) {
+    await this.prisma.issueDependency.deleteMany({ where: { blockingIssueId, blockedIssueId } });
   }
 }

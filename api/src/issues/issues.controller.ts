@@ -45,4 +45,20 @@ export class IssuesController {
 
   @Get(':id/activity')
   getActivity(@Param('id') id: string) { return this.issues.getActivity(id); }
+
+  @Post(':id/subtasks')
+  createSubTask(@Param('id') id: string, @Body() body: { title: string }, @Req() req: any) {
+    return this.issues.createSubTask(id, body, req.user.sub, req.user.organizationId);
+  }
+
+  @Post(':id/dependencies')
+  addDependency(@Param('id') id: string, @Body() body: { blockedIssueId: string }) {
+    return this.issues.addDependency(id, body.blockedIssueId);
+  }
+
+  @Delete(':id/dependencies/:blockedIssueId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeDependency(@Param('id') id: string, @Param('blockedIssueId') blockedIssueId: string) {
+    return this.issues.removeDependency(id, blockedIssueId);
+  }
 }

@@ -31,7 +31,7 @@ const STATUS_STYLES: Record<string, string> = {
   "in-review":   "bg-blue-50 text-blue-700",
 };
 
-const LABELS_OPTIONS = ["bug", "feature", "improvement", "docs", "infra", "design"];
+const LABELS_FALLBACK = ["bug", "feature", "improvement", "docs", "infra", "design"];
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -89,6 +89,20 @@ export default function IssueDetailPage() {
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef  = useRef<HTMLTextAreaElement>(null);
 
+  // Sub-tasks
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
+  const [addingSubTask, setAddingSubTask]     = useState(false);
+  const [savingSubTask, setSavingSubTask]     = useState(false);
+
+  // Dependencies
+  const [addingDep, setAddingDep]         = useState(false);
+  const [depSearch, setDepSearch]         = useState("");
+  const [depType, setDepType]             = useState<"blocks" | "blocked_by">("blocks");
+  const [savingDep, setSavingDep]         = useState(false);
+
+  // Label defs from org
+  const [labelDefs, setLabelDefs] = useState<{ name: string; color: string }[]>([]);
+
   useEffect(() => {
     if (!token || !id) return;
     api.issues.get(token, id).then((iss) => {
@@ -106,6 +120,8 @@ export default function IssueDetailPage() {
     if (!token) return;
     api.customFields.list(token).then(setCustomFields).catch(() => {});
     api.users.list(token).then(setUsers).catch(() => {});
+    api.issues.list(token, { limit: "200" }).then(r => setAllIssues(r.data.map(i => ({ id: i.id, title: i.title })))).catch(() => {});
+    api.organizations.mine(token).then(org => setLabelDefs(Array.isArray(org.labelDefs) ? org.labelDefs : [])).catch(() => {});
   }, [token]);
 
   useEffect(() => {
@@ -223,9 +239,12 @@ export default function IssueDetailPage() {
                       {priority.label} Priority
                     </span>
                   )}
-                  {labels.map((l) => (
-                    <span key={l} className="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold tracking-wide uppercase">{l}</span>
-                  ))}
+                  {labels.map((l) => {
+                    const def = labelDefs.find(d => d.name === l);
+                    return def
+                      ? <span key={l} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase text-white" style={{ background: def.color }}>{l}</span>
+                      : <span key={l} className="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-bold tracking-wide uppercase">{l}</span>;
+                  })}
                 </div>
               </section>
 
@@ -265,6 +284,166 @@ export default function IssueDetailPage() {
                   </div>
                 )}
               </article>
+
+              {/* Sub-tasks */}
+              <section className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>checklist</span>
+                    Sub-tasks
+                    {(issue.children ?? []).length > 0 && (
+                      <span className="text-[10px] font-black bg-surface-container-high px-1.5 py-0.5 rounded text-on-surface-variant">
+                        {issue.children!.filter(c => c.status === "done").length}/{issue.children!.length}
+                      </span>
+                    )}
+                  </h3>
+                  <button onClick={() => setAddingSubTask(v => !v)} className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>Add
+                  </button>
+                </div>
+
+                {(issue.children ?? []).length > 0 && (
+                  <div className="mb-2 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${Math.round((issue.children!.filter(c => c.status === "done").length / issue.children!.length) * 100)}%` }}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  {(issue.children ?? []).map(child => (
+                    <Link key={child.id} href={`/issues/${child.id}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors group">
+                      <span className={`material-symbols-outlined flex-shrink-0 ${child.status === "done" ? "text-emerald-500" : "text-outline"}`}
+                        style={{ fontSize: 16, fontVariationSettings: child.status === "done" ? "'FILL' 1" : "'FILL' 0" }}>
+                        {child.status === "done" ? "check_circle" : "radio_button_unchecked"}
+                      </span>
+                      <span className={`text-sm flex-1 truncate ${child.status === "done" ? "line-through text-outline" : "text-on-surface"}`}>{child.title}</span>
+                      <span className="text-[10px] font-bold text-outline uppercase opacity-0 group-hover:opacity-100 transition-opacity">{child.id}</span>
+                    </Link>
+                  ))}
+                </div>
+
+                {addingSubTask && (
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      autoFocus
+                      value={newSubTaskTitle}
+                      onChange={e => setNewSubTaskTitle(e.target.value)}
+                      onKeyDown={async e => {
+                        if (e.key === "Enter" && newSubTaskTitle.trim() && token) {
+                          setSavingSubTask(true);
+                          try {
+                            await api.issues.createSubTask(token, id, { title: newSubTaskTitle.trim() });
+                            const updated = await api.issues.get(token, id);
+                            setIssue(updated);
+                            setNewSubTaskTitle("");
+                            setAddingSubTask(false);
+                          } finally { setSavingSubTask(false); }
+                        }
+                        if (e.key === "Escape") { setAddingSubTask(false); setNewSubTaskTitle(""); }
+                      }}
+                      placeholder="Sub-task title… (Enter to save)"
+                      className="flex-1 px-3 py-2 text-sm border border-outline-variant/20 rounded-lg bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                    />
+                    <button
+                      disabled={savingSubTask || !newSubTaskTitle.trim()}
+                      onClick={async () => {
+                        if (!token || !newSubTaskTitle.trim()) return;
+                        setSavingSubTask(true);
+                        try {
+                          await api.issues.createSubTask(token, id, { title: newSubTaskTitle.trim() });
+                          const updated = await api.issues.get(token, id);
+                          setIssue(updated);
+                          setNewSubTaskTitle("");
+                          setAddingSubTask(false);
+                        } finally { setSavingSubTask(false); }
+                      }}
+                      className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40"
+                    >{savingSubTask ? "…" : "Add"}</button>
+                  </div>
+                )}
+              </section>
+
+              {/* Dependencies */}
+              <section className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>link</span>
+                    Dependencies
+                  </h3>
+                  <button onClick={() => setAddingDep(v => !v)} className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>Add
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  {(issue.blocking ?? []).map(dep => (
+                    <div key={dep.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-low">
+                      <span className="text-[10px] font-bold text-amber-600 uppercase bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">blocks</span>
+                      <Link href={`/issues/${dep.blockedIssue.id}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockedIssue.title}</Link>
+                      <button onClick={async () => { if (!token) return; await api.issues.removeDependency(token, id, dep.blockedIssue.id); setIssue(await api.issues.get(token, id)); }}
+                        className="text-outline hover:text-error transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                      </button>
+                    </div>
+                  ))}
+                  {(issue.blockedBy ?? []).map(dep => (
+                    <div key={dep.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-low">
+                      <span className="text-[10px] font-bold text-rose-600 uppercase bg-rose-50 px-1.5 py-0.5 rounded flex-shrink-0">blocked by</span>
+                      <Link href={`/issues/${dep.blockingIssue.id}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockingIssue.title}</Link>
+                      <button onClick={async () => { if (!token) return; await api.issues.removeDependency(token, dep.blockingIssue.id, id); setIssue(await api.issues.get(token, id)); }}
+                        className="text-outline hover:text-error transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                      </button>
+                    </div>
+                  ))}
+                  {(issue.blocking ?? []).length === 0 && (issue.blockedBy ?? []).length === 0 && !addingDep && (
+                    <p className="text-xs text-outline italic px-1">No dependencies</p>
+                  )}
+                </div>
+
+                {addingDep && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex gap-2">
+                      <select value={depType} onChange={e => setDepType(e.target.value as "blocks" | "blocked_by")}
+                        className="px-2 py-1.5 text-xs border border-outline-variant/20 rounded-lg bg-surface-container-low text-on-surface focus:outline-none">
+                        <option value="blocks">blocks</option>
+                        <option value="blocked_by">blocked by</option>
+                      </select>
+                      <input
+                        autoFocus
+                        value={depSearch}
+                        onChange={e => setDepSearch(e.target.value)}
+                        placeholder="Search issue ID or title…"
+                        className="flex-1 px-3 py-1.5 text-sm border border-outline-variant/20 rounded-lg bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                      />
+                    </div>
+                    {depSearch.trim() && (
+                      <div className="border border-outline-variant/20 rounded-lg bg-surface-container-lowest shadow-sm overflow-hidden max-h-40 overflow-y-auto">
+                        {allIssues.filter(i => i.id !== id && (i.id.toLowerCase().includes(depSearch.toLowerCase()) || i.title.toLowerCase().includes(depSearch.toLowerCase()))).slice(0, 6).map(i => (
+                          <button key={i.id} onClick={async () => {
+                            if (!token) return;
+                            setSavingDep(true);
+                            try {
+                              if (depType === "blocks") await api.issues.addDependency(token, id, i.id);
+                              else await api.issues.addDependency(token, i.id, id);
+                              setIssue(await api.issues.get(token, id));
+                              setAddingDep(false); setDepSearch("");
+                            } catch { toast("Failed to add dependency"); }
+                            finally { setSavingDep(false); }
+                          }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-surface-container-low flex items-center gap-2 border-b border-outline-variant/10 last:border-0">
+                            <span className="text-[10px] font-bold text-outline">{i.id}</span>
+                            <span className="truncate text-on-surface">{i.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
 
               {/* Comments */}
               <section className="mt-10 space-y-8">
@@ -479,22 +658,21 @@ export default function IssueDetailPage() {
 
                   <FieldRow label="Labels">
                     <div className="flex flex-wrap gap-1.5">
-                      {LABELS_OPTIONS.map((opt) => {
-                        const active = labels.includes(opt);
+                      {(labelDefs.length > 0 ? labelDefs : LABELS_FALLBACK.map(n => ({ name: n, color: "#6366f1" }))).map((def) => {
+                        const active = labels.includes(def.name);
                         return (
                           <button
-                            key={opt}
+                            key={def.name}
                             onClick={() => {
-                              const next = active ? labels.filter((l) => l !== opt) : [...labels, opt];
+                              const next = active ? labels.filter((l) => l !== def.name) : [...labels, def.name];
                               patch({ labels: next });
                             }}
-                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
-                              active
-                                ? "bg-primary text-white border-primary"
-                                : "bg-surface-container text-on-surface-variant border-outline-variant/30 hover:border-primary/40"
-                            }`}
+                            className="px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all"
+                            style={active
+                              ? { background: def.color, color: "#fff", borderColor: def.color }
+                              : { borderColor: "rgb(var(--color-outline-variant)/0.3)" }}
                           >
-                            {opt}
+                            {def.name}
                           </button>
                         );
                       })}

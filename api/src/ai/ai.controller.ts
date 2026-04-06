@@ -38,6 +38,19 @@ export class AiController {
     return this.ai.analyzeSprint(body);
   }
 
+  @Post('write-issue')
+  writeIssue(@Body() body: { roughDescription: string }) {
+    return this.ai.writeIssue(body);
+  }
+
+  @Post('standup')
+  generateStandup(@Body() body: {
+    sprintName: string;
+    issues: Array<{ title: string; status: string; priority: string; assignee?: string; updatedAt?: string }>;
+  }) {
+    return this.ai.generateStandup(body);
+  }
+
   @Post('analyze-roadmap')
   analyzeRoadmap(@Body() body: {
     projectName: string;

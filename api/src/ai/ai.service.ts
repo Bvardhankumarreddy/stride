@@ -354,6 +354,91 @@ No markdown fences, no extra text.`;
     }
   }
 
+  // ── AI issue writer ─────────────────────────────────────────────────────────
+
+  async writeIssue(input: { roughDescription: string }): Promise<{
+    title: string;
+    description: string;
+    priority: string;
+    labels: string[];
+    acceptanceCriteria: string[];
+  } | null> {
+    const system = `You are a senior product manager writing a well-structured engineering issue from a rough description.
+Return ONLY valid JSON with these keys:
+- "title": concise, action-oriented issue title (max 80 chars)
+- "description": 2-3 sentence clear problem/goal statement in markdown
+- "priority": one of "urgent", "high", "medium", "low"
+- "labels": array of 1-3 relevant label strings (e.g. "bug", "feature", "ux", "backend", "performance")
+- "acceptance_criteria": array of 3-5 clear, testable acceptance criteria strings
+No markdown fences, no extra text.`;
+
+    const raw = await this.complete(system, `Rough description: ${input.roughDescription}`, 1024);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        title: data.title ?? '',
+        description: data.description ?? '',
+        priority: data.priority ?? 'medium',
+        labels: data.labels ?? [],
+        acceptanceCriteria: data.acceptance_criteria ?? [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Standup generator ────────────────────────────────────────────────────────
+
+  async generateStandup(input: {
+    sprintName: string;
+    issues: Array<{ title: string; status: string; priority: string; assignee?: string; updatedAt?: string }>;
+  }): Promise<{
+    yesterday: string[];
+    today: string[];
+    blockers: string[];
+    summary: string;
+  } | null> {
+    const system = `You are a scrum master generating a daily standup from sprint issue data.
+Return ONLY valid JSON with these keys:
+- "yesterday": array of strings — what was completed or progressed yesterday
+- "today": array of strings — what the team is working on today
+- "blockers": array of strings — current blockers or risks (empty array if none)
+- "summary": one sentence overall standup summary
+No markdown fences, no extra text.`;
+
+    const issuesStr = input.issues.map(i =>
+      `- [${i.status.toUpperCase()}] ${i.title}` +
+      (i.assignee ? ` (${i.assignee})` : '') +
+      (i.priority === 'urgent' ? ' ⚠️ URGENT' : '')
+    ).join('\n');
+
+    const inProgress = input.issues.filter(i => i.status === 'in-progress');
+    const done = input.issues.filter(i => i.status === 'done');
+    const blocked = input.issues.filter(i => ['urgent'].includes(i.priority) && i.status !== 'done');
+
+    const prompt =
+      `Sprint: ${input.sprintName}\n` +
+      `Done: ${done.length} · In Progress: ${inProgress.length} · Blocked/Urgent: ${blocked.length}\n\n` +
+      `Issues:\n${issuesStr}`;
+
+    const raw = await this.complete(system, prompt, 1024);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        yesterday: data.yesterday ?? [],
+        today: data.today ?? [],
+        blockers: data.blockers ?? [],
+        summary: data.summary ?? '',
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // ── Summarize comments ──────────────────────────────────────────────────────
 
   async summarizeComments(input: {

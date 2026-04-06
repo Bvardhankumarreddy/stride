@@ -5,7 +5,7 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api, ApiIssue, ApiCustomField, ApiUser } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiSavedView } from "@/lib/api";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import { toast } from "@/components/Toast";
 
@@ -102,7 +102,7 @@ function GroupHeader({ icon, iconColor, label, count, colSpan }: { icon: string;
 }
 
 function IssueRow({
-  issue, selected, onToggle, visibleFields, onUpdate, users, customFields,
+  issue, selected, onToggle, visibleFields, onUpdate, users, customFields, labelDefs,
 }: {
   issue: ApiIssue;
   selected: boolean;
@@ -111,6 +111,7 @@ function IssueRow({
   onUpdate: (id: string, patch: Partial<ApiIssue> & { assigneeId?: string | null }) => void;
   users: Pick<ApiUser, "id" | "name" | "initials">[];
   customFields: ApiCustomField[];
+  labelDefs: { name: string; color: string }[];
 }) {
   const token = useToken();
   const labels = Array.isArray(issue.labels) ? issue.labels : [];
@@ -268,9 +269,12 @@ function IssueRow({
       {visibleFields.has("labels") && (
         <td className="px-2 py-2">
           <div className="flex gap-1 flex-wrap">
-            {labels.map(l => (
-              <span key={l} className={clsx("px-1.5 py-0.5 rounded text-[10px] font-bold border", LABEL_COLOR[l] ?? LABEL_COLOR.default)}>{l}</span>
-            ))}
+            {labels.map(l => {
+              const def = labelDefs.find(d => d.name === l);
+              return def
+                ? <span key={l} className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style={{ background: def.color }}>{l}</span>
+                : <span key={l} className={clsx("px-1.5 py-0.5 rounded text-[10px] font-bold border", LABEL_COLOR[l] ?? LABEL_COLOR.default)}>{l}</span>;
+            })}
           </div>
         </td>
       )}
@@ -318,6 +322,7 @@ export default function IssuesPage() {
   const [selected, setSelected]   = useState<Set<string>>(new Set());
   const [users, setUsers]         = useState<Pick<ApiUser, "id" | "name" | "initials">[]>([]);
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
+  const [labelDefs, setLabelDefs] = useState<{ name: string; color: string }[]>([]);
 
   // Field visibility
   const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set(FIXED_FIELDS.map(f => f.key)));
@@ -334,6 +339,13 @@ export default function IssuesPage() {
   // Column resize
   const [colWidths, setColWidths] = useState<Record<string, number>>({ ...DEFAULT_WIDTHS });
   const resizeRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
+
+  // Saved views
+  const [savedViews, setSavedViews] = useState<ApiSavedView[]>([]);
+  const [viewsOpen, setViewsOpen] = useState(false);
+  const [savingView, setSavingView] = useState(false);
+  const [viewName, setViewName] = useState("");
+  const viewsRef = useRef<HTMLDivElement>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
@@ -364,6 +376,7 @@ export default function IssuesPage() {
 
   useClickOutside(fieldsRef, () => setFieldsOpen(false));
   useClickOutside(filterRef, () => setFilterOpen(false));
+  useClickOutside(viewsRef, () => setViewsOpen(false));
 
   useEffect(() => {
     if (!token) return;
@@ -371,11 +384,15 @@ export default function IssuesPage() {
       api.issues.list(token, { limit: "50" }),
       api.users.list(token),
       api.customFields.list(token),
-    ]).then(([issueRes, userRes, cfRes]) => {
+      api.savedViews.list(token),
+      api.organizations.mine(token),
+    ]).then(([issueRes, userRes, cfRes, viewsRes, orgRes]) => {
       setAllIssues(issueRes.data);
       setTotal(issueRes.total);
       setUsers(userRes);
       setCustomFields(cfRes);
+      setSavedViews(viewsRes);
+      setLabelDefs(Array.isArray(orgRes.labelDefs) ? orgRes.labelDefs : []);
     }).finally(() => setLoading(false));
   }, [token, refreshKey]);
 
@@ -474,10 +491,94 @@ export default function IssuesPage() {
 
   const topBarActions = (
     <div className="hidden md:flex items-center gap-2">
+      {/* Saved Views */}
+      <div className="relative" ref={viewsRef}>
+        <button
+          onClick={() => { setViewsOpen(v => !v); setFilterOpen(false); setFieldsOpen(false); }}
+          className={clsx(
+            "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border cursor-pointer",
+            viewsOpen ? "bg-primary/10 text-primary border-primary/30" : "text-on-surface-variant hover:bg-surface-container-high border-outline-variant/20"
+          )}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>bookmarks</span>
+          Views
+          {savedViews.length > 0 && <span className="w-4 h-4 rounded-full bg-surface-container-high text-on-surface-variant text-[9px] font-black flex items-center justify-center">{savedViews.length}</span>}
+        </button>
+        {viewsOpen && (
+          <div className="absolute right-0 top-full mt-2 z-50 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 w-64 py-2">
+            {savedViews.length > 0 && (
+              <>
+                <p className="px-3 pb-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Saved views</p>
+                {savedViews.map(v => (
+                  <div key={v.id} className="flex items-center gap-1 px-2 hover:bg-surface-container-low">
+                    <button
+                      onClick={() => {
+                        const f = v.filters as any;
+                        setFilters({ status: f.status ?? [], priority: f.priority ?? [], assigneeIds: f.assigneeIds ?? [] });
+                        setViewsOpen(false);
+                      }}
+                      className="flex-1 text-left px-2 py-2 text-sm text-on-surface truncate"
+                    >{v.name}</button>
+                    <button
+                      onClick={async () => {
+                        if (!token) return;
+                        await api.savedViews.remove(token, v.id);
+                        setSavedViews(prev => prev.filter(x => x.id !== v.id));
+                      }}
+                      className="p-1 text-outline hover:text-error transition-colors flex-shrink-0"
+                    ><span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span></button>
+                  </div>
+                ))}
+                <div className="my-1.5 border-t border-outline-variant/10" />
+              </>
+            )}
+            {/* Save current filters as a view */}
+            {activeFilterCount > 0 ? (
+              <div className="px-3 pt-1 space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Save current filters</p>
+                <input
+                  autoFocus
+                  value={viewName}
+                  onChange={e => setViewName(e.target.value)}
+                  onKeyDown={async e => {
+                    if (e.key !== "Enter" || !viewName.trim() || !token) return;
+                    setSavingView(true);
+                    try {
+                      const created = await api.savedViews.create(token, { name: viewName.trim(), filters: filters as any });
+                      setSavedViews(prev => [...prev, created]);
+                      setViewName("");
+                      setViewsOpen(false);
+                    } finally { setSavingView(false); }
+                  }}
+                  placeholder="View name… (Enter to save)"
+                  className="w-full px-2.5 py-1.5 text-xs border border-outline-variant/20 rounded-lg bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                />
+                <button
+                  disabled={savingView || !viewName.trim()}
+                  onClick={async () => {
+                    if (!viewName.trim() || !token) return;
+                    setSavingView(true);
+                    try {
+                      const created = await api.savedViews.create(token, { name: viewName.trim(), filters: filters as any });
+                      setSavedViews(prev => [...prev, created]);
+                      setViewName("");
+                      setViewsOpen(false);
+                    } finally { setSavingView(false); }
+                  }}
+                  className="w-full py-1.5 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity"
+                >{savingView ? "Saving…" : "Save view"}</button>
+              </div>
+            ) : (
+              <p className="px-3 py-2 text-xs text-on-surface-variant italic">Apply filters first to save a view.</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Filters */}
       <div className="relative" ref={filterRef}>
         <button
-          onClick={() => { setFilterOpen(v => !v); setFieldsOpen(false); }}
+          onClick={() => { setFilterOpen(v => !v); setFieldsOpen(false); setViewsOpen(false); }}
           className={clsx(
             "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border cursor-pointer",
             filterOpen || activeFilterCount > 0
@@ -545,7 +646,7 @@ export default function IssuesPage() {
       {/* Fields toggle */}
       <div className="relative" ref={fieldsRef}>
         <button
-          onClick={() => { setFieldsOpen(v => !v); setFilterOpen(false); }}
+          onClick={() => { setFieldsOpen(v => !v); setFilterOpen(false); setViewsOpen(false); }}
           className={clsx(
             "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border cursor-pointer",
             fieldsOpen ? "bg-primary/10 text-primary border-primary/30" : "text-on-surface-variant hover:bg-surface-container-high border-outline-variant/20"
@@ -738,20 +839,33 @@ export default function IssuesPage() {
                 <>
                   {inProgress.length > 0 && <>
                     <GroupHeader icon="play_circle" iconColor="text-amber-500" label="In Progress" count={inProgress.length} colSpan={visibleColCount} />
-                    {inProgress.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} />)}
+                    {inProgress.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} labelDefs={labelDefs} />)}
                   </>}
                   {todo.length > 0 && <>
                     <GroupHeader icon="circle" iconColor="text-outline" label="To Do" count={todo.length} colSpan={visibleColCount} />
-                    {todo.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} />)}
+                    {todo.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} labelDefs={labelDefs} />)}
                   </>}
                   {done.length > 0 && <>
                     <GroupHeader icon="check_circle" iconColor="text-emerald-500" label="Done" count={done.length} colSpan={visibleColCount} />
-                    {done.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} />)}
+                    {done.map(i => <IssueRow key={i.id} issue={i} selected={selected.has(i.id)} onToggle={() => toggleSelect(i.id)} visibleFields={visibleFields} onUpdate={handleIssueUpdate} users={users} customFields={customFields} labelDefs={labelDefs} />)}
                   </>}
                   {filteredIssues.length === 0 && (
                     <tr>
-                      <td colSpan={visibleColCount} className="px-4 py-12 text-center text-on-surface-variant text-sm">
-                        {activeFilterCount > 0 ? "No issues match the current filters." : "No issues yet."}
+                      <td colSpan={visibleColCount} className="px-4 py-20 text-center">
+                        {activeFilterCount > 0 ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="material-symbols-outlined text-outline" style={{ fontSize: 36 }}>filter_list_off</span>
+                            <p className="text-sm font-bold text-on-surface">No issues match your filters</p>
+                            <button onClick={() => setFilters({ status: [], priority: [], assigneeIds: [] })} className="mt-1 text-xs text-primary font-semibold hover:underline">Clear all filters</button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="material-symbols-outlined text-outline" style={{ fontSize: 36 }}>checklist</span>
+                            <p className="text-sm font-bold text-on-surface">No issues yet</p>
+                            <p className="text-xs text-on-surface-variant">Create your first issue to start tracking work.</p>
+                            <button onClick={() => openModal()} className="mt-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity">New Issue</button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}

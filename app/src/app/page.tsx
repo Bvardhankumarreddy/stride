@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
   title: "Stride — AI-Native Project Management Tool",
@@ -78,13 +79,14 @@ export default async function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-on-surface-variant">
             <a href="#features" className="hover:text-on-surface transition-colors">Features</a>
-            <Link href="/pricing" className="hover:text-on-surface transition-colors">Pricing</Link>
+            <a href="#pricing" className="hover:text-on-surface transition-colors">Pricing</a>
+            <a href="#contact" className="hover:text-on-surface transition-colors">Contact</a>
             <Link href="/login" className="hover:text-on-surface transition-colors">Sign in</Link>
-            <Link href="/onboarding" className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm shadow-primary/20">
+            <Link href="/login" className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm shadow-primary/20">
               Get started free
             </Link>
           </nav>
-          <Link href="/onboarding" className="md:hidden px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm">
+          <Link href="/login" className="md:hidden px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm">
             Get started
           </Link>
         </div>
@@ -109,17 +111,17 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/onboarding"
+              href="/login"
               className="px-8 py-3.5 bg-primary text-white font-bold rounded-2xl text-base hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/25"
             >
               Start for free
             </Link>
-            <Link
-              href="/login"
+            <a
+              href="#contact"
               className="px-8 py-3.5 border border-outline-variant/30 text-on-surface font-semibold rounded-2xl text-base hover:bg-surface-container-low transition-colors"
             >
-              Sign in
-            </Link>
+              Talk to sales
+            </a>
           </div>
 
           <p className="text-xs text-outline mt-4">No credit card required · Free plan available</p>
@@ -185,6 +187,7 @@ export default async function LandingPage() {
                   desc: "For small teams getting started",
                   features: ["Up to 5 members", "1 project", "100 issues", "Board & list views", "Basic notifications"],
                   cta: "Get started",
+                  href: "/login",
                   highlight: false,
                 },
                 {
@@ -192,7 +195,8 @@ export default async function LandingPage() {
                   price: "$12",
                   desc: "Per user/month for growing teams",
                   features: ["Unlimited members", "Unlimited projects", "Sprints & roadmap", "Custom fields", "CSV export", "Docs & wiki"],
-                  cta: "Start Pro trial",
+                  cta: "Contact us",
+                  href: "#contact",
                   highlight: true,
                 },
                 {
@@ -201,6 +205,7 @@ export default async function LandingPage() {
                   desc: "Per user/month for scaling orgs",
                   features: ["Everything in Pro", "AI digest & suggestions", "GitHub & Slack integrations", "Audit logs", "Priority support"],
                   cta: "Contact us",
+                  href: "#contact",
                   highlight: false,
                 },
               ].map((plan) => (
@@ -219,12 +224,12 @@ export default async function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href="/onboarding"
+                  <a
+                    href={plan.href}
                     className={`block text-center py-2.5 rounded-xl text-sm font-bold transition-all ${plan.highlight ? "bg-white text-primary hover:bg-white/90" : "border border-outline-variant/30 text-on-surface hover:bg-surface-container-low"}`}
                   >
                     {plan.cta}
-                  </Link>
+                  </a>
                 </div>
               ))}
             </div>
@@ -240,12 +245,61 @@ export default async function LandingPage() {
             <p className="text-on-surface-variant mb-8">
               Join teams who replaced Jira with something that actually works with them.
             </p>
-            <Link
-              href="/onboarding"
-              className="inline-flex px-8 py-3.5 bg-primary text-white font-bold rounded-2xl text-base hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/25"
-            >
-              Get started free
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/login"
+                className="inline-flex px-8 py-3.5 bg-primary text-white font-bold rounded-2xl text-base hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-primary/25"
+              >
+                Get started free
+              </Link>
+              <a
+                href="#contact"
+                className="inline-flex px-8 py-3.5 border border-outline-variant/30 text-on-surface font-semibold rounded-2xl text-base hover:bg-surface-container-low transition-colors"
+              >
+                Talk to sales
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact */}
+        <section id="contact" className="py-20 px-6 bg-surface-container-lowest">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+              {/* Left — copy */}
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-wide uppercase mb-6 border border-primary/20">
+                  <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>mail</span>
+                  Get in touch
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-on-surface mb-4">
+                  Let's find the right plan for your team
+                </h2>
+                <p className="text-on-surface-variant leading-relaxed mb-8">
+                  Whether you're evaluating Pro, scaling to Business, or need a custom enterprise arrangement — our team will help you get set up fast.
+                </p>
+                <ul className="space-y-4">
+                  {[
+                    { icon: "bolt",          text: "Onboarding & migration support" },
+                    { icon: "group",          text: "Volume discounts for large teams" },
+                    { icon: "security",       text: "SSO, audit logs & compliance needs" },
+                    { icon: "support_agent",  text: "Dedicated account manager on Business" },
+                  ].map(item => (
+                    <li key={item.icon} className="flex items-center gap-3 text-sm text-on-surface-variant">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="material-symbols-outlined text-primary" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>{item.icon}</span>
+                      </div>
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Right — form */}
+              <div className="bg-white rounded-2xl border border-outline-variant/15 p-8 shadow-sm">
+                <ContactForm />
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -261,7 +315,8 @@ export default async function LandingPage() {
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="hover:text-on-surface transition-colors">Features</a>
-            <Link href="/pricing" className="hover:text-on-surface transition-colors">Pricing</Link>
+            <a href="#pricing" className="hover:text-on-surface transition-colors">Pricing</a>
+            <a href="#contact" className="hover:text-on-surface transition-colors">Contact</a>
             <Link href="/login" className="hover:text-on-surface transition-colors">Sign in</Link>
           </div>
           <p>© {new Date().getFullYear()} Stride. All rights reserved.</p>

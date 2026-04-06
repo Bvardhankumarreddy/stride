@@ -23,6 +23,7 @@ import { AiModule } from './ai/ai.module';
 import { TeamsModule } from './teams/teams.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { TemplatesModule } from './templates/templates.module';
+import { SavedViewsModule } from './saved-views/saved-views.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TemplatesModule } from './templates/templates.module';
     TeamsModule,
     WebhooksModule,
     TemplatesModule,
+    SavedViewsModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,

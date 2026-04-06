@@ -79,7 +79,7 @@ export class OrganizationsService {
     });
   }
 
-  async update(orgId: string, data: { name?: string; aiSettings?: Record<string, boolean> }, requesterId: string) {
+  async update(orgId: string, data: { name?: string; aiSettings?: Record<string, boolean>; labelDefs?: { name: string; color: string }[] }, requesterId: string) {
     const requester = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId: requesterId, organizationId: orgId } },
     });

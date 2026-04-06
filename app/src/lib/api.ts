@@ -53,6 +53,27 @@ export interface ApiUser {
   role: string;
 }
 
+export interface ApiIssueChild {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+}
+
+export interface ApiIssueDependency {
+  id: string;
+  blockingIssue: { id: string; title: string; status: string };
+  blockedIssue:  { id: string; title: string; status: string };
+}
+
+export interface ApiSavedView {
+  id: string;
+  name: string;
+  filters: Record<string, unknown>;
+  createdAt: string;
+  createdBy: { id: string; name: string | null; initials: string | null };
+}
+
 export interface ApiIssue {
   id: string;
   title: string;
@@ -64,6 +85,7 @@ export interface ApiIssue {
   labels: string[];
   projectId: string | null;
   sprintId: string | null;
+  parentId: string | null;
   createdAt: string;
   updatedAt: string;
   assignee: Pick<ApiUser, "id" | "name" | "initials" | "image"> | null;
@@ -72,6 +94,9 @@ export interface ApiIssue {
   project: { id: string; name: string } | null;
   comments?: ApiComment[];
   customFieldValues?: ApiCustomFieldValue[];
+  children?: ApiIssueChild[];
+  blocking?: ApiIssueDependency[];
+  blockedBy?: ApiIssueDependency[];
 }
 
 export interface ApiComment {
@@ -161,6 +186,7 @@ export interface ApiWebhook {
 export interface ApiSprint {
   id: string;
   name: string;
+  goal: string | null;
   startDate: string | null;
   endDate: string | null;
   status: string;
@@ -204,6 +230,7 @@ export interface ApiOrganization {
   slug: string;
   plan: string;
   aiSettings: { digest?: boolean; suggestions?: boolean; autoLabel?: boolean };
+  labelDefs: { name: string; color: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -260,6 +287,12 @@ export const api = {
       apiFetch<ApiIssueActivity[]>(`/issues/${id}/activity`, token),
     bulkUpdate: (token: string, ids: string[], data: { status?: string; assigneeId?: string; priority?: string }) =>
       apiFetch<{ updated: number }>(`/issues/bulk`, token, { method: "PATCH", body: JSON.stringify({ ids, ...data }) }),
+    createSubTask: (token: string, parentId: string, body: { title: string }) =>
+      apiFetch<ApiIssueChild>(`/issues/${parentId}/subtasks`, token, { method: "POST", body: JSON.stringify(body) }),
+    addDependency: (token: string, blockingIssueId: string, blockedIssueId: string) =>
+      apiFetch<ApiIssueDependency>(`/issues/${blockingIssueId}/dependencies`, token, { method: "POST", body: JSON.stringify({ blockedIssueId }) }),
+    removeDependency: (token: string, blockingIssueId: string, blockedIssueId: string) =>
+      apiFetch<void>(`/issues/${blockingIssueId}/dependencies/${blockedIssueId}`, token, { method: "DELETE" }),
     downloadCsv: (token: string) => {
       const a = document.createElement("a");
       a.href = `${API}/issues/export`;
@@ -310,9 +343,9 @@ export const api = {
       apiFetch<ApiSprint[]>(`/projects/${projectId}/sprints`, token),
     get: (token: string, projectId: string, id: string) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token),
-    create: (token: string, projectId: string, body: { name: string; startDate?: string; endDate?: string; status?: string }) =>
+    create: (token: string, projectId: string, body: { name: string; goal?: string; startDate?: string; endDate?: string; status?: string }) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints`, token, { method: "POST", body: JSON.stringify(body) }),
-    update: (token: string, projectId: string, id: string, body: { name?: string; startDate?: string; endDate?: string; status?: string }) =>
+    update: (token: string, projectId: string, id: string, body: { name?: string; goal?: string; startDate?: string; endDate?: string; status?: string }) =>
       apiFetch<ApiSprint>(`/projects/${projectId}/sprints/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
     velocity: (token: string, projectId: string) =>
       apiFetch<ApiVelocity[]>(`/projects/${projectId}/sprints/velocity`, token),
@@ -358,7 +391,7 @@ export const api = {
       apiFetch<ApiOrgMember>(`/organizations/${orgId}/members/${userId}`, token, { method: 'PATCH', body: JSON.stringify({ role }) }),
     removeMember: (token: string, orgId: string, userId: string) =>
       apiFetch<void>(`/organizations/${orgId}/members/${userId}`, token, { method: 'DELETE' }),
-    update: (token: string, orgId: string, data: { name?: string; aiSettings?: Record<string, boolean> }) =>
+    update: (token: string, orgId: string, data: { name?: string; aiSettings?: Record<string, boolean>; labelDefs?: { name: string; color: string }[] }) =>
       apiFetch<ApiOrganization>(`/organizations/${orgId}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (token: string, orgId: string) =>
       apiFetch<void>(`/organizations/${orgId}`, token, { method: 'DELETE' }),
@@ -425,6 +458,17 @@ export const api = {
         risks: string[]; recommendations: string[];
         sprintInsights: { name: string; health: string; note: string }[];
       }>(`/ai/analyze-roadmap`, token, { method: "POST", body: JSON.stringify(body) }),
+    writeIssue: (token: string, body: { roughDescription: string }) =>
+      apiFetch<{
+        title: string; description: string; priority: string; labels: string[]; acceptanceCriteria: string[];
+      }>(`/ai/write-issue`, token, { method: "POST", body: JSON.stringify(body) }),
+    standup: (token: string, body: {
+      sprintName: string;
+      issues: { title: string; status: string; priority: string; assignee?: string }[];
+    }) =>
+      apiFetch<{
+        yesterday: string[]; today: string[]; blockers: string[]; summary: string;
+      }>(`/ai/standup`, token, { method: "POST", body: JSON.stringify(body) }),
   },
 
   billing: {
@@ -477,5 +521,12 @@ export const api = {
       apiFetch<{ id: string; type: string }>(`/integrations`, token, { method: "POST", body: JSON.stringify(body) }),
     remove: (token: string, type: string) =>
       apiFetch<void>(`/integrations/${encodeURIComponent(type)}`, token, { method: "DELETE" }),
+  },
+
+  savedViews: {
+    list: (token: string) => apiFetch<ApiSavedView[]>(`/saved-views`, token),
+    create: (token: string, body: { name: string; filters: Record<string, unknown> }) =>
+      apiFetch<ApiSavedView>(`/saved-views`, token, { method: "POST", body: JSON.stringify(body) }),
+    remove: (token: string, id: string) => apiFetch<void>(`/saved-views/${id}`, token, { method: "DELETE" }),
   },
 };
