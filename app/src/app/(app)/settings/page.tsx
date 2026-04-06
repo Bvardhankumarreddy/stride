@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
@@ -110,7 +110,7 @@ const INTEGRATIONS: Integration[] = [
   },
 ];
 
-export default function SettingsPage() {
+function SettingsInner() {
   const token = useToken();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -851,5 +851,13 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsInner />
+    </Suspense>
   );
 }
