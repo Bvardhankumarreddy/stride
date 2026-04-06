@@ -18,6 +18,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { CustomFieldsModule } from './custom-fields/custom-fields.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
     InvitationsModule,
     CustomFieldsModule,
     IntegrationsModule,
+    BillingModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,

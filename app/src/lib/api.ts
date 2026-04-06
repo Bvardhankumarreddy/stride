@@ -354,6 +354,13 @@ export const api = {
     },
   },
 
+  billing: {
+    checkout: (token: string, plan: 'pro' | 'business') =>
+      apiFetch<{ url: string }>(`/billing/checkout`, token, { method: 'POST', body: JSON.stringify({ plan }) }),
+    portal: (token: string) =>
+      apiFetch<{ url: string }>(`/billing/portal`, token),
+  },
+
   integrations: {
     list: (token: string) =>
       apiFetch<{ id: string; type: string; config: Record<string, string>; createdAt: string }[]>(`/integrations`, token),

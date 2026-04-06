@@ -78,7 +78,7 @@ export default async function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-on-surface-variant">
             <a href="#features" className="hover:text-on-surface transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-on-surface transition-colors">Pricing</a>
+            <Link href="/pricing" className="hover:text-on-surface transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-on-surface transition-colors">Sign in</Link>
             <Link href="/onboarding" className="px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-sm shadow-primary/20">
               Get started free
@@ -261,7 +261,7 @@ export default async function LandingPage() {
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="hover:text-on-surface transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-on-surface transition-colors">Pricing</a>
+            <Link href="/pricing" className="hover:text-on-surface transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-on-surface transition-colors">Sign in</Link>
           </div>
           <p>© {new Date().getFullYear()} Stride. All rights reserved.</p>

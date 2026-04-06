@@ -15,6 +15,7 @@ const TABS = [
   { id: "integrations", label: "Integrations", icon: "extension" },
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
   { id: "notifications", label: "Notifications", icon: "notifications" },
+  { id: "billing", label: "Billing", icon: "credit_card" },
 ];
 
 const NOTIF_EVENTS = [
@@ -129,6 +130,8 @@ export default function SettingsPage() {
   const [aiAutoLabel, setAiAutoLabel] = useState(false);
   const [connectedIntegrations, setConnectedIntegrations] = useState<Set<string>>(new Set());
   const [savingIntegration, setSavingIntegration] = useState(false);
+  const [orgPlan, setOrgPlan] = useState<string>("free");
+  const [billingLoading, setBillingLoading] = useState(false);
 
   // Custom fields state
   const [customFields, setCustomFields] = useState<import("@/lib/api").ApiCustomField[]>([]);
@@ -146,8 +149,12 @@ export default function SettingsPage() {
   useEffect(() => {
     const success = searchParams.get("integration_success");
     const error   = searchParams.get("integration_error");
+    const tab     = searchParams.get("tab");
+    const billOk  = searchParams.get("billing_success");
     if (success) { toast(`${success.charAt(0).toUpperCase() + success.slice(1)} connected successfully`); setActiveTab("integrations"); router.replace("/settings"); }
     if (error)   { toast(`Failed to connect ${error} — please try again`); setActiveTab("integrations"); router.replace("/settings"); }
+    if (billOk)  { toast("Subscription activated — your plan has been upgraded!"); setActiveTab("billing"); router.replace("/settings"); }
+    if (tab && !billOk && !success && !error) setActiveTab(tab);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -169,6 +176,7 @@ export default function SettingsPage() {
       setOrgId(org.id);
       setWorkspaceName(org.name);
       setSavedName(org.name);
+      setOrgPlan(org.plan ?? "free");
       const ai = (org.aiSettings ?? {}) as { digest?: boolean; suggestions?: boolean; autoLabel?: boolean };
       setAiDigest(ai.digest ?? true);
       setAiSuggestions(ai.suggestions ?? true);
@@ -686,6 +694,110 @@ export default function SettingsPage() {
 
                 <p className="text-xs text-on-surface-variant mt-4 italic">Preferences are saved locally on this device.</p>
               </div>
+            </div>
+          )}
+
+          {/* Billing */}
+          {activeTab === "billing" && (
+            <div className="space-y-6">
+              {/* Current plan */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+                  <h2 className="font-bold text-on-surface">Current Plan</h2>
+                </div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className={clsx(
+                    "px-3 py-1.5 rounded-lg text-sm font-black uppercase tracking-wide",
+                    orgPlan === "free" && "bg-surface-container text-on-surface-variant",
+                    orgPlan === "pro" && "bg-primary/10 text-primary",
+                    orgPlan === "business" && "bg-secondary/10 text-secondary",
+                  )}>
+                    {orgPlan.charAt(0).toUpperCase() + orgPlan.slice(1)}
+                  </div>
+                  {orgPlan === "free" && <p className="text-sm text-on-surface-variant">Up to 5 members · 1 project · 100 issues</p>}
+                  {orgPlan === "pro" && <p className="text-sm text-on-surface-variant">Unlimited members · Unlimited projects · Sprints & roadmap</p>}
+                  {orgPlan === "business" && <p className="text-sm text-on-surface-variant">Everything in Pro · AI digest · Audit logs · Priority support</p>}
+                </div>
+                {orgPlan !== "free" && (
+                  <button
+                    disabled={billingLoading}
+                    onClick={async () => {
+                      if (!token) return;
+                      setBillingLoading(true);
+                      try {
+                        const { url } = await api.billing.portal(token);
+                        if (url) window.location.href = url;
+                      } catch {
+                        toast("Failed to open billing portal — please try again");
+                      } finally {
+                        setBillingLoading(false);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold border border-outline-variant/30 rounded-xl text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>open_in_new</span>
+                    {billingLoading ? "Opening…" : "Manage subscription"}
+                  </button>
+                )}
+              </div>
+
+              {/* Plan comparison */}
+              {orgPlan === "free" && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {([
+                    {
+                      plan: "pro" as const,
+                      name: "Pro",
+                      price: "$12/user/mo",
+                      accentClass: "bg-primary text-white",
+                      features: ["Unlimited members", "Unlimited projects", "Sprints & roadmap", "Custom fields", "CSV export", "Docs & wiki"],
+                    },
+                    {
+                      plan: "business" as const,
+                      name: "Business",
+                      price: "$25/user/mo",
+                      accentClass: "bg-secondary text-white",
+                      features: ["Everything in Pro", "AI digest & suggestions", "GitHub & Slack integrations", "Audit logs", "Priority support"],
+                    },
+                  ]).map((p) => (
+                    <div key={p.plan} className="bg-white rounded-2xl border border-outline-variant/15 overflow-hidden shadow-sm">
+                      <div className={`px-5 py-4 ${p.accentClass}`}>
+                        <p className="font-black text-base tracking-tight">{p.name}</p>
+                        <p className="text-sm opacity-80 mt-0.5">{p.price}</p>
+                      </div>
+                      <div className="px-5 py-4">
+                        <ul className="space-y-2 mb-5">
+                          {p.features.map((f) => (
+                            <li key={f} className="flex items-center gap-2 text-sm text-on-surface-variant">
+                              <span className="material-symbols-outlined text-primary" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+                        <button
+                          disabled={billingLoading}
+                          onClick={async () => {
+                            if (!token) return;
+                            setBillingLoading(true);
+                            try {
+                              const { url } = await api.billing.checkout(token, p.plan);
+                              if (url) window.location.href = url;
+                            } catch {
+                              toast("Failed to start checkout — please try again");
+                            } finally {
+                              setBillingLoading(false);
+                            }
+                          }}
+                          className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
+                        >
+                          {billingLoading ? "Redirecting…" : `Upgrade to ${p.name}`}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
