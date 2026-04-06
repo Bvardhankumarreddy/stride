@@ -43,12 +43,13 @@ def lambda_handler(event, context):
         elif email_type == 'stride_invite':          return handle_stride_invite(body, headers)
         elif email_type == 'stride_password_reset':  return handle_password_reset(body, headers)
         elif email_type == 'stride_verify_email':    return handle_verify_email(body, headers)
+        elif email_type == 'stride_contact':         return handle_stride_contact(body, headers)
         else:
             return {
                 'statusCode': 400, 'headers': headers,
                 'body': json.dumps({
                     'error': 'Invalid email type',
-                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email']
+                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email', 'stride_contact']
                 })
             }
 
@@ -258,6 +259,85 @@ def handle_stride_digest(body, headers):
             Destination={'ToAddresses': [email]},
             Message={
                 'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body':    {'Html': {'Data': html_body, 'Charset': 'UTF-8'}}
+            }
+        )
+        return {'statusCode': 200, 'headers': headers,
+                'body': json.dumps({'success': True, 'messageId': response['MessageId']})}
+    except ClientError as e:
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': e.response['Error']['Message']})}
+
+
+# ── Contact Form ──────────────────────────────────────────────────────────────
+
+def handle_stride_contact(body, headers):
+    to_email       = body.get('email')          # Stride team inbox (CONTACT_EMAIL)
+    name           = body.get('name', 'Someone')
+    submitter_email = body.get('submitterEmail', '')
+    company        = body.get('company', '')
+    message        = body.get('message', '')
+
+    if not all([to_email, submitter_email, message]):
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'Missing required fields: email, submitterEmail, message'})}
+
+    company_row = f"""
+        <tr>
+          <td style="padding:8px 0;color:#64748b;font-size:13px;width:110px">Company</td>
+          <td style="padding:8px 0;font-size:13px;color:#1e293b">{company}</td>
+        </tr>""" if company else ''
+
+    html_body = f"""
+    <div style="font-family:Inter,sans-serif;max-width:540px;margin:0 auto;
+                background:#fff;border-radius:16px;overflow:hidden">
+        <div style="padding:28px 32px 0;background:linear-gradient(135deg,#0058be,#2170e4)">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.1em;
+                       color:rgba(255,255,255,.7);text-transform:uppercase">Stride</p>
+            <h1 style="margin:0 0 20px;font-size:22px;font-weight:900;color:#fff">
+                New contact form submission
+            </h1>
+        </div>
+        <div style="padding:28px 32px">
+            <p style="margin:0 0 20px;font-size:14px;color:#475569">
+                Someone reached out via the Stride website.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border-top:1px solid #f1f5f9;margin-bottom:20px">
+                <tr>
+                  <td style="padding:8px 0;color:#64748b;font-size:13px;width:110px">Name</td>
+                  <td style="padding:8px 0;font-size:13px;color:#1e293b">{name}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;color:#64748b;font-size:13px">Email</td>
+                  <td style="padding:8px 0;font-size:13px">
+                      <a href="mailto:{submitter_email}" style="color:#0058be">{submitter_email}</a>
+                  </td>
+                </tr>
+                {company_row}
+            </table>
+            <div style="background:#f8fafc;border-radius:10px;padding:16px 18px;
+                        font-size:14px;color:#334155;white-space:pre-wrap;line-height:1.6">
+{message}
+            </div>
+        </div>
+        <div style="padding:16px 32px 24px;border-top:1px solid #f1f5f9">
+            <a href="mailto:{submitter_email}"
+               style="display:inline-block;padding:10px 22px;background:#0058be;
+                      color:#fff;border-radius:8px;text-decoration:none;
+                      font-weight:700;font-size:13px">
+                Reply to {name}
+            </a>
+        </div>
+    </div>"""
+
+    try:
+        response = ses_client.send_email(
+            Source=f'Stride <{FROM_EMAIL}>',
+            Destination={'ToAddresses': [to_email]},
+            ReplyToAddresses=[submitter_email],
+            Message={
+                'Subject': {'Data': f'New contact from {name}', 'Charset': 'UTF-8'},
                 'Body':    {'Html': {'Data': html_body, 'Charset': 'UTF-8'}}
             }
         )

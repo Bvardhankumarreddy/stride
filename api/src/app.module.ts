@@ -24,6 +24,7 @@ import { TeamsModule } from './teams/teams.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { TemplatesModule } from './templates/templates.module';
 import { SavedViewsModule } from './saved-views/saved-views.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SavedViewsModule } from './saved-views/saved-views.module';
     WebhooksModule,
     TemplatesModule,
     SavedViewsModule,
+    ContactModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,

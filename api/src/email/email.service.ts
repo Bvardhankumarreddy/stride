@@ -113,6 +113,28 @@ export class EmailService {
       };
     }
 
+    if (type === 'stride_contact') {
+      const submitterEmail = payload.submitterEmail as string;
+      return {
+        subject: `New contact form submission from ${name}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:4px">New contact form submission</h2>
+            <p style="color:#727785;font-size:13px;margin-bottom:24px">Someone reached out via the Stride website.</p>
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <tr><td style="padding:8px 0;color:#424754;width:120px"><strong>Name</strong></td><td style="padding:8px 0">${name}</td></tr>
+              <tr><td style="padding:8px 0;color:#424754"><strong>Email</strong></td><td style="padding:8px 0"><a href="mailto:${submitterEmail}" style="color:#0058be">${submitterEmail}</a></td></tr>
+              ${payload.company ? `<tr><td style="padding:8px 0;color:#424754"><strong>Company</strong></td><td style="padding:8px 0">${payload.company}</td></tr>` : ''}
+            </table>
+            <hr style="border:none;border-top:1px solid #e1e2e4;margin:20px 0">
+            <p style="font-size:13px;color:#424754;white-space:pre-wrap">${payload.message}</p>
+            <hr style="border:none;border-top:1px solid #e1e2e4;margin:20px 0">
+            <a href="mailto:${submitterEmail}" style="display:inline-block;background:#0058be;color:#fff;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px">Reply to ${name}</a>
+          </div>`,
+        text: `New contact form submission\n\nName: ${name}\nEmail: ${submitterEmail}${payload.company ? `\nCompany: ${payload.company}` : ''}\n\n${payload.message}`,
+      };
+    }
+
     // Generic fallback
     return {
       subject: `Stride notification`,
