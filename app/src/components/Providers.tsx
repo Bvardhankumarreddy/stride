@@ -17,7 +17,12 @@ function SessionWatcher() {
     const isPublic =
       PUBLIC_PATHS.includes(pathname) ||
       pathname.startsWith("/invite") ||
-      pathname.startsWith("/api/");
+      pathname.startsWith("/api/") ||
+      pathname.startsWith("/auth/") ||
+      pathname.startsWith("/forgot-password") ||
+      pathname.startsWith("/reset-password") ||
+      pathname.startsWith("/pricing") ||
+      pathname.startsWith("/change-password");
     if (!isPublic) {
       router.replace("/login");
     }
