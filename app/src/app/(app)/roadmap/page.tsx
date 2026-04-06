@@ -355,58 +355,45 @@ export default function RoadmapPage() {
           </div>
         )}
 
-      </main>
 
-      {/* AI Roadmap Analysis Panel */}
-      {showAnalysis && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAnalysis(false)} />
-          <div className="relative w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/10 bg-gradient-to-r from-secondary/5 to-transparent">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-secondary">AI Analysis</p>
-                  <h2 className="text-sm font-black text-on-surface">{selectedProject?.name ?? "Roadmap"}</h2>
-                </div>
+
+        {/* AI Roadmap Analysis — inline section */}
+        {showAnalysis && (
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm overflow-hidden">
+            {analysisLoading ? (
+              <div className="flex items-center gap-3 px-6 py-8">
+                <div className="w-5 h-5 rounded-full border-2 border-secondary border-t-transparent animate-spin flex-shrink-0" />
+                <p className="text-sm text-on-surface-variant">Analyzing roadmap…</p>
               </div>
-              <button onClick={() => setShowAnalysis(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-              {analysisLoading ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-20">
-                  <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
-                  <p className="text-sm text-on-surface-variant">Analyzing roadmap…</p>
+            ) : analysis ? (
+              <div className="p-6 space-y-6">
+                {/* Top row: health + timeline + re-analyze */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className={clsx("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold", HEALTH_STYLES[analysis.overallHealth]?.badge ?? HEALTH_STYLES["at-risk"].badge)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>{HEALTH_STYLES[analysis.overallHealth]?.icon ?? "warning"}</span>
+                    <span className="capitalize">{analysis.overallHealth.replace("-", " ")}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-container text-on-surface-variant">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+                    <span className="capitalize">{analysis.timeline}</span>
+                  </div>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <span className="material-symbols-outlined text-secondary" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                    <span className="text-xs font-bold text-secondary uppercase tracking-widest">AI Analysis</span>
+                  </div>
                 </div>
-              ) : analysis ? (
-                <>
-                  {/* Overall health */}
-                  <div className={clsx("flex items-center gap-2 px-4 py-3 rounded-xl", HEALTH_STYLES[analysis.overallHealth]?.badge ?? HEALTH_STYLES["at-risk"].badge)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>{HEALTH_STYLES[analysis.overallHealth]?.icon ?? "warning"}</span>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide capitalize">{analysis.overallHealth.replace("-", " ")}</p>
-                      <p className="text-xs mt-0.5 opacity-80">Timeline: <span className="font-bold capitalize">{analysis.timeline}</span></p>
-                    </div>
-                  </div>
 
-                  {/* Summary */}
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Summary</p>
-                    <p className="text-sm text-on-surface leading-relaxed">{analysis.summary}</p>
-                  </div>
+                <p className="text-sm text-on-surface leading-relaxed">{analysis.summary}</p>
 
+                <div className="grid md:grid-cols-3 gap-6">
                   {/* Sprint insights */}
                   {analysis.sprintInsights.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Sprint Insights</p>
+                    <div className="md:col-span-1">
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Sprint Insights</p>
                       <div className="space-y-2">
                         {analysis.sprintInsights.map((si, i) => (
-                          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-surface-container">
-                            <span className={clsx("w-2 h-2 rounded-full mt-1.5 flex-shrink-0", HEALTH_STYLES[si.health]?.dot ?? "bg-amber-400")} />
+                          <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-surface-container">
+                            <span className={clsx("w-2 h-2 rounded-full mt-1 flex-shrink-0", HEALTH_STYLES[si.health]?.dot ?? "bg-amber-400")} />
                             <div>
                               <p className="text-xs font-bold text-on-surface">{si.name}</p>
                               <p className="text-xs text-on-surface-variant mt-0.5">{si.note}</p>
@@ -420,8 +407,8 @@ export default function RoadmapPage() {
                   {/* Risks */}
                   {analysis.risks.length > 0 && (
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2">Risks</p>
-                      <ul className="space-y-1.5">
+                      <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-3">Risks</p>
+                      <ul className="space-y-2">
                         {analysis.risks.map((r, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
                             <span className="material-symbols-outlined text-amber-500 mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>warning</span>
@@ -435,8 +422,8 @@ export default function RoadmapPage() {
                   {/* Recommendations */}
                   {analysis.recommendations.length > 0 && (
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Recommendations</p>
-                      <ul className="space-y-1.5">
+                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Recommendations</p>
+                      <ul className="space-y-2">
                         {analysis.recommendations.map((rec, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
                             <span className="material-symbols-outlined text-primary mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
@@ -446,24 +433,29 @@ export default function RoadmapPage() {
                       </ul>
                     </div>
                   )}
-                </>
-              ) : null}
-            </div>
+                </div>
 
-            {!analysisLoading && analysis && (
-              <div className="px-6 py-4 border-t border-outline-variant/10">
-                <button
-                  onClick={handleAnalyzeRoadmap}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary/10 text-secondary text-sm font-bold hover:bg-secondary/20 transition-colors"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>refresh</span>
-                  Re-analyze
-                </button>
+                <div className="flex items-center gap-3 pt-2 border-t border-outline-variant/10">
+                  <button
+                    onClick={handleAnalyzeRoadmap}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                    Re-analyze
+                  </button>
+                  <button
+                    onClick={() => setShowAnalysis(false)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
-            )}
+            ) : null}
           </div>
-        </div>
-      )}
+        )}
+
+      </main>
     </div>
   );
 }

@@ -268,6 +268,102 @@ export default function SprintsPage() {
                 </div>
               </div>
             </div>
+
+          {/* AI Sprint Analysis — inline */}
+          {showAnalysis && (
+            <div className="mt-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm overflow-hidden">
+              {analysisLoading ? (
+                <div className="flex items-center gap-3 px-6 py-6">
+                  <div className="w-5 h-5 rounded-full border-2 border-secondary border-t-transparent animate-spin flex-shrink-0" />
+                  <p className="text-sm text-on-surface-variant">Analyzing sprint…</p>
+                </div>
+              ) : analysis ? (
+                <div className="p-6 space-y-5">
+                  {/* Top row: health + likelihood + AI badge */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className={clsx("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold", HEALTH_STYLES[analysis.health]?.badge ?? HEALTH_STYLES["at-risk"].badge)}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>{HEALTH_STYLES[analysis.health]?.icon ?? "warning"}</span>
+                      <span className="capitalize">{analysis.health.replace("-", " ")}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                        <div
+                          className={clsx("h-full rounded-full", HEALTH_STYLES[analysis.health]?.bar ?? "bg-amber-500")}
+                          style={{ width: `${analysis.completionLikelihood}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-on-surface whitespace-nowrap">{analysis.completionLikelihood}% likely</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-secondary" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                      <span className="text-xs font-bold text-secondary uppercase tracking-widest">AI Analysis</span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-on-surface leading-relaxed">{analysis.summary}</p>
+                  <p className="text-xs text-on-surface-variant">Workload: <span className="font-bold text-on-surface capitalize">{analysis.workloadBalance}</span> · <span className="font-bold text-on-surface">{analysis.healthReason}</span></p>
+
+                  <div className="grid md:grid-cols-3 gap-5 pt-1">
+                    {analysis.highlights.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Highlights</p>
+                        <ul className="space-y-1.5">
+                          {analysis.highlights.map((h, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                              <span className="material-symbols-outlined text-emerald-500 mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              {h}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {analysis.risks.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">Risks</p>
+                        <ul className="space-y-1.5">
+                          {analysis.risks.map((r, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                              <span className="material-symbols-outlined text-amber-500 mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>warning</span>
+                              {r}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {analysis.recommendations.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Recommendations</p>
+                        <ul className="space-y-1.5">
+                          {analysis.recommendations.map((rec, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                              <span className="material-symbols-outlined text-primary mt-0.5 flex-shrink-0" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2 border-t border-outline-variant/10">
+                    <button
+                      onClick={handleAnalyzeSprint}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                      Re-analyze
+                    </button>
+                    <button
+                      onClick={() => setShowAnalysis(false)}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
           </section>
         ) : (
           <section className="px-6 py-8 border-b border-outline-variant/10">
@@ -451,126 +547,6 @@ export default function SprintsPage() {
         <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add</span>
       </button>
 
-      {/* AI Sprint Analysis Panel */}
-      {showAnalysis && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAnalysis(false)} />
-          <div className="relative w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col h-full overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/10 bg-gradient-to-r from-secondary/5 to-transparent">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-secondary">AI Analysis</p>
-                  <h2 className="text-sm font-black text-on-surface">{active?.name}</h2>
-                </div>
-              </div>
-              <button onClick={() => setShowAnalysis(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-              {analysisLoading ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-20">
-                  <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
-                  <p className="text-sm text-on-surface-variant">Analyzing sprint…</p>
-                </div>
-              ) : analysis ? (
-                <>
-                  {/* Health badge */}
-                  <div className={clsx("flex items-center gap-2 px-4 py-3 rounded-xl", HEALTH_STYLES[analysis.health]?.badge ?? HEALTH_STYLES["at-risk"].badge)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>{HEALTH_STYLES[analysis.health]?.icon ?? "warning"}</span>
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide capitalize">{analysis.health.replace("-", " ")}</p>
-                      <p className="text-xs mt-0.5 opacity-80">{analysis.healthReason}</p>
-                    </div>
-                  </div>
-
-                  {/* Completion likelihood */}
-                  <div className="bg-surface-container rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Completion Likelihood</span>
-                      <span className="text-lg font-black text-on-surface">{analysis.completionLikelihood}%</span>
-                    </div>
-                    <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                      <div
-                        className={clsx("h-full rounded-full transition-all", HEALTH_STYLES[analysis.health]?.bar ?? "bg-amber-500")}
-                        style={{ width: `${analysis.completionLikelihood}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-on-surface-variant mt-2">Workload: <span className="font-bold text-on-surface capitalize">{analysis.workloadBalance}</span></p>
-                  </div>
-
-                  {/* Summary */}
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Summary</p>
-                    <p className="text-sm text-on-surface leading-relaxed">{analysis.summary}</p>
-                  </div>
-
-                  {/* Highlights */}
-                  {analysis.highlights.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">Highlights</p>
-                      <ul className="space-y-1.5">
-                        {analysis.highlights.map((h, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
-                            <span className="material-symbols-outlined text-emerald-500 mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Risks */}
-                  {analysis.risks.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2">Risks</p>
-                      <ul className="space-y-1.5">
-                        {analysis.risks.map((r, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
-                            <span className="material-symbols-outlined text-amber-500 mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>warning</span>
-                            {r}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Recommendations */}
-                  {analysis.recommendations.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Recommendations</p>
-                      <ul className="space-y-1.5">
-                        {analysis.recommendations.map((rec, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
-                            <span className="material-symbols-outlined text-primary mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
-                            {rec}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-
-            {/* Re-analyze footer */}
-            {!analysisLoading && analysis && (
-              <div className="px-6 py-4 border-t border-outline-variant/10">
-                <button
-                  onClick={handleAnalyzeSprint}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary/10 text-secondary text-sm font-bold hover:bg-secondary/20 transition-colors"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>refresh</span>
-                  Re-analyze
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Create Sprint Modal */}
       {showCreate && (
