@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useToken } from "@/lib/useToken";
 import { useSession } from "next-auth/react";
 import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, apiFetch } from "@/lib/api";
+import CommentEditor from "@/components/CommentEditor";
 import { toast } from "@/components/Toast";
 
 const STATUSES = [
@@ -62,7 +63,6 @@ export default function IssueDetailPage() {
 
   const [issue, setIssue]               = useState<ApiIssue | null>(null);
   const [loading, setLoading]           = useState(true);
-  const [comment, setComment]           = useState("");
   const [posting, setPosting]           = useState(false);
   const [customFields, setCustomFields] = useState<ApiCustomField[]>([]);
   const [fieldValues, setFieldValues]   = useState<Record<string, string>>({});
@@ -146,16 +146,6 @@ export default function IssueDetailPage() {
     catch { toast("Failed to save field"); }
   }
 
-  async function submitComment() {
-    if (!comment.trim() || !token || !id) return;
-    setPosting(true);
-    try {
-      await apiFetch(`/issues/${id}/comments`, token, { method: "POST", body: JSON.stringify({ body: comment }) });
-      setComment("");
-      const updated = await api.issues.get(token, id);
-      setIssue(updated);
-    } finally { setPosting(false); }
-  }
 
   const priority = issue ? (PRIORITIES.find((p) => p.value === issue.priority) ?? PRIORITIES[2]) : null;
   const labels: string[] = Array.isArray(issue?.labels) ? issue!.labels : [];
@@ -330,35 +320,28 @@ export default function IssueDetailPage() {
                           </div>
                         </div>
                         {editingCommentId === c.id ? (
-                          <div>
-                            <textarea
-                              value={editCommentDraft}
-                              onChange={(e) => setEditCommentDraft(e.target.value)}
-                              autoFocus
-                              rows={3}
-                              className="w-full bg-surface-container-low border border-primary/30 rounded-xl px-3 py-2 font-body text-lg text-on-surface resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          <div className="p-3 bg-surface-container-low rounded-xl border border-primary/20">
+                            <CommentEditor
+                              users={users}
+                              initialContent={editCommentDraft}
+                              submitLabel="Save"
+                              onCancel={() => setEditingCommentId(null)}
+                              onSubmit={async (html) => {
+                                if (!token) return;
+                                try {
+                                  await api.comments.update(token, id, c.id, { body: html });
+                                  const updated = await api.issues.get(token, id);
+                                  setIssue(updated);
+                                  setEditingCommentId(null);
+                                } catch { toast("Failed to update comment"); }
+                              }}
                             />
-                            <div className="flex gap-2 mt-2">
-                              <button
-                                onClick={async () => {
-                                  if (!editCommentDraft.trim() || !token) return;
-                                  try {
-                                    await api.comments.update(token, id, c.id, { body: editCommentDraft.trim() });
-                                    const updated = await api.issues.get(token, id);
-                                    setIssue(updated);
-                                    setEditingCommentId(null);
-                                  } catch { toast("Failed to update comment"); }
-                                }}
-                                className="text-xs font-bold px-3 py-1.5 bg-primary text-white rounded-lg hover:opacity-90"
-                              >Save</button>
-                              <button
-                                onClick={() => setEditingCommentId(null)}
-                                className="text-xs font-bold px-3 py-1.5 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container"
-                              >Cancel</button>
-                            </div>
                           </div>
                         ) : (
-                          <p className="font-body text-lg text-on-surface-variant leading-relaxed">{c.body}</p>
+                          <div
+                            className="font-body text-base text-on-surface-variant leading-relaxed prose prose-sm max-w-none [&_.mention]:text-primary [&_.mention]:font-semibold"
+                            dangerouslySetInnerHTML={{ __html: c.body }}
+                          />
                         )}
                       </div>
                     </div>
@@ -397,22 +380,19 @@ export default function IssueDetailPage() {
                       {me?.initials ?? "?"}
                     </div>
                     <div className="flex-1 p-4 bg-surface-container-low rounded-xl border border-outline-variant/10">
-                      <textarea
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        className="w-full bg-transparent border-none focus:ring-0 p-0 font-body text-lg resize-none text-on-surface placeholder:text-outline"
-                        placeholder="Write a comment..."
-                        rows={2}
+                      <CommentEditor
+                        users={users}
+                        submitting={posting}
+                        onSubmit={async (html) => {
+                          if (!token || !id) return;
+                          setPosting(true);
+                          try {
+                            await apiFetch(`/issues/${id}/comments`, token, { method: "POST", body: JSON.stringify({ body: html }) });
+                            const updated = await api.issues.get(token, id);
+                            setIssue(updated);
+                          } finally { setPosting(false); }
+                        }}
                       />
-                      <div className="flex justify-end mt-2">
-                        <button
-                          onClick={submitComment}
-                          disabled={posting || !comment.trim()}
-                          className="bg-primary text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-40"
-                        >
-                          {posting ? "Sending…" : "Send"}
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>

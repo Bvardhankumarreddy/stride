@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
@@ -112,6 +112,8 @@ const INTEGRATIONS: Integration[] = [
 export default function SettingsPage() {
   const token = useToken();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
   const [activeTab, setActiveTab] = useState("workspace");
   const [orgId, setOrgId] = useState<string | null>(null);
   const [workspaceName, setWorkspaceName] = useState("");
@@ -140,6 +142,14 @@ export default function SettingsPage() {
   const [editFieldOptions, setEditFieldOptions] = useState("");
 
   useEffect(() => { setNotifPrefs(loadNotifPrefs()); }, []);
+
+  useEffect(() => {
+    const success = searchParams.get("integration_success");
+    const error   = searchParams.get("integration_error");
+    if (success) { toast(`${success.charAt(0).toUpperCase() + success.slice(1)} connected successfully`); setActiveTab("integrations"); router.replace("/settings"); }
+    if (error)   { toast(`Failed to connect ${error} — please try again`); setActiveTab("integrations"); router.replace("/settings"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!token || activeTab !== "fields") return;
@@ -546,12 +556,24 @@ export default function SettingsPage() {
                   <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">OAuth</p>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Coming soon</span>
+                      {connectingTo.name !== "GitHub" && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Coming soon</span>
+                      )}
                     </div>
-                    <button disabled className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-on-surface/10 text-on-surface-variant text-sm font-bold rounded-xl cursor-not-allowed opacity-50">
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock</span>
-                      {connectingTo.oauthLabel}
-                    </button>
+                    {connectingTo.name === "GitHub" && token ? (
+                      <a
+                        href={`${API_URL}/integrations/oauth/github?token=${token}`}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-on-surface text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>code</span>
+                        {connectingTo.oauthLabel}
+                      </a>
+                    ) : (
+                      <button disabled className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-on-surface/10 text-on-surface-variant text-sm font-bold rounded-xl cursor-not-allowed opacity-50">
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock</span>
+                        {connectingTo.oauthLabel}
+                      </button>
+                    )}
                   </div>
 
                   {/* Token fallback */}

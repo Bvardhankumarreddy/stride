@@ -126,6 +126,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Block unverified users
+    if (!user.emailVerified) {
+      throw new UnauthorizedException('Email not verified. Please check your inbox.');
+    }
+
     // Check lockout before validating password
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);

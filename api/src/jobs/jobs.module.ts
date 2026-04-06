@@ -17,6 +17,7 @@ import { AiSummaryProcessor } from './ai-summary.processor';
 import { NotificationFanoutProcessor } from './notification-fanout.processor';
 import { WebhookProcessor } from './webhook.processor';
 import { DueDateScheduler } from './due-date.scheduler';
+import { DigestScheduler } from './digest.scheduler';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { DueDateScheduler } from './due-date.scheduler';
     NotificationFanoutProcessor,
     WebhookProcessor,
     DueDateScheduler,
+    DigestScheduler,
   ],
   exports: [JobsService],
 })
