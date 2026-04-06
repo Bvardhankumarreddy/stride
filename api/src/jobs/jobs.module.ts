@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
+import { AiModule } from '../ai/ai.module';
 import {
   QUEUE_EMAIL_DIGEST,
   QUEUE_AI_SUMMARY,
@@ -39,9 +39,9 @@ import { DigestScheduler } from './digest.scheduler';
       { name: QUEUE_WEBHOOK },
     ),
     ConfigModule,
-    HttpModule,
     PrismaModule,
     EmailModule,
+    AiModule,
   ],
   controllers: [JobsController],
   providers: [

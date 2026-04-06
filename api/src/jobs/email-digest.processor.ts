@@ -14,6 +14,13 @@ export interface EmailDigestPayload {
     overdue: number;
     sprintName?: string;
     sprintDaysLeft?: number;
+    // AI-generated fields (optional — present when ANTHROPIC_API_KEY is set)
+    health?: string;
+    healthReason?: string;
+    summary?: string;
+    blockers?: string[];
+    highlights?: string[];
+    recommendations?: string[];
   };
 }
 
