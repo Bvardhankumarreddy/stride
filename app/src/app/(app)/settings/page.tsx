@@ -14,6 +14,7 @@ const TABS = [
   { id: "members", label: "Members & Roles", icon: "group" },
   { id: "teams", label: "Teams", icon: "groups" },
   { id: "fields", label: "Custom Fields", icon: "tune" },
+  { id: "templates", label: "Templates", icon: "description" },
   { id: "integrations", label: "Integrations", icon: "extension" },
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
   { id: "notifications", label: "Notifications", icon: "notifications" },
@@ -147,6 +148,12 @@ function SettingsInner() {
   const [editFieldName, setEditFieldName] = useState("");
   const [editFieldOptions, setEditFieldOptions] = useState("");
 
+  // Templates state
+  const [orgTemplates, setOrgTemplates] = useState<import("@/lib/api").ApiIssueTemplate[]>([]);
+  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [templateForm, setTemplateForm] = useState({ name: "", description: "", titlePrefix: "", body: "", priority: "medium" });
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
   // Invite state
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
@@ -202,6 +209,11 @@ function SettingsInner() {
     if (!token || activeTab !== "teams") return;
     api.teams.list(token).then(setTeams).catch(() => {});
     api.users.list(token).then(setAllUsers).catch(() => {});
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "templates") return;
+    api.templates.list(token).then(setOrgTemplates).catch(() => {});
   }, [token, activeTab]);
 
   useEffect(() => {
@@ -788,6 +800,167 @@ function SettingsInner() {
                       );
                     })}
                   </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Templates */}
+          {activeTab === "templates" && (
+            <div className="space-y-4">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="font-bold text-on-surface">Issue Templates</h2>
+                  <button
+                    onClick={() => { setShowCreateTemplate(true); setTemplateForm({ name: "", description: "", titlePrefix: "", body: "", priority: "medium" }); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                    New template
+                  </button>
+                </div>
+                <p className="text-xs text-on-surface-variant mb-5">Custom templates are available org-wide. Only owners and admins can create or delete them.</p>
+
+                {/* Built-in templates (read-only display) */}
+                <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Built-in</p>
+                <div className="space-y-2 mb-5">
+                  {[
+                    { name: "Bug Report", description: "Steps to reproduce, expected vs actual behavior", priority: "high", labels: ["bug"] },
+                    { name: "Feature Request", description: "Problem statement, proposed solution, acceptance criteria", priority: "medium", labels: ["feature"] },
+                    { name: "Task", description: "What needs to be done and definition of done", priority: "medium", labels: [] },
+                  ].map(t => (
+                    <div key={t.name} className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/10 bg-surface-container-low">
+                      <span className="material-symbols-outlined text-primary" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>description</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-on-surface">{t.name}</p>
+                        <p className="text-xs text-on-surface-variant truncate">{t.description}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant uppercase">built-in</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Create custom template form */}
+                {showCreateTemplate && (
+                  <div className="mb-5 p-4 rounded-xl bg-surface-container-low border border-outline-variant/10 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Template Name</label>
+                        <input
+                          autoFocus
+                          value={templateForm.name}
+                          onChange={e => setTemplateForm(f => ({ ...f, name: e.target.value }))}
+                          placeholder="e.g. Security Issue"
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Default Priority</label>
+                        <select
+                          value={templateForm.priority}
+                          onChange={e => setTemplateForm(f => ({ ...f, priority: e.target.value }))}
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                        >
+                          <option value="urgent">Urgent</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Description</label>
+                      <input
+                        value={templateForm.description}
+                        onChange={e => setTemplateForm(f => ({ ...f, description: e.target.value }))}
+                        placeholder="Short description shown in the template picker"
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Title Prefix (optional)</label>
+                      <input
+                        value={templateForm.titlePrefix}
+                        onChange={e => setTemplateForm(f => ({ ...f, titlePrefix: e.target.value }))}
+                        placeholder="e.g. Security: "
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Body Template (markdown)</label>
+                      <textarea
+                        value={templateForm.body}
+                        onChange={e => setTemplateForm(f => ({ ...f, body: e.target.value }))}
+                        placeholder={"## Summary\n\n## Steps\n1. \n\n## Notes"}
+                        rows={5}
+                        className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface font-mono resize-none"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        disabled={!templateForm.name.trim() || savingTemplate}
+                        onClick={async () => {
+                          if (!token) return;
+                          setSavingTemplate(true);
+                          try {
+                            const t = await api.templates.create(token, {
+                              name: templateForm.name,
+                              description: templateForm.description || undefined,
+                              titlePrefix: templateForm.titlePrefix || undefined,
+                              body: templateForm.body || undefined,
+                              priority: templateForm.priority,
+                            });
+                            setOrgTemplates(prev => [...prev, t]);
+                            setShowCreateTemplate(false);
+                            toast("Template created");
+                          } catch {
+                            toast("Failed to create template");
+                          } finally {
+                            setSavingTemplate(false);
+                          }
+                        }}
+                        className="px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {savingTemplate ? "Saving…" : "Create template"}
+                      </button>
+                      <button onClick={() => setShowCreateTemplate(false)} className="px-4 py-1.5 text-sm font-bold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom templates list */}
+                {orgTemplates.length > 0 && (
+                  <>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Custom</p>
+                    <div className="space-y-2">
+                      {orgTemplates.map(t => (
+                        <div key={t.id} className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/10 bg-surface-container-lowest">
+                          <span className="material-symbols-outlined text-secondary" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>description</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-on-surface">{t.name}</p>
+                            {t.description && <p className="text-xs text-on-surface-variant truncate">{t.description}</p>}
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase">{t.priority}</span>
+                          <button
+                            onClick={async () => {
+                              if (!token) return;
+                              await api.templates.remove(token, t.id);
+                              setOrgTemplates(prev => prev.filter(x => x.id !== t.id));
+                              toast("Template deleted");
+                            }}
+                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {orgTemplates.length === 0 && !showCreateTemplate && (
+                  <p className="text-sm text-on-surface-variant italic">No custom templates yet. Create one to extend the built-ins.</p>
                 )}
               </div>
             </div>

@@ -133,6 +133,18 @@ export interface ApiTeam {
   _count?: { projects: number; members: number };
 }
 
+export interface ApiIssueTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  titlePrefix: string | null;
+  body: string | null;
+  priority: string;
+  labels: string[];
+  createdAt: string;
+  createdBy: { id: string; name: string | null; initials: string | null };
+}
+
 export interface ApiWebhook {
   id: string;
   name: string;
@@ -436,6 +448,15 @@ export const api = {
       apiFetch<ApiTeamMember>(`/teams/${id}/members/${userId}`, token, { method: "PATCH", body: JSON.stringify({ role }) }),
     removeMember: (token: string, id: string, userId: string) =>
       apiFetch<void>(`/teams/${id}/members/${userId}`, token, { method: "DELETE" }),
+  },
+
+  templates: {
+    list: (token: string) => apiFetch<ApiIssueTemplate[]>(`/templates`, token),
+    create: (token: string, body: { name: string; description?: string; titlePrefix?: string; body?: string; priority?: string; labels?: string[] }) =>
+      apiFetch<ApiIssueTemplate>(`/templates`, token, { method: "POST", body: JSON.stringify(body) }),
+    update: (token: string, id: string, body: Partial<{ name: string; description: string; titlePrefix: string; body: string; priority: string; labels: string[] }>) =>
+      apiFetch<ApiIssueTemplate>(`/templates/${id}`, token, { method: "PATCH", body: JSON.stringify(body) }),
+    remove: (token: string, id: string) => apiFetch<void>(`/templates/${id}`, token, { method: "DELETE" }),
   },
 
   webhooks: {

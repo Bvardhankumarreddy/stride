@@ -25,6 +25,7 @@ model Organization {
   integrations Integration[]
   teams        Team[]
   webhooks     Webhook[]
+  templates    IssueTemplate[]
 }
 
 model OrganizationMember {
@@ -90,6 +91,7 @@ model User {
   auditLogs                AuditLog[]
   issueActivities          IssueActivity[]
   teamMemberships          TeamMember[]
+  createdTemplates         IssueTemplate[] @relation("CreatedTemplates")
 }
 
 model Project {
@@ -349,4 +351,22 @@ model WebhookDelivery {
 
   webhookId String
   webhook   Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+}
+
+model IssueTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  titlePrefix String?
+  body        String?
+  priority    String   @default("medium")
+  labels      String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedTemplates", fields: [createdById], references: [id])
 }

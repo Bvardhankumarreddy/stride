@@ -2,9 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { useToken } from "@/lib/useToken";
-import { api, ApiUser, ApiCustomField } from "@/lib/api";
+import { api, ApiUser, ApiCustomField, ApiIssueTemplate } from "@/lib/api";
 import { toast } from "@/components/Toast";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
+
+const BUILTIN_TEMPLATES: Omit<ApiIssueTemplate, "id" | "createdAt" | "createdBy">[] = [
+  {
+    name: "Bug Report",
+    description: "Something isn't working as expected",
+    titlePrefix: "Bug: ",
+    body: "## Steps to Reproduce\n1. \n2. \n\n## Expected Behavior\n\n## Actual Behavior\n\n## Environment\n- OS: \n- Browser/Version: ",
+    priority: "high",
+    labels: ["bug"],
+  },
+  {
+    name: "Feature Request",
+    description: "Suggest a new feature or improvement",
+    titlePrefix: "Feature: ",
+    body: "## Problem\n\n## Proposed Solution\n\n## Acceptance Criteria\n- [ ] \n- [ ] \n\n## Additional Context",
+    priority: "medium",
+    labels: ["feature"],
+  },
+  {
+    name: "Task",
+    description: "A unit of work to be completed",
+    titlePrefix: "",
+    body: "## What needs to be done\n\n## Definition of Done\n- [ ] ",
+    priority: "medium",
+    labels: [],
+  },
+];
 
 export default function CreateIssueModal() {
   const token = useToken();
@@ -20,6 +47,8 @@ export default function CreateIssueModal() {
   const [cfValues, setCfValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [defaultProjectId, setDefaultProjectId] = useState<string | null>(null);
+  const [customTemplates, setCustomTemplates] = useState<ApiIssueTemplate[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     if (!open || !token) return;
@@ -29,16 +58,26 @@ export default function CreateIssueModal() {
     setAssigneeId("");
     setDescription("");
     setCfValues({});
+    setShowTemplates(false);
     Promise.all([
       api.users.list(token),
       api.customFields.list(token),
       api.projects.list(token),
-    ]).then(([u, cf, projects]) => {
+      api.templates.list(token),
+    ]).then(([u, cf, projects, tmpl]) => {
       setUsers(u);
       setCustomFields(cf);
       setDefaultProjectId(projects[0]?.id ?? null);
+      setCustomTemplates(tmpl);
     }).catch(() => {});
   }, [open, token, defaultStatus]);
+
+  function applyTemplate(tmpl: typeof BUILTIN_TEMPLATES[0] | ApiIssueTemplate) {
+    if (tmpl.titlePrefix) setTitle(tmpl.titlePrefix);
+    if (tmpl.body) setDescription(tmpl.body);
+    if (tmpl.priority) setPriority(tmpl.priority);
+    setShowTemplates(false);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -87,9 +126,41 @@ export default function CreateIssueModal() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-outline-variant/10">
           <h2 className="text-base font-bold text-on-surface">New Issue</h2>
-          <button onClick={closeModal} className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant">
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Template picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowTemplates(v => !v)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-on-surface-variant border border-outline-variant/30 rounded-lg hover:bg-surface-container-low transition-colors"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>description</span>
+                Templates
+                <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{showTemplates ? "expand_less" : "expand_more"}</span>
+              </button>
+              {showTemplates && (
+                <div className="absolute right-0 top-full mt-1 w-64 bg-surface-container-lowest rounded-xl border border-outline-variant/15 shadow-xl z-10 overflow-hidden">
+                  {[...BUILTIN_TEMPLATES, ...customTemplates].map((tmpl, i) => (
+                    <button
+                      key={"id" in tmpl ? (tmpl as ApiIssueTemplate).id : i}
+                      type="button"
+                      onClick={() => applyTemplate(tmpl)}
+                      className="w-full text-left px-4 py-3 hover:bg-surface-container-low transition-colors border-b border-outline-variant/10 last:border-0"
+                    >
+                      <p className="text-sm font-semibold text-on-surface">{tmpl.name}</p>
+                      {tmpl.description && <p className="text-xs text-on-surface-variant mt-0.5 truncate">{tmpl.description}</p>}
+                    </button>
+                  ))}
+                  {BUILTIN_TEMPLATES.length + customTemplates.length === 0 && (
+                    <p className="px-4 py-3 text-xs text-on-surface-variant">No templates available</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <button onClick={closeModal} className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant">
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

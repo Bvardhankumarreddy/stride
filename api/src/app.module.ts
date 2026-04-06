@@ -22,6 +22,7 @@ import { BillingModule } from './billing/billing.module';
 import { AiModule } from './ai/ai.module';
 import { TeamsModule } from './teams/teams.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     AiModule,
     TeamsModule,
     WebhooksModule,
+    TemplatesModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,
