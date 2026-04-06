@@ -32,7 +32,9 @@ export class AiService {
         system,
         messages: [{ role: 'user', content: prompt }],
       });
-      return (msg.content[0] as { text: string }).text;
+      const raw = (msg.content[0] as { text: string }).text;
+      // Strip markdown code fences if Claude wraps the JSON despite instructions
+      return raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
     } catch (err) {
       this.logger.error(`Claude API error: ${err.message}`);
       return null;

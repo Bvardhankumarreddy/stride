@@ -361,7 +361,18 @@ export default function SprintsPage() {
                     </button>
                   </div>
                 </div>
-              ) : null}
+              ) : (
+                <div className="flex items-center justify-between px-6 py-5">
+                  <p className="text-sm text-on-surface-variant">Analysis unavailable. Try again.</p>
+                  <button
+                    onClick={handleAnalyzeSprint}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                    Retry
+                  </button>
+                </div>
+              )}
             </div>
           )}
           </section>
