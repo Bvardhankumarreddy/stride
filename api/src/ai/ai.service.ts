@@ -213,6 +213,145 @@ No markdown, no preamble.`;
     }
   }
 
+  // ── Sprint analysis ─────────────────────────────────────────────────────────
+
+  async analyzeSprint(input: {
+    sprintName: string;
+    startDate: string | null;
+    endDate: string | null;
+    issues: Array<{ id: string; title: string; status: string; priority: string; assignee?: string; estimate?: number }>;
+  }): Promise<{
+    health: string;
+    healthReason: string;
+    summary: string;
+    completionLikelihood: number;
+    risks: string[];
+    recommendations: string[];
+    highlights: string[];
+    workloadBalance: string;
+  } | null> {
+    const system = `You are an agile engineering coach analysing a sprint. Return ONLY valid JSON with these keys:
+- "health": one of "on-track", "at-risk", "off-track"
+- "health_reason": one sentence explaining the health rating
+- "summary": 2-3 sentence narrative of sprint state and trajectory
+- "completion_likelihood": integer 0-100 — estimated % chance the sprint completes all issues on time
+- "risks": array of strings, each a specific risk or blocker
+- "recommendations": array of strings, each an actionable recommendation for the team
+- "highlights": array of strings, each a positive highlight
+- "workload_balance": one of "balanced", "unbalanced", "overloaded"
+No markdown fences, no extra text.`;
+
+    const done = input.issues.filter(i => i.status === 'done');
+    const inProgress = input.issues.filter(i => i.status === 'in-progress');
+    const todo = input.issues.filter(i => i.status === 'todo');
+    const unassigned = input.issues.filter(i => !i.assignee);
+    const urgent = input.issues.filter(i => i.priority === 'urgent' && i.status !== 'done');
+
+    const now = new Date();
+    const end = input.endDate ? new Date(input.endDate) : null;
+    const start = input.startDate ? new Date(input.startDate) : null;
+    const totalDays = start && end ? Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86_400_000)) : null;
+    const daysLeft = end ? Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 86_400_000)) : null;
+
+    const issuesStr = input.issues.map(i =>
+      `- [${i.status.toUpperCase()}] ${i.title} (priority=${i.priority}` +
+      (i.assignee ? `, assignee=${i.assignee}` : ', UNASSIGNED') +
+      (i.estimate ? `, ${i.estimate}pt` : '') + ')'
+    ).join('\n');
+
+    const prompt =
+      `Sprint: ${input.sprintName}\n` +
+      (start && end ? `Duration: ${input.startDate} → ${input.endDate} (${totalDays} days total, ${daysLeft} days left)\n` : '') +
+      `Progress: ${done.length} done, ${inProgress.length} in-progress, ${todo.length} todo\n` +
+      `Urgent open: ${urgent.length} · Unassigned: ${unassigned.length}\n\nIssues:\n${issuesStr}`;
+
+    const raw = await this.complete(system, prompt, 1024);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        health: data.health ?? 'at-risk',
+        healthReason: data.health_reason ?? '',
+        summary: data.summary ?? '',
+        completionLikelihood: Math.max(0, Math.min(100, data.completion_likelihood ?? 50)),
+        risks: data.risks ?? [],
+        recommendations: data.recommendations ?? [],
+        highlights: data.highlights ?? [],
+        workloadBalance: data.workload_balance ?? 'balanced',
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Roadmap analysis ─────────────────────────────────────────────────────────
+
+  async analyzeRoadmap(input: {
+    projectName: string;
+    sprints: Array<{
+      name: string;
+      status: string;
+      startDate: string | null;
+      endDate: string | null;
+      totalIssues: number;
+      completedIssues: number;
+      totalPoints: number;
+      completedPoints: number;
+    }>;
+  }): Promise<{
+    overallHealth: string;
+    summary: string;
+    timeline: string;
+    risks: string[];
+    recommendations: string[];
+    sprintInsights: Array<{ name: string; health: string; note: string }>;
+  } | null> {
+    const system = `You are a senior engineering manager reviewing a project roadmap. Return ONLY valid JSON with these keys:
+- "overall_health": one of "on-track", "at-risk", "off-track"
+- "summary": 2-3 sentence executive summary of the roadmap health and outlook
+- "timeline": one of "achievable", "optimistic", "unrealistic"
+- "risks": array of strings, each a roadmap-level risk
+- "recommendations": array of strings, each a strategic recommendation
+- "sprint_insights": array of objects, one per sprint, each with "name", "health" (one of "on-track","at-risk","off-track"), "note" (one sentence insight)
+No markdown fences, no extra text.`;
+
+    const sprintsStr = input.sprints.map(s => {
+      const pct = s.totalIssues ? Math.round((s.completedIssues / s.totalIssues) * 100) : 0;
+      return `- ${s.name} [${s.status.toUpperCase()}] ${s.startDate ?? '?'} → ${s.endDate ?? '?'}: ${s.completedIssues}/${s.totalIssues} issues (${pct}%), ${s.completedPoints}/${s.totalPoints} pts`;
+    }).join('\n');
+
+    const completed = input.sprints.filter(s => s.status === 'completed').length;
+    const active = input.sprints.filter(s => s.status === 'active').length;
+    const planned = input.sprints.filter(s => s.status === 'planned' || s.status === 'upcoming').length;
+
+    const prompt =
+      `Project: ${input.projectName}\n` +
+      `Sprints: ${completed} completed, ${active} active, ${planned} planned\n\n` +
+      `Sprint details:\n${sprintsStr}`;
+
+    const raw = await this.complete(system, prompt, 1536);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        overallHealth: data.overall_health ?? 'at-risk',
+        summary: data.summary ?? '',
+        timeline: data.timeline ?? 'achievable',
+        risks: data.risks ?? [],
+        recommendations: data.recommendations ?? [],
+        sprintInsights: (data.sprint_insights ?? []).map((si: any) => ({
+          name: si.name,
+          health: si.health,
+          note: si.note,
+        })),
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // ── Summarize comments ──────────────────────────────────────────────────────
 
   async summarizeComments(input: {

@@ -9,6 +9,23 @@ import { useToken } from "@/lib/useToken";
 import { api, ApiSprint, ApiIssue, ApiVelocity } from "@/lib/api";
 import { toast } from "@/components/Toast";
 
+type SprintAnalysis = {
+  health: string;
+  healthReason: string;
+  summary: string;
+  completionLikelihood: number;
+  risks: string[];
+  recommendations: string[];
+  highlights: string[];
+  workloadBalance: string;
+};
+
+const HEALTH_STYLES: Record<string, { badge: string; bar: string; icon: string }> = {
+  "on-track":  { badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", bar: "bg-emerald-500", icon: "check_circle" },
+  "at-risk":   { badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",   bar: "bg-amber-500",   icon: "warning" },
+  "off-track": { badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",       bar: "bg-rose-500",    icon: "cancel" },
+};
+
 const PRIORITY_DOT: Record<string, string> = {
   urgent: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]",
   high: "bg-orange-400",
@@ -43,6 +60,11 @@ export default function SprintsPage() {
   const [loading, setLoading] = useState(true);
   const [orgName, setOrgName] = useState("Workspace");
   const [projectId, setProjectId] = useState<string | null>(null);
+
+  // AI analysis state
+  const [analysis, setAnalysis] = useState<SprintAnalysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   // Create sprint modal state
   const [showCreate, setShowCreate] = useState(false);
@@ -98,6 +120,35 @@ export default function SprintsPage() {
       setFormError("Failed to create sprint. Please try again.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAnalyzeSprint() {
+    if (!token || !active) return;
+    setAnalysisLoading(true);
+    setShowAnalysis(true);
+    setAnalysis(null);
+    try {
+      const sprintIssues = issues.filter(i => i.sprintId === active.id);
+      const result = await api.ai.analyzeSprint(token, {
+        sprintName: active.name,
+        startDate: active.startDate,
+        endDate: active.endDate,
+        issues: sprintIssues.map(i => ({
+          id: i.id,
+          title: i.title,
+          status: i.status,
+          priority: i.priority,
+          assignee: i.assignee?.name ?? undefined,
+          estimate: i.estimate ?? undefined,
+        })),
+      });
+      setAnalysis(result);
+    } catch {
+      toast("AI analysis failed. Please try again.");
+      setShowAnalysis(false);
+    } finally {
+      setAnalysisLoading(false);
     }
   }
 
@@ -163,12 +214,21 @@ export default function SprintsPage() {
                 <h1 className="text-2xl font-black tracking-tight text-on-surface font-headline">{active.name}</h1>
                 <p className="text-sm text-on-surface-variant mt-0.5">{formatDate(active.startDate)} – {formatDate(active.endDate)}</p>
               </div>
-              {daysLeft(active.endDate) !== null && (
-                <div className="text-right">
-                  <p className="text-3xl font-black text-on-surface font-headline">{daysLeft(active.endDate)}</p>
-                  <p className="text-xs text-on-surface-variant font-medium">days left</p>
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {daysLeft(active.endDate) !== null && (
+                  <div className="text-right">
+                    <p className="text-3xl font-black text-on-surface font-headline">{daysLeft(active.endDate)}</p>
+                    <p className="text-xs text-on-surface-variant font-medium">days left</p>
+                  </div>
+                )}
+                <button
+                  onClick={handleAnalyzeSprint}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  Analyze
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -390,6 +450,127 @@ export default function SprintsPage() {
       >
         <span className="material-symbols-outlined" style={{ fontSize: 28 }}>add</span>
       </button>
+
+      {/* AI Sprint Analysis Panel */}
+      {showAnalysis && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAnalysis(false)} />
+          <div className="relative w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col h-full overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/10 bg-gradient-to-r from-secondary/5 to-transparent">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-secondary">AI Analysis</p>
+                  <h2 className="text-sm font-black text-on-surface">{active?.name}</h2>
+                </div>
+              </div>
+              <button onClick={() => setShowAnalysis(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              {analysisLoading ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-20">
+                  <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+                  <p className="text-sm text-on-surface-variant">Analyzing sprint…</p>
+                </div>
+              ) : analysis ? (
+                <>
+                  {/* Health badge */}
+                  <div className={clsx("flex items-center gap-2 px-4 py-3 rounded-xl", HEALTH_STYLES[analysis.health]?.badge ?? HEALTH_STYLES["at-risk"].badge)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>{HEALTH_STYLES[analysis.health]?.icon ?? "warning"}</span>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide capitalize">{analysis.health.replace("-", " ")}</p>
+                      <p className="text-xs mt-0.5 opacity-80">{analysis.healthReason}</p>
+                    </div>
+                  </div>
+
+                  {/* Completion likelihood */}
+                  <div className="bg-surface-container rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Completion Likelihood</span>
+                      <span className="text-lg font-black text-on-surface">{analysis.completionLikelihood}%</span>
+                    </div>
+                    <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                      <div
+                        className={clsx("h-full rounded-full transition-all", HEALTH_STYLES[analysis.health]?.bar ?? "bg-amber-500")}
+                        style={{ width: `${analysis.completionLikelihood}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-on-surface-variant mt-2">Workload: <span className="font-bold text-on-surface capitalize">{analysis.workloadBalance}</span></p>
+                  </div>
+
+                  {/* Summary */}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Summary</p>
+                    <p className="text-sm text-on-surface leading-relaxed">{analysis.summary}</p>
+                  </div>
+
+                  {/* Highlights */}
+                  {analysis.highlights.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">Highlights</p>
+                      <ul className="space-y-1.5">
+                        {analysis.highlights.map((h, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                            <span className="material-symbols-outlined text-emerald-500 mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Risks */}
+                  {analysis.risks.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2">Risks</p>
+                      <ul className="space-y-1.5">
+                        {analysis.risks.map((r, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                            <span className="material-symbols-outlined text-amber-500 mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>warning</span>
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {analysis.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Recommendations</p>
+                      <ul className="space-y-1.5">
+                        {analysis.recommendations.map((rec, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-on-surface">
+                            <span className="material-symbols-outlined text-primary mt-0.5 flex-shrink-0" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+
+            {/* Re-analyze footer */}
+            {!analysisLoading && analysis && (
+              <div className="px-6 py-4 border-t border-outline-variant/10">
+                <button
+                  onClick={handleAnalyzeSprint}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary/10 text-secondary text-sm font-bold hover:bg-secondary/20 transition-colors"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                  Re-analyze
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Create Sprint Modal */}
       {showCreate && (

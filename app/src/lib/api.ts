@@ -361,6 +361,25 @@ export const api = {
       apiFetch<{ similar: { id: string; title: string; reason: string; similarityScore: number }[] }>(`/ai/similar-issues`, token, { method: "POST", body: JSON.stringify(body) }),
     summarizeComments: (token: string, body: { issueTitle: string; comments: { author: string; body: string }[] }) =>
       apiFetch<{ summary: string; keyDecisions: string[]; openQuestions: string[] } | null>(`/ai/summarize-comments`, token, { method: "POST", body: JSON.stringify(body) }),
+    analyzeSprint: (token: string, body: {
+      sprintName: string;
+      startDate: string | null;
+      endDate: string | null;
+      issues: { id: string; title: string; status: string; priority: string; assignee?: string; estimate?: number }[];
+    }) =>
+      apiFetch<{
+        health: string; healthReason: string; summary: string; completionLikelihood: number;
+        risks: string[]; recommendations: string[]; highlights: string[]; workloadBalance: string;
+      }>(`/ai/analyze-sprint`, token, { method: "POST", body: JSON.stringify(body) }),
+    analyzeRoadmap: (token: string, body: {
+      projectName: string;
+      sprints: { name: string; status: string; startDate: string | null; endDate: string | null; totalIssues: number; completedIssues: number; totalPoints: number; completedPoints: number }[];
+    }) =>
+      apiFetch<{
+        overallHealth: string; summary: string; timeline: string;
+        risks: string[]; recommendations: string[];
+        sprintInsights: { name: string; health: string; note: string }[];
+      }>(`/ai/analyze-roadmap`, token, { method: "POST", body: JSON.stringify(body) }),
   },
 
   billing: {
