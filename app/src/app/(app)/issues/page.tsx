@@ -472,6 +472,16 @@ export default function IssuesPage() {
     setVisibleFields(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
   }
 
+  async function exportCsv() {
+    if (!token) return;
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+    const res = await fetch(`${API}/issues/export`, { headers: { Authorization: `Bearer ${token}` } });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "issues.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function handleIssueUpdate(id: string, patch: Partial<ApiIssue> & { assigneeId?: string | null }) {
     setAllIssues(prev => prev.map(i => {
       if (i.id !== id) return i;
@@ -574,6 +584,16 @@ export default function IssuesPage() {
           </div>
         )}
       </div>
+
+      {/* Export CSV */}
+      <button
+        onClick={exportCsv}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border cursor-pointer text-on-surface-variant hover:bg-surface-container-high border-outline-variant/20"
+        title="Export to CSV"
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+        Export
+      </button>
 
       {/* Filters */}
       <div className="relative" ref={filterRef}>

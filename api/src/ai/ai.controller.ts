@@ -51,6 +51,37 @@ export class AiController {
     return this.ai.generateStandup(body);
   }
 
+  @Post('auto-assign')
+  autoAssign(@Body() body: {
+    title: string;
+    description?: string;
+    priority?: string;
+    labels?: string[];
+    members: Array<{ id: string; name: string; openIssueCount: number }>;
+  }) {
+    return this.ai.autoAssign(body);
+  }
+
+  @Post('pr-description')
+  prDescription(@Body() body: {
+    issueTitle: string;
+    issueDescription?: string;
+    status?: string;
+    priority?: string;
+    labels?: string[];
+  }) {
+    return this.ai.writePrDescription(body);
+  }
+
+  @Post('plan-capacity')
+  planCapacity(@Body() body: {
+    sprintName: string;
+    issues: Array<{ id: string; title: string; priority: string; estimate?: number }>;
+    members: Array<{ id: string; name: string; capacity?: number }>;
+  }) {
+    return this.ai.planCapacity(body);
+  }
+
   @Post('analyze-roadmap')
   analyzeRoadmap(@Body() body: {
     projectName: string;

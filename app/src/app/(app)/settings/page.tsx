@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api } from "@/lib/api";
+import { api, ApiAuditLog } from "@/lib/api";
 import { toast } from "@/components/Toast";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -20,6 +20,7 @@ const TABS = [
   { id: "ai", label: "AI Settings", icon: "auto_awesome" },
   { id: "notifications", label: "Notifications", icon: "notifications" },
   { id: "billing", label: "Billing", icon: "credit_card" },
+  { id: "audit", label: "Audit Log", icon: "policy" },
 ];
 
 const NOTIF_EVENTS = [
@@ -178,6 +179,10 @@ function SettingsInner() {
   const [addingMemberTeamId, setAddingMemberTeamId] = useState<string | null>(null);
   const [memberUserId, setMemberUserId] = useState("");
 
+  // Audit log state
+  const [auditLogs, setAuditLogs] = useState<ApiAuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
   // Webhooks state
   const [webhooks, setWebhooks] = useState<import("@/lib/api").ApiWebhook[]>([]);
   const [showCreateWebhook, setShowCreateWebhook] = useState(false);
@@ -221,6 +226,12 @@ function SettingsInner() {
   useEffect(() => {
     if (!token || activeTab !== "templates") return;
     api.templates.list(token).then(setOrgTemplates).catch(() => {});
+  }, [token, activeTab]);
+
+  useEffect(() => {
+    if (!token || activeTab !== "audit") return;
+    setAuditLoading(true);
+    api.audit.list(token, 200).then(setAuditLogs).catch(() => {}).finally(() => setAuditLoading(false));
   }, [token, activeTab]);
 
   useEffect(() => {
@@ -1542,6 +1553,49 @@ function SettingsInner() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === "audit" && (
+            <div className="space-y-4">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>policy</span>
+                  <h2 className="font-bold text-on-surface">Audit Log</h2>
+                </div>
+                <p className="text-xs text-on-surface-variant mb-6">A record of all significant actions in your workspace.</p>
+
+                {auditLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <span className="material-symbols-outlined animate-spin text-primary" style={{ fontSize: 24 }}>progress_activity</span>
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <span className="material-symbols-outlined text-outline" style={{ fontSize: 40 }}>policy</span>
+                    <p className="text-sm text-on-surface-variant mt-3">No audit events recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-outline-variant/10">
+                    {auditLogs.map(log => (
+                      <div key={log.id} className="flex items-start gap-3 py-3">
+                        <div className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-[9px] font-black text-on-surface-variant">
+                            {log.user?.initials ?? "??"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-on-surface">{log.user?.name ?? log.user?.email ?? "System"}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-surface-container text-on-surface-variant font-mono">{log.action}</span>
+                            {log.targetId && <span className="text-xs text-outline truncate max-w-[120px]">{log.targetId}</span>}
+                          </div>
+                          <p className="text-xs text-outline mt-0.5">{new Date(log.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

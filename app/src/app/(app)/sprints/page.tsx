@@ -71,6 +71,17 @@ export default function SprintsPage() {
   const [standupLoading, setStandupLoading] = useState(false);
   const [showStandup, setShowStandup] = useState(false);
 
+  // AI capacity planner state
+  type CapacityPlan = {
+    assignments: Array<{ issueId: string; issueTitle: string; memberId: string; memberName: string; reason: string }>;
+    overloaded: string[];
+    underutilized: string[];
+    summary: string;
+  };
+  const [capacity, setCapacity] = useState<CapacityPlan | null>(null);
+  const [capacityLoading, setCapacityLoading] = useState(false);
+  const [showCapacity, setShowCapacity] = useState(false);
+
   // Sprint goal edit state
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState("");
@@ -184,6 +195,38 @@ export default function SprintsPage() {
       setShowStandup(false);
     } finally {
       setStandupLoading(false);
+    }
+  }
+
+  async function handleCapacity() {
+    if (!token || !active) return;
+    setCapacityLoading(true);
+    setShowCapacity(true);
+    setCapacity(null);
+    try {
+      const sprintIssues = issues.filter(i => i.sprintId === active.id && !i.assignee);
+      const members = Array.from(
+        new Map(
+          issues.filter(i => i.assignee).map(i => [i.assignee!.id, { id: i.assignee!.id, name: i.assignee!.name ?? i.assignee!.id }])
+        ).values()
+      );
+      const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+      const res = await fetch(`${API}/ai/plan-capacity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          sprintName: active.name,
+          issues: sprintIssues.map(i => ({ id: i.id, title: i.title, priority: i.priority, estimate: i.estimate ?? undefined })),
+          members,
+        }),
+      });
+      const data = await res.json();
+      setCapacity(data);
+    } catch {
+      toast("Capacity planning failed. Please try again.");
+      setShowCapacity(false);
+    } finally {
+      setCapacityLoading(false);
     }
   }
 
@@ -309,6 +352,13 @@ export default function SprintsPage() {
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>record_voice_over</span>
                     Standup
+                  </button>
+                  <button
+                    onClick={handleCapacity}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 text-xs font-bold hover:bg-emerald-500/20 transition-colors"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>balance</span>
+                    Capacity
                   </button>
                 </div>
               </div>
@@ -529,6 +579,81 @@ export default function SprintsPage() {
                 <div className="flex items-center justify-between px-6 py-5">
                   <p className="text-sm text-on-surface-variant">Failed to generate standup. Try again.</p>
                   <button onClick={handleStandup} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-500/10 text-violet-600 text-xs font-bold hover:bg-violet-500/20 transition-colors">
+                    <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                    Retry
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {/* AI Capacity Planner */}
+          {showCapacity && (
+            <div className="mt-4 bg-surface-container-lowest rounded-2xl border border-emerald-500/15 shadow-sm overflow-hidden">
+              {capacityLoading ? (
+                <div className="flex items-center gap-3 px-6 py-5">
+                  <span className="w-4 h-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                  <p className="text-sm text-on-surface-variant">Planning capacity…</p>
+                </div>
+              ) : capacity ? (
+                <div>
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-emerald-600" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>balance</span>
+                      <span className="text-xs font-bold text-emerald-700 uppercase tracking-widest">AI Capacity Plan</span>
+                    </div>
+                    <button onClick={() => setShowCapacity(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                    </button>
+                  </div>
+                  <div className="px-6 py-4 space-y-4">
+                    <p className="text-sm text-on-surface-variant">{capacity.summary}</p>
+                    {capacity.assignments.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Suggested Assignments</p>
+                        {capacity.assignments.map((a, i) => (
+                          <div key={i} className="flex items-start gap-3 bg-surface-container rounded-xl p-3">
+                            <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                              {a.memberName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-on-surface">{a.issueTitle}</p>
+                              <p className="text-[11px] text-emerald-700 font-medium">→ {a.memberName}</p>
+                              <p className="text-[11px] text-on-surface-variant">{a.reason}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-on-surface-variant">All issues are already assigned.</p>
+                    )}
+                    {(capacity.overloaded.length > 0 || capacity.underutilized.length > 0) && (
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        {capacity.overloaded.length > 0 && (
+                          <div className="bg-rose-50 rounded-xl p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 mb-1.5">Overloaded</p>
+                            {capacity.overloaded.map(n => <p key={n} className="text-xs text-rose-700">{n}</p>)}
+                          </div>
+                        )}
+                        {capacity.underutilized.length > 0 && (
+                          <div className="bg-emerald-50 rounded-xl p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1.5">Available</p>
+                            {capacity.underutilized.map(n => <p key={n} className="text-xs text-emerald-700">{n}</p>)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-outline-variant/10">
+                      <button onClick={handleCapacity} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-700 text-xs font-bold hover:bg-emerald-500/20 transition-colors">
+                        <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
+                        Regenerate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between px-6 py-5">
+                  <p className="text-sm text-on-surface-variant">Failed to plan capacity. Try again.</p>
+                  <button onClick={handleCapacity} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-700 text-xs font-bold hover:bg-emerald-500/20 transition-colors">
                     <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>refresh</span>
                     Retry
                   </button>

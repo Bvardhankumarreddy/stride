@@ -113,6 +113,27 @@ export class EmailService {
       };
     }
 
+    if (type === 'stride_due_date') {
+      const issueTitle = payload.issueTitle as string;
+      const isOverdue  = payload.isOverdue as boolean;
+      const dueDate    = payload.dueDate as string;
+      const label      = isOverdue ? 'Overdue' : 'Due today';
+      return {
+        subject: `${label}: "${issueTitle}"`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:8px;color:${isOverdue ? '#dc2626' : '#d97706'}">${label}</h2>
+            <p style="color:#424754;margin-bottom:8px">Hi ${name},</p>
+            <p style="color:#424754;margin-bottom:24px">The following issue is ${isOverdue ? 'overdue' : 'due today'} (${dueDate}):</p>
+            <div style="padding:16px;background:#f8fafc;border-radius:8px;border-left:3px solid ${isOverdue ? '#dc2626' : '#d97706'};margin-bottom:24px">
+              <strong>${issueTitle}</strong>
+            </div>
+            <p style="font-size:12px;color:#9aa0af">You are receiving this because you are assigned to this issue in Stride.</p>
+          </div>`,
+        text: `${label}: "${issueTitle}" (due ${dueDate})\n\nHi ${name},\n\nThis issue is ${isOverdue ? 'overdue' : 'due today'}. Please update its status in Stride.`,
+      };
+    }
+
     if (type === 'stride_contact') {
       const submitterEmail = payload.submitterEmail as string;
       return {

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
-import { AuditService } from './audit.service';
-import { AuditController } from './audit.controller';
+import { TimeLogsController } from './time-logs.controller';
+import { TimeLogsService } from './time-logs.service';
 
 @Module({
   imports: [
@@ -15,8 +15,7 @@ import { AuditController } from './audit.controller';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuditController],
-  providers: [AuditService],
-  exports: [AuditService],
+  controllers: [TimeLogsController],
+  providers: [TimeLogsService],
 })
-export class AuditModule {}
+export class TimeLogsModule {}

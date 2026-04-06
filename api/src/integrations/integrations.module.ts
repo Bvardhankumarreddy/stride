@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { IntegrationsController } from './integrations.controller';
 import { IntegrationsService } from './integrations.service';
+import { SlackService } from './slack.service';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { IntegrationsService } from './integrations.service';
     }),
   ],
   controllers: [IntegrationsController],
-  providers: [IntegrationsService],
+  providers: [IntegrationsService, SlackService],
+  exports: [SlackService],
 })
 export class IntegrationsModule {}

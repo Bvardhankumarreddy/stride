@@ -44,6 +44,7 @@ def lambda_handler(event, context):
         elif email_type == 'stride_password_reset':  return handle_password_reset(body, headers)
         elif email_type == 'stride_verify_email':    return handle_verify_email(body, headers)
         elif email_type == 'stride_contact':         return handle_stride_contact(body, headers)
+        elif email_type == 'stride_due_date':        return handle_stride_due_date(body, headers)
         else:
             return {
                 'statusCode': 400, 'headers': headers,
@@ -249,6 +250,64 @@ def handle_stride_digest(body, headers):
         <div style="padding:16px 32px 24px;border-top:1px solid #f1f5f9">
             <p style="margin:0;font-size:11px;color:#94a3b8">
                 Sent because Daily AI Digest is enabled in your Stride settings.
+            </p>
+        </div>
+    </div>"""
+
+    try:
+        response = ses_client.send_email(
+            Source=f'Stride <{FROM_EMAIL}>',
+            Destination={'ToAddresses': [email]},
+            Message={
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body':    {'Html': {'Data': html_body, 'Charset': 'UTF-8'}}
+            }
+        )
+        return {'statusCode': 200, 'headers': headers,
+                'body': json.dumps({'success': True, 'messageId': response['MessageId']})}
+    except ClientError as e:
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': e.response['Error']['Message']})}
+
+
+# ── Due Date Reminder ─────────────────────────────────────────────────────────
+
+def handle_stride_due_date(body, headers):
+    email       = body.get('email')
+    name        = body.get('name', 'there')
+    issue_title = body.get('issueTitle', '')
+    is_overdue  = body.get('isOverdue', False)
+    due_date    = body.get('dueDate', '')
+
+    if not email:
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'Missing required field: email'})}
+
+    label       = 'Overdue' if is_overdue else 'Due today'
+    accent      = '#dc2626' if is_overdue else '#d97706'
+    bg          = '#fef2f2' if is_overdue else '#fffbeb'
+    subject     = f'{label}: "{issue_title}"'
+
+    html_body = f"""
+    <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;
+                background:#fff;border-radius:16px;overflow:hidden">
+        <div style="padding:28px 32px 0;background:{accent}">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.1em;
+                       color:rgba(255,255,255,.7);text-transform:uppercase">Stride</p>
+            <h1 style="margin:0 0 20px;font-size:22px;font-weight:900;color:#fff">
+                {label} &#9201;
+            </h1>
+        </div>
+        <div style="padding:28px 32px">
+            <p style="margin:0 0 16px;font-size:14px;color:#475569">
+                Hi <strong>{name}</strong>, the following issue is <strong>{label.lower()}</strong>{f' ({due_date})' if due_date else ''}:
+            </p>
+            <div style="padding:14px 18px;background:{bg};border-radius:10px;
+                        border-left:4px solid {accent};margin-bottom:24px">
+                <p style="margin:0;font-size:14px;font-weight:700;color:#1e293b">{issue_title}</p>
+            </div>
+            <p style="margin:0;font-size:12px;color:#94a3b8">
+                You are receiving this because you are assigned to this issue in Stride.
             </p>
         </div>
     </div>"""

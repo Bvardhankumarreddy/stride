@@ -1,14 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class DueDateScheduler {
   private readonly logger = new Logger(DueDateScheduler.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private email: EmailService,
+  ) {}
 
-  /** Runs daily at 8 AM — creates in-app notifications for overdue + due-today issues */
+  /** Runs daily at 8 AM — creates in-app notifications and sends emails for overdue + due-today issues */
   @Cron(CronExpression.EVERY_DAY_AT_8AM)
   async sendDueDateReminders() {
     this.logger.log('Running due-date reminder job');
@@ -24,7 +28,10 @@ export class DueDateScheduler {
         status: { not: 'done' },
         assigneeId: { not: null },
       },
-      select: { id: true, title: true, dueDate: true, assigneeId: true },
+      select: {
+        id: true, title: true, dueDate: true, assigneeId: true,
+        assignee: { select: { email: true, name: true } },
+      },
     });
 
     if (issues.length === 0) return;
@@ -42,6 +49,21 @@ export class DueDateScheduler {
     });
 
     await this.prisma.notification.createMany({ data: notifications });
-    this.logger.log(`Created ${notifications.length} due-date notifications`);
+
+    // Send emails
+    for (const issue of issues) {
+      if (!issue.assignee?.email) continue;
+      const isOverdue = issue.dueDate! < now;
+      await this.email.send('stride_due_date', {
+        email: issue.assignee.email,
+        name: issue.assignee.name ?? issue.assignee.email,
+        issueTitle: issue.title,
+        issueId: issue.id,
+        isOverdue,
+        dueDate: issue.dueDate!.toISOString().split('T')[0],
+      });
+    }
+
+    this.logger.log(`Created ${notifications.length} due-date notifications and sent emails`);
   }
 }

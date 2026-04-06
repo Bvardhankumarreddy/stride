@@ -95,6 +95,7 @@ model User {
   teamMemberships          TeamMember[]
   createdTemplates         IssueTemplate[] @relation("CreatedTemplates")
   createdViews             SavedView[]     @relation("CreatedViews")
+  timeLogs                 TimeLog[]       @relation("TimeLogs")
 }
 
 model Project {
@@ -161,6 +162,7 @@ model Issue {
   activities        IssueActivity[]
   blocking          IssueDependency[]  @relation("BlockingIssue")
   blockedBy         IssueDependency[]  @relation("BlockedIssue")
+  timeLogs          TimeLog[]
 }
 
 model IssueDependency {
@@ -174,6 +176,20 @@ model IssueDependency {
   blockedIssue  Issue @relation("BlockedIssue",  fields: [blockedIssueId],  references: [id], onDelete: Cascade)
 
   @@unique([blockingIssueId, blockedIssueId])
+}
+
+model TimeLog {
+  id        String   @id @default(cuid())
+  minutes   Int
+  note      String?
+  loggedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  issueId String
+  userId  String
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User  @relation("TimeLogs", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavedView {

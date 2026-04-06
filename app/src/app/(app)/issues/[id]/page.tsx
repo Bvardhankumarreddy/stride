@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
 import { useSession } from "next-auth/react";
-import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, apiFetch } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch } from "@/lib/api";
 import CommentEditor from "@/components/CommentEditor";
 import { toast } from "@/components/Toast";
 
@@ -74,12 +74,22 @@ export default function IssueDetailPage() {
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   // AI state
-  const [aiPanel, setAiPanel]         = useState<"criteria" | "similar" | "summary" | null>(null);
+  const [aiPanel, setAiPanel]         = useState<"criteria" | "similar" | "summary" | "assign" | "pr" | null>(null);
   const [aiLoading, setAiLoading]     = useState(false);
   const [aiCriteria, setAiCriteria]   = useState<string[] | null>(null);
   const [aiSimilar, setAiSimilar]     = useState<{ id: string; title: string; reason: string; similarityScore: number }[] | null>(null);
   const [aiSummary, setAiSummary]     = useState<{ summary: string; keyDecisions: string[]; openQuestions: string[] } | null>(null);
+  const [aiAssign, setAiAssign]       = useState<{ memberId: string; memberName: string; reason: string } | null>(null);
+  const [aiPr, setAiPr]               = useState<{ title: string; body: string } | null>(null);
   const [allIssues, setAllIssues]     = useState<{ id: string; title: string; description?: string }[]>([]);
+
+  // Time tracking state
+  const [timeLogs, setTimeLogs]         = useState<ApiTimeLog[]>([]);
+  const [timeLogsLoaded, setTimeLogsLoaded] = useState(false);
+  const [showTimeLogs, setShowTimeLogs] = useState(false);
+  const [logMinutes, setLogMinutes]     = useState("");
+  const [logNote, setLogNote]           = useState("");
+  const [loggingTime, setLoggingTime]   = useState(false);
 
   // Inline title / description editing
   const [editingTitle, setEditingTitle]       = useState(false);
@@ -742,6 +752,106 @@ export default function IssueDetailPage() {
                 </section>
               )}
 
+              {/* Time Tracking */}
+              <section>
+                <button
+                  onClick={async () => {
+                    const next = !showTimeLogs;
+                    setShowTimeLogs(next);
+                    if (next && !timeLogsLoaded && token) {
+                      const logs = await api.timeLogs.list(token, id).catch(() => []);
+                      setTimeLogs(logs);
+                      setTimeLogsLoaded(true);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-3 hover:text-on-surface transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>timer</span>
+                    Time Tracked
+                    {timeLogs.length > 0 && (
+                      <span className="text-[10px] font-black bg-surface-container-high px-1.5 py-0.5 rounded text-on-surface-variant">
+                        {Math.round(timeLogs.reduce((s, l) => s + l.minutes, 0) / 60 * 10) / 10}h
+                      </span>
+                    )}
+                  </span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{showTimeLogs ? "expand_less" : "expand_more"}</span>
+                </button>
+                {showTimeLogs && (
+                  <div className="space-y-3">
+                    {/* Log form */}
+                    <div className="bg-surface-container-low rounded-xl p-3 space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Minutes"
+                          value={logMinutes}
+                          onChange={(e) => setLogMinutes(e.target.value)}
+                          className="w-24 bg-surface-container border border-outline-variant/20 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Note (optional)"
+                          value={logNote}
+                          onChange={(e) => setLogNote(e.target.value)}
+                          className="flex-1 bg-surface-container border border-outline-variant/20 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        />
+                      </div>
+                      <button
+                        disabled={loggingTime || !logMinutes}
+                        onClick={async () => {
+                          if (!token || !logMinutes) return;
+                          setLoggingTime(true);
+                          try {
+                            const log = await api.timeLogs.create(token, id, { minutes: parseInt(logMinutes, 10), note: logNote || undefined });
+                            setTimeLogs((prev) => [log, ...prev]);
+                            setLogMinutes("");
+                            setLogNote("");
+                          } catch { toast("Failed to log time"); }
+                          finally { setLoggingTime(false); }
+                        }}
+                        className="w-full text-xs font-bold py-1.5 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {loggingTime ? "Logging…" : "Log time"}
+                      </button>
+                    </div>
+                    {/* Existing logs */}
+                    {timeLogs.length === 0 ? (
+                      <p className="text-xs text-on-surface-variant italic">No time logged yet.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {timeLogs.map((log) => (
+                          <div key={log.id} className="flex items-start justify-between gap-2 bg-surface-container-low rounded-lg px-3 py-2 group">
+                            <div>
+                              <p className="text-xs font-semibold text-on-surface">
+                                {log.minutes >= 60
+                                  ? `${Math.floor(log.minutes / 60)}h ${log.minutes % 60 > 0 ? `${log.minutes % 60}m` : ""}`
+                                  : `${log.minutes}m`}
+                                <span className="font-normal text-on-surface-variant ml-1.5">{log.user?.name ?? "You"}</span>
+                              </p>
+                              {log.note && <p className="text-[11px] text-on-surface-variant">{log.note}</p>}
+                            </div>
+                            {log.user?.id === me?.id && (
+                              <button
+                                onClick={async () => {
+                                  if (!token) return;
+                                  await api.timeLogs.remove(token, id, log.id).catch(() => {});
+                                  setTimeLogs((prev) => prev.filter((l) => l.id !== log.id));
+                                }}
+                                className="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-rose-500 transition-all"
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>delete</span>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+
               {/* AI Intelligence */}
               <section className="p-5 bg-secondary/5 rounded-2xl border border-secondary/15 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
@@ -940,6 +1050,110 @@ export default function IssueDetailPage() {
                           </ul>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* AI auto-assign */}
+                  <button
+                    disabled={aiLoading || users.length === 0}
+                    onClick={async () => {
+                      if (aiPanel === "assign") { setAiPanel(null); return; }
+                      setAiPanel("assign");
+                      if (aiAssign) return;
+                      setAiLoading(true);
+                      try {
+                        const openCounts = await Promise.all(users.map(u =>
+                          apiFetch<{ total: number }>(`/issues?assigneeId=${u.id}&limit=1`, token!)
+                            .then(r => ({ id: u.id, name: u.name ?? u.email, openIssueCount: r.total ?? 0 }))
+                            .catch(() => ({ id: u.id, name: u.name ?? u.email, openIssueCount: 0 }))
+                        ));
+                        const res = await apiFetch<{ memberId: string; memberName: string; reason: string }>(
+                          `/ai/auto-assign`, token!, {
+                            method: "POST",
+                            body: JSON.stringify({ title: issue!.title, description: issue!.description, priority: issue!.priority, labels: issue!.labels, members: openCounts }),
+                          }
+                        );
+                        setAiAssign(res);
+                      } finally { setAiLoading(false); }
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group text-left"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>person_search</span>
+                      AI auto-assign
+                    </span>
+                    {aiLoading && aiPanel === "assign"
+                      ? <span className="w-3.5 h-3.5 border-2 border-secondary/40 border-t-secondary rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>{aiPanel === "assign" ? "expand_less" : "arrow_forward"}</span>
+                    }
+                  </button>
+                  {aiPanel === "assign" && aiAssign && (
+                    <div className="bg-surface-container-lowest rounded-xl p-4 space-y-3 border border-secondary/10">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Suggested Assignee</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {aiAssign.memberName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-on-surface">{aiAssign.memberName}</p>
+                          <p className="text-xs text-on-surface-variant">{aiAssign.reason}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await patch({ assigneeId: aiAssign.memberId });
+                          setAiPanel(null);
+                        }}
+                        className="w-full text-xs font-bold py-2 bg-secondary text-on-secondary rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        Assign to {aiAssign.memberName}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* AI PR description */}
+                  <button
+                    disabled={aiLoading}
+                    onClick={async () => {
+                      if (aiPanel === "pr") { setAiPanel(null); return; }
+                      setAiPanel("pr");
+                      if (aiPr) return;
+                      setAiLoading(true);
+                      try {
+                        const res = await apiFetch<{ title: string; body: string }>(
+                          `/ai/pr-description`, token!, {
+                            method: "POST",
+                            body: JSON.stringify({ issueTitle: issue!.title, issueDescription: issue!.description, status: issue!.status, priority: issue!.priority, labels: issue!.labels }),
+                          }
+                        );
+                        setAiPr(res);
+                      } finally { setAiLoading(false); }
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group text-left"
+                  >
+                    <span className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>merge</span>
+                      Write PR description
+                    </span>
+                    {aiLoading && aiPanel === "pr"
+                      ? <span className="w-3.5 h-3.5 border-2 border-secondary/40 border-t-secondary rounded-full animate-spin" />
+                      : <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontSize: 16 }}>{aiPanel === "pr" ? "expand_less" : "arrow_forward"}</span>
+                    }
+                  </button>
+                  {aiPanel === "pr" && aiPr && (
+                    <div className="bg-surface-container-lowest rounded-xl p-4 space-y-3 border border-secondary/10">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">PR Description</p>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(`${aiPr.title}\n\n${aiPr.body}`); toast("Copied to clipboard"); }}
+                          className="text-[10px] font-bold text-secondary hover:opacity-70 flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 12 }}>content_copy</span>
+                          Copy
+                        </button>
+                      </div>
+                      <p className="text-xs font-bold text-on-surface">{aiPr.title}</p>
+                      <pre className="text-xs text-on-surface-variant leading-relaxed whitespace-pre-wrap font-mono bg-surface-container rounded-lg p-3 max-h-48 overflow-y-auto">{aiPr.body}</pre>
                     </div>
                   )}
 

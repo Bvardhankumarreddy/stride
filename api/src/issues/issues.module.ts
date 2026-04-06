@@ -5,9 +5,10 @@ import { SearchModule } from '../search/search.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { EmailModule } from '../email/email.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
-  imports: [SearchModule, NotificationsModule, EmailModule, WebhooksModule],
+  imports: [SearchModule, NotificationsModule, EmailModule, WebhooksModule, IntegrationsModule],
   providers: [IssuesService],
   controllers: [IssuesController],
 })

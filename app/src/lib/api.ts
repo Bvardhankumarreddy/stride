@@ -66,6 +66,25 @@ export interface ApiIssueDependency {
   blockedIssue:  { id: string; title: string; status: string };
 }
 
+export interface ApiAuditLog {
+  id: string;
+  action: string;
+  targetId: string | null;
+  metadata: Record<string, unknown>;
+  ipAddress: string | null;
+  createdAt: string;
+  user: { id: string; name: string | null; email: string; initials: string | null } | null;
+}
+
+export interface ApiTimeLog {
+  id: string;
+  minutes: number;
+  note: string | null;
+  loggedAt: string;
+  createdAt: string;
+  user: { id: string; name: string | null; initials: string | null };
+}
+
 export interface ApiSavedView {
   id: string;
   name: string;
@@ -528,5 +547,19 @@ export const api = {
     create: (token: string, body: { name: string; filters: Record<string, unknown> }) =>
       apiFetch<ApiSavedView>(`/saved-views`, token, { method: "POST", body: JSON.stringify(body) }),
     remove: (token: string, id: string) => apiFetch<void>(`/saved-views/${id}`, token, { method: "DELETE" }),
+  },
+
+  audit: {
+    list: (token: string, limit?: number) =>
+      apiFetch<ApiAuditLog[]>(`/audit${limit ? `?limit=${limit}` : ""}`, token),
+  },
+
+  timeLogs: {
+    list: (token: string, issueId: string) =>
+      apiFetch<ApiTimeLog[]>(`/issues/${issueId}/time`, token),
+    create: (token: string, issueId: string, body: { minutes: number; note?: string; loggedAt?: string }) =>
+      apiFetch<ApiTimeLog>(`/issues/${issueId}/time`, token, { method: "POST", body: JSON.stringify(body) }),
+    remove: (token: string, issueId: string, logId: string) =>
+      apiFetch<void>(`/issues/${issueId}/time/${logId}`, token, { method: "DELETE" }),
   },
 };

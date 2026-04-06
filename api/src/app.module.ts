@@ -25,6 +25,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { TemplatesModule } from './templates/templates.module';
 import { SavedViewsModule } from './saved-views/saved-views.module';
 import { ContactModule } from './contact/contact.module';
+import { AuditModule } from './audit/audit.module';
+import { PublicModule } from './public/public.module';
+import { TimeLogsModule } from './time-logs/time-logs.module';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { ContactModule } from './contact/contact.module';
     TemplatesModule,
     SavedViewsModule,
     ContactModule,
+    AuditModule,
+    PublicModule,
+    TimeLogsModule,
     ProjectsModule,
     SprintsModule,
     IssuesModule,

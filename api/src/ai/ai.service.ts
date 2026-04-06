@@ -439,6 +439,124 @@ No markdown fences, no extra text.`;
     }
   }
 
+  // ── Auto-assign ─────────────────────────────────────────────────────────────
+
+  async autoAssign(input: {
+    title: string;
+    description?: string;
+    priority?: string;
+    labels?: string[];
+    members: Array<{ id: string; name: string; openIssueCount: number }>;
+  }): Promise<{ memberId: string; memberName: string; reason: string } | null> {
+    if (input.members.length === 0) return null;
+
+    const system = `You are a team lead assigning engineering issues to team members.
+Given an issue and team member workloads, pick the best assignee.
+Return ONLY valid JSON with keys: "member_id", "member_name", "reason" (one sentence explaining why).
+No markdown fences, no extra text.`;
+
+    const membersStr = input.members.map(m => `- ${m.name} (id=${m.id}, open issues=${m.openIssueCount})`).join('\n');
+    let context = `Issue: ${input.title}`;
+    if (input.description) context += `\nDescription: ${input.description}`;
+    if (input.priority) context += `\nPriority: ${input.priority}`;
+    if (input.labels?.length) context += `\nLabels: ${input.labels.join(', ')}`;
+    context += `\n\nTeam members:\n${membersStr}`;
+
+    const raw = await this.complete(system, context, 256);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return { memberId: data.member_id, memberName: data.member_name, reason: data.reason };
+    } catch {
+      return null;
+    }
+  }
+
+  // ── PR description ──────────────────────────────────────────────────────────
+
+  async writePrDescription(input: {
+    issueTitle: string;
+    issueDescription?: string;
+    status?: string;
+    priority?: string;
+    labels?: string[];
+  }): Promise<{ title: string; body: string } | null> {
+    const system = `You are a senior engineer writing a GitHub pull request description from an issue.
+Return ONLY valid JSON with keys:
+- "title": concise PR title starting with a type prefix (feat/fix/chore/refactor) (max 72 chars)
+- "body": full PR body in GitHub-flavored Markdown with sections: ## Summary, ## Changes, ## Testing
+No markdown fences around the JSON itself.`;
+
+    let context = `Issue: ${input.issueTitle}`;
+    if (input.issueDescription) context += `\nDescription: ${input.issueDescription}`;
+    if (input.priority) context += `\nPriority: ${input.priority}`;
+    if (input.labels?.length) context += `\nLabels: ${input.labels.join(', ')}`;
+
+    const raw = await this.complete(system, context, 1024);
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Sprint capacity planner ─────────────────────────────────────────────────
+
+  async planCapacity(input: {
+    sprintName: string;
+    issues: Array<{ id: string; title: string; priority: string; estimate?: number }>;
+    members: Array<{ id: string; name: string; capacity?: number }>;
+  }): Promise<{
+    assignments: Array<{ issueId: string; issueTitle: string; memberId: string; memberName: string; reason: string }>;
+    overloaded: string[];
+    underutilized: string[];
+    summary: string;
+  } | null> {
+    if (input.members.length === 0 || input.issues.length === 0) return null;
+
+    const system = `You are an engineering manager planning sprint capacity.
+Assign unassigned sprint issues to team members based on workload balance and issue priority.
+Return ONLY valid JSON with keys:
+- "assignments": array of objects, each with "issue_id", "issue_title", "member_id", "member_name", "reason"
+- "overloaded": array of member names who have too much work
+- "underutilized": array of member names who have spare capacity
+- "summary": 1-2 sentence overview of the capacity plan
+No markdown fences, no extra text.`;
+
+    const issuesStr = input.issues.map(i =>
+      `- id=${i.id}: ${i.title} (priority=${i.priority}${i.estimate ? `, ${i.estimate}pt` : ''})`
+    ).join('\n');
+    const membersStr = input.members.map(m =>
+      `- id=${m.id}: ${m.name}${m.capacity ? ` (capacity=${m.capacity}pt)` : ''}`
+    ).join('\n');
+
+    const prompt = `Sprint: ${input.sprintName}\n\nIssues to assign:\n${issuesStr}\n\nTeam members:\n${membersStr}`;
+
+    const raw = await this.complete(system, prompt, 2048);
+    if (!raw) return null;
+
+    try {
+      const data = JSON.parse(raw);
+      return {
+        assignments: (data.assignments ?? []).map((a: any) => ({
+          issueId: a.issue_id,
+          issueTitle: a.issue_title,
+          memberId: a.member_id,
+          memberName: a.member_name,
+          reason: a.reason,
+        })),
+        overloaded: data.overloaded ?? [],
+        underutilized: data.underutilized ?? [],
+        summary: data.summary ?? '',
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // ── Summarize comments ──────────────────────────────────────────────────────
 
   async summarizeComments(input: {
