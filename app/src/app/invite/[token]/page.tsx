@@ -58,7 +58,7 @@ export default function InvitePage() {
       const res = await fetch(`${API}/auth/register-member`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email, password }),
+        body: JSON.stringify({ name: name.trim(), email, password, inviteToken }),
       });
       if (!res.ok) {
         const text = await res.text();
