@@ -97,7 +97,7 @@ export class WebhooksService {
     }
 
     await this.prisma.webhookDelivery.create({
-      data: { webhookId: wh.id, event, payload, statusCode, success, response },
+      data: { webhookId: wh.id, event, payload: payload as any, statusCode, success, response },
     });
   }
 
