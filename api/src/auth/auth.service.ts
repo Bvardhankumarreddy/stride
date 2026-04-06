@@ -110,12 +110,12 @@ export class AuthService {
     const initials = dto.initials ?? dto.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
     // emailVerified is set immediately — they proved ownership by clicking the invite link in their email
-    // mustChangePassword = true so they are prompted to set their own password after first login
+    // mustChangePassword = false — they chose their own password during registration
     const user = await this.prisma.user.create({
-      data: { name: dto.name, email: dto.email, password: passwordHash, initials, mustChangePassword: true, emailVerified: new Date() },
+      data: { name: dto.name, email: dto.email, password: passwordHash, initials, mustChangePassword: false, emailVerified: new Date() },
     });
 
-    const accessToken = this.signToken(user, null, true);
+    const accessToken = this.signToken(user, null, false);
     const refreshToken = await this.generateRefreshToken(user.id);
     return { accessToken, refreshToken, user: this.sanitize(user) };
   }
