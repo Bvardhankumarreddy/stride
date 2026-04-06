@@ -42,6 +42,9 @@ export default function MembersPage() {
     }).finally(() => setLoading(false));
   }, [token]);
 
+  const myMembership = members.find((m) => m.userId === me?.id);
+  const canManage = !!myMembership && ["owner", "admin"].includes(myMembership.role);
+
   async function sendInvite() {
     if (!token || !org || !inviteEmail.trim()) return;
     setSending(true);
@@ -145,7 +148,7 @@ export default function MembersPage() {
                   <p className="text-xs text-on-surface-variant">{m.user.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {m.userId !== me?.id ? (
+                  {canManage && m.userId !== me?.id ? (
                     <select
                       value={m.role}
                       onChange={(e) => changeRole(m.userId, e.target.value)}
@@ -160,7 +163,7 @@ export default function MembersPage() {
                       {m.role}
                     </span>
                   )}
-                  {m.userId !== me?.id && (
+                  {canManage && m.userId !== me?.id && (
                     <button
                       onClick={() => removeMember(m.userId)}
                       className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
@@ -195,13 +198,15 @@ export default function MembersPage() {
                   <span className={clsx("text-[10px] font-bold px-2 py-1 rounded-full capitalize", ROLE_BADGE[inv.role] ?? ROLE_BADGE.member)}>
                     {inv.role}
                   </span>
-                  <button
-                    onClick={() => revokeInvitation(inv.id)}
-                    className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
-                    title="Cancel invite"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-                  </button>
+                  {canManage && (
+                    <button
+                      onClick={() => revokeInvitation(inv.id)}
+                      className="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-red-500 transition-colors"
+                      title="Cancel invite"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
