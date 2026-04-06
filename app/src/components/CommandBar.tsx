@@ -235,13 +235,13 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 bg-white border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">
+              <kbd className="px-1.5 py-0.5 bg-surface-container-lowest border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">
                 TAB
               </kbd>
               <span className="text-[10px] text-outline font-bold uppercase tracking-tighter">Navigate</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 bg-white border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">
+              <kbd className="px-1.5 py-0.5 bg-surface-container-lowest border border-outline-variant/30 rounded text-[10px] font-bold shadow-sm">
                 ↵
               </kbd>
               <span className="text-[10px] text-outline font-bold uppercase tracking-tighter">Select</span>

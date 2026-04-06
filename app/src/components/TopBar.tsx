@@ -46,7 +46,7 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
   }, [menuOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-outline-variant/10">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-surface-container-lowest/90 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-outline-variant/10">
       {breadcrumbs && breadcrumbs.length > 0 ? (
         <nav className="flex items-center gap-1 text-sm font-medium text-on-surface-variant">
           {breadcrumbs.map((crumb, i) => (

@@ -358,7 +358,7 @@ export default function IssueDetailPage() {
                   {/* Delete confirmation */}
                   {deletingCommentId && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-sm p-6">
                         <h3 className="text-lg font-bold text-on-surface mb-2">Delete comment?</h3>
                         <p className="text-sm text-on-surface-variant mb-6">This cannot be undone.</p>
                         <div className="flex gap-3">
@@ -594,7 +594,7 @@ export default function IssueDetailPage() {
                       } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
                       finally { setAiLoading(false); }
                     }}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
                   >
                     <span className="flex items-center gap-2">
                       <span className="material-symbols-outlined" style={{ fontSize: 15 }}>checklist</span>
@@ -606,7 +606,7 @@ export default function IssueDetailPage() {
                     }
                   </button>
                   {aiPanel === "criteria" && aiCriteria && (
-                    <div className="bg-white rounded-xl p-4 space-y-2 border border-secondary/10">
+                    <div className="bg-surface-container-lowest rounded-xl p-4 space-y-2 border border-secondary/10">
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary">Acceptance Criteria</p>
                         <button
@@ -665,7 +665,7 @@ export default function IssueDetailPage() {
                       } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
                       finally { setAiLoading(false); }
                     }}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
                   >
                     <span className="flex items-center gap-2">
                       <span className="material-symbols-outlined" style={{ fontSize: 15 }}>content_copy</span>
@@ -677,7 +677,7 @@ export default function IssueDetailPage() {
                     }
                   </button>
                   {aiPanel === "similar" && aiSimilar && (
-                    <div className="bg-white rounded-xl p-4 border border-secondary/10">
+                    <div className="bg-surface-container-lowest rounded-xl p-4 border border-secondary/10">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-3">Similar Issues</p>
                       {aiSimilar.length === 0 ? (
                         <p className="text-xs text-on-surface-variant italic">No similar issues found.</p>
@@ -718,7 +718,7 @@ export default function IssueDetailPage() {
                       } catch { toast("AI unavailable — check API key"); setAiPanel(null); }
                       finally { setAiLoading(false); }
                     }}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-surface-container-lowest rounded-xl text-sm font-bold text-on-surface-variant hover:text-secondary hover:shadow-sm transition-all group disabled:opacity-50"
                     title={!issue.comments?.length ? "No comments to summarize" : undefined}
                   >
                     <span className="flex items-center gap-2">
@@ -731,7 +731,7 @@ export default function IssueDetailPage() {
                     }
                   </button>
                   {aiPanel === "summary" && aiSummary && (
-                    <div className="bg-white rounded-xl p-4 space-y-3 border border-secondary/10">
+                    <div className="bg-surface-container-lowest rounded-xl p-4 space-y-3 border border-secondary/10">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-secondary mb-1.5">Summary</p>
                         <p className="text-xs text-on-surface-variant leading-relaxed">{aiSummary.summary}</p>

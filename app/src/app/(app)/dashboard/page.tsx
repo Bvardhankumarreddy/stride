@@ -121,7 +121,7 @@ export default function DashboardPage() {
             )) : docs.map((doc) => (
               <Link key={doc.id} href={`/docs/${doc.id}`} className="flex-none w-64 bg-surface-container-low p-5 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group block">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-2xl">
+                  <div className="w-10 h-10 rounded-lg bg-surface-container-lowest shadow-sm flex items-center justify-center text-2xl">
                     {doc.emoji}
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
@@ -143,8 +143,8 @@ export default function DashboardPage() {
               <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold">{displayIssues.length}</span>
             </div>
             <div className="flex gap-1 p-1 bg-surface-container-low rounded-lg w-fit text-sm font-medium">
-              <button onClick={() => setIssueTab("mine")} className={`px-3 py-1.5 rounded-md transition-all ${issueTab === "mine" ? "bg-white shadow-sm text-primary font-bold" : "text-on-surface-variant"}`}>Mine ({myIssues.length})</button>
-              <button onClick={() => setIssueTab("all")} className={`px-3 py-1.5 rounded-md transition-all ${issueTab === "all" ? "bg-white shadow-sm text-primary font-bold" : "text-on-surface-variant"}`}>All ({allIssues.length})</button>
+              <button onClick={() => setIssueTab("mine")} className={`px-3 py-1.5 rounded-md transition-all ${issueTab === "mine" ? "bg-surface-container-lowest shadow-sm text-primary font-bold" : "text-on-surface-variant"}`}>Mine ({myIssues.length})</button>
+              <button onClick={() => setIssueTab("all")} className={`px-3 py-1.5 rounded-md transition-all ${issueTab === "all" ? "bg-surface-container-lowest shadow-sm text-primary font-bold" : "text-on-surface-variant"}`}>All ({allIssues.length})</button>
             </div>
           </div>
           <div className="space-y-2">

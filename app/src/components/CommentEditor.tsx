@@ -111,7 +111,7 @@ export default function CommentEditor({
       {/* @mention dropdown */}
       {menu.active && menu.items.length > 0 && menu.rect && (
         <div
-          className="fixed z-[200] bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 min-w-[160px]"
+          className="fixed z-[200] bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 min-w-[160px]"
           style={{ top: menu.rect.bottom + 4, left: menu.rect.left }}
         >
           {menu.items.map((item, i) => (

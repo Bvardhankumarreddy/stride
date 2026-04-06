@@ -178,7 +178,7 @@ export default function SprintsPage() {
                 { label: "In Progress", value: activeStats.inProgress, icon: "play_circle", color: "text-amber-500" },
                 { label: "Story Points", value: `${activeStats.points.completed}/${activeStats.points.total}`, icon: "star", color: "text-secondary" },
               ].map(({ label, value, icon, color }) => (
-                <div key={label} className="bg-white rounded-2xl p-4 shadow-sm border border-outline-variant/10">
+                <div key={label} className="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/10">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={clsx("material-symbols-outlined", color ?? "text-on-surface-variant")} style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                     <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">{label}</span>
@@ -223,7 +223,7 @@ export default function SprintsPage() {
               const stats = sprintStats(sprint);
               const pct = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
               return (
-                <div key={sprint.id} className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 hover:shadow-md transition-shadow">
+                <div key={sprint.id} className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-outline-variant/10 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-on-surface">{sprint.name}</h3>
@@ -281,7 +281,7 @@ export default function SprintsPage() {
             </div>
             <div className="space-y-2">
               {backlog.slice(0, 5).map((issue) => (
-                <Link key={issue.id} href={`/issues/${issue.id}`} className="bg-white rounded-xl p-3.5 shadow-sm border border-outline-variant/10 flex items-start gap-3 hover:shadow-md transition-shadow block">
+                <Link key={issue.id} href={`/issues/${issue.id}`} className="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm border border-outline-variant/10 flex items-start gap-3 hover:shadow-md transition-shadow block">
                   <span className={clsx("mt-1 w-2 h-2 rounded-full flex-shrink-0", PRIORITY_DOT[issue.priority] ?? "bg-slate-300")} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-outline">{issue.id}</p>
@@ -321,7 +321,7 @@ export default function SprintsPage() {
           return (
             <section className="px-6 py-6 border-t border-outline-variant/10">
               <h2 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Burndown — {active.name}</h2>
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-outline-variant/10">
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }} preserveAspectRatio="none">
                   {/* Grid lines */}
                   {[0, 0.25, 0.5, 0.75, 1].map(t => (
@@ -394,7 +394,7 @@ export default function SprintsPage() {
       {/* Create Sprint Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-black text-on-surface">New Sprint</h2>
               <button onClick={() => setShowCreate(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">

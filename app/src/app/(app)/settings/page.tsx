@@ -217,7 +217,7 @@ function SettingsInner() {
                 className={clsx(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all",
                   activeTab === tab.id
-                    ? "bg-white text-primary shadow-sm font-bold"
+                    ? "bg-surface-container-lowest text-primary shadow-sm font-bold"
                     : "text-on-surface-variant hover:text-on-surface"
                 )}
               >

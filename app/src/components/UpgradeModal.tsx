@@ -50,7 +50,7 @@ export default function UpgradeModal({ requiredPlan, featureName, onClose }: Upg
       style={{ background: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className={`px-6 py-5 ${plan.color}`}>
           <div className="flex items-center justify-between">

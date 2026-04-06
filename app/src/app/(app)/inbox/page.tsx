@@ -84,7 +84,7 @@ export default function InboxPage() {
               onClick={() => setActiveTab(tab)}
               className={clsx(
                 "flex-1 px-3 py-1.5 text-sm rounded-lg transition-all font-medium",
-                tab === activeTab ? "bg-white text-primary font-bold shadow-sm" : "text-on-surface-variant hover:text-on-surface"
+                tab === activeTab ? "bg-surface-container-lowest text-primary font-bold shadow-sm" : "text-on-surface-variant hover:text-on-surface"
               )}
             >
               {tab}

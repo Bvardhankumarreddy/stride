@@ -149,7 +149,7 @@ export default function Sidebar() {
         </button>
 
         {wsOpen && (
-          <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white rounded-2xl shadow-xl border border-outline-variant/15 overflow-hidden">
+          <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/15 overflow-hidden">
             {!createOpen ? (
               <>
                 <div className="px-3 pt-3 pb-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
@@ -286,7 +286,7 @@ export default function Sidebar() {
         )}
 
         <button onClick={() => setMenuOpen(v => !v)}
-          className="w-full flex items-center gap-3 px-3 py-3 bg-white/50 rounded-xl hover:bg-white/80 transition-colors">
+          className="w-full flex items-center gap-3 px-3 py-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors">
           <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-bold text-on-primary-fixed">{initials}</span>
           </div>

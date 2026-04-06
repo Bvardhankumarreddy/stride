@@ -150,7 +150,7 @@ function IssueRow({
             <span className={clsx("w-2 h-2 rounded-full", PRIORITY_DOT[issue.priority] ?? "bg-slate-300")} />
           </button>
           {editPriority && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[130px]">
+            <div className="absolute z-50 top-full left-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[130px]">
               {PRIORITIES.map(p => (
                 <button key={p} onClick={() => { applyPatch({ priority: p }); setEditPriority(false); }}
                   className={clsx("w-full text-left px-3 py-1.5 text-xs hover:bg-surface-container-low flex items-center gap-2 font-medium capitalize", issue.priority === p && "text-primary bg-primary/5")}>
@@ -188,7 +188,7 @@ function IssueRow({
             </span>
           </button>
           {editStatus && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[150px]">
+            <div className="absolute z-50 top-full left-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[150px]">
               {STATUSES.map(s => (
                 <button key={s} onClick={() => { applyPatch({ status: s }); setEditStatus(false); }}
                   className={clsx("w-full text-left px-3 py-1.5 hover:bg-surface-container-low flex items-center", issue.status === s && "bg-primary/5")}>
@@ -216,7 +216,7 @@ function IssueRow({
             )}
           </button>
           {editAssignee && (
-            <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[180px] max-h-52 overflow-y-auto">
+            <div className="absolute z-50 top-full left-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[180px] max-h-52 overflow-y-auto">
               <button onClick={() => { applyPatch({ assigneeId: null }); setEditAssignee(false); }}
                 className={clsx("w-full text-left px-3 py-1.5 text-xs hover:bg-surface-container-low flex items-center gap-2", !issue.assignee && "text-primary bg-primary/5")}>
                 <div className="w-5 h-5 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center flex-shrink-0 text-outline" style={{ fontSize: 10 }}>—</div>
@@ -254,7 +254,7 @@ function IssueRow({
               defaultValue={issue.dueDate ? issue.dueDate.split("T")[0] : ""}
               onBlur={e => { setEditDue(false); applyPatch({ dueDate: e.target.value || null }); }}
               onKeyDown={e => { if (e.key === "Escape") setEditDue(false); }}
-              className="w-full text-xs border border-primary/30 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 bg-white"
+              className="w-full text-xs border border-primary/30 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 bg-surface-container-low text-on-surface"
             />
           ) : (
             <button onClick={() => setEditDue(true)} title="Set due date" className="text-[11px] text-on-surface-variant italic hover:text-on-surface transition-colors w-full text-left">
@@ -284,7 +284,7 @@ function IssueRow({
               autoFocus
               defaultValue={issue.estimate ?? ""}
               min={0}
-              className="w-14 text-right text-xs border border-primary/30 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 bg-white"
+              className="w-14 text-right text-xs border border-primary/30 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 bg-surface-container-low text-on-surface"
               onBlur={e => { setEditEstimate(false); const v = parseInt(e.target.value, 10); applyPatch({ estimate: isNaN(v) ? null : v }); }}
               onKeyDown={e => { if (e.key === "Escape") setEditEstimate(false); if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
             />
@@ -492,7 +492,7 @@ export default function IssuesPage() {
           )}
         </button>
         {filterOpen && (
-          <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-xl border border-outline-variant/20 w-64 p-3 max-h-[80vh] overflow-y-auto">
+          <div className="absolute right-0 top-full mt-2 z-50 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 w-64 p-3 max-h-[80vh] overflow-y-auto">
             {/* Status */}
             <p className="text-[11px] font-black uppercase tracking-widest text-on-surface-variant mb-2">Status</p>
             <div className="flex flex-col gap-0.5 mb-3">
@@ -555,7 +555,7 @@ export default function IssuesPage() {
           Fields
         </button>
         {fieldsOpen && (
-          <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-xl border border-outline-variant/20 w-52 py-2 max-h-[80vh] overflow-y-auto">
+          <div className="absolute right-0 top-full mt-2 z-50 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 w-52 py-2 max-h-[80vh] overflow-y-auto">
             <p className="px-3 pb-2 text-[11px] font-black uppercase tracking-widest text-on-surface-variant border-b border-outline-variant/10 mb-1">Built-in columns</p>
             {FIXED_FIELDS.map(f => (
               <label key={f.key} className={clsx("flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container-low cursor-pointer", f.key === "title" && "opacity-40 pointer-events-none")}>
@@ -592,7 +592,7 @@ export default function IssuesPage() {
 
       <main className="pt-16 pb-24 min-h-screen">
         {/* Header */}
-        <section className="px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-16 z-20 border-b border-outline-variant/10">
+        <section className="px-6 py-4 bg-surface-container-lowest/90 backdrop-blur-sm sticky top-16 z-20 border-b border-outline-variant/10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-baseline gap-2">
               <h1 className="text-xl font-bold font-headline tracking-tight">Issues</h1>
@@ -601,7 +601,7 @@ export default function IssuesPage() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg">
                 <Link href="/board" className="px-3 py-1 text-xs font-semibold rounded-md text-on-surface-variant hover:text-on-surface transition-all">Board</Link>
-                <button className="px-3 py-1 text-xs font-bold rounded-md bg-white text-primary shadow-sm">List</button>
+                <button className="px-3 py-1 text-xs font-bold rounded-md bg-surface-container-low text-primary shadow-sm">List</button>
                 <Link href="/roadmap" className="px-3 py-1 text-xs font-semibold rounded-md text-on-surface-variant hover:text-on-surface transition-all">Timeline</Link>
               </div>
             </div>
@@ -621,12 +621,12 @@ export default function IssuesPage() {
               {/* Bulk status */}
               <div className="relative" ref={bulkStatusRef}>
                 <button onClick={() => { setBulkStatusOpen(v => !v); setBulkAssigneeOpen(false); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 text-xs font-semibold">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-surface-container text-xs font-semibold">
                   <span className="material-symbols-outlined" style={{ fontSize: 15 }}>swap_horiz</span>
                   Status
                 </button>
                 {bulkStatusOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[150px] z-50">
+                  <div className="absolute top-full left-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[150px] z-50">
                     {STATUSES.map(s => (
                       <button key={s} onClick={() => { bulkApply({ status: s }); setBulkStatusOpen(false); }}
                         className="w-full text-left px-3 py-1.5 hover:bg-surface-container-low flex items-center">
@@ -642,12 +642,12 @@ export default function IssuesPage() {
               {/* Bulk assignee */}
               <div className="relative" ref={bulkAssigneeRef}>
                 <button onClick={() => { setBulkAssigneeOpen(v => !v); setBulkStatusOpen(false); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 text-xs font-semibold">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-surface-container text-xs font-semibold">
                   <span className="material-symbols-outlined" style={{ fontSize: 15 }}>person</span>
                   Assignee
                 </button>
                 {bulkAssigneeOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[180px] max-h-52 overflow-y-auto z-50">
+                  <div className="absolute top-full left-0 mt-1 bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/20 py-1 min-w-[180px] max-h-52 overflow-y-auto z-50">
                     <button onClick={() => { bulkApply({ assigneeId: "" }); setBulkAssigneeOpen(false); }}
                       className="w-full text-left px-3 py-1.5 text-xs hover:bg-surface-container-low flex items-center gap-2 text-on-surface-variant">
                       <div className="w-5 h-5 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center text-outline text-[10px]">—</div>

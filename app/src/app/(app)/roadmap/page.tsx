@@ -151,7 +151,7 @@ export default function RoadmapPage() {
                   onClick={() => setZoom(z)}
                   className={clsx(
                     "px-4 py-1.5 text-sm rounded-md font-medium transition-all",
-                    z === zoom ? "bg-white shadow-sm text-primary font-bold" : "text-on-surface-variant hover:text-on-surface"
+                    z === zoom ? "bg-surface-container-lowest shadow-sm text-primary font-bold" : "text-on-surface-variant hover:text-on-surface"
                   )}
                 >
                   {z}
@@ -162,7 +162,7 @@ export default function RoadmapPage() {
               <button
                 onClick={() => setTeamOpen(v => !v)}
                 className={clsx(
-                  "flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border rounded-lg text-sm font-medium transition-colors",
                   teamOpen ? "border-primary/30 text-primary bg-primary/5" : "border-outline-variant/20 hover:bg-surface-container-low"
                 )}
               >
@@ -171,7 +171,7 @@ export default function RoadmapPage() {
                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>expand_more</span>
               </button>
               {teamOpen && projects.length > 0 && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
                   {projects.map(p => (
                     <button
                       key={p.id}
@@ -191,7 +191,7 @@ export default function RoadmapPage() {
               <button
                 onClick={() => setFilterOpen(v => !v)}
                 className={clsx(
-                  "flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border rounded-lg text-sm font-medium transition-colors",
                   filterOpen || filterStatus !== "All" ? "border-primary/30 text-primary bg-primary/5" : "border-outline-variant/20 hover:bg-surface-container-low"
                 )}
               >
@@ -199,7 +199,7 @@ export default function RoadmapPage() {
                 {filterStatus === "All" ? "Filter" : filterStatus}
               </button>
               {filterOpen && (
-                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                <div className="absolute right-0 top-full mt-1 w-40 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
                   {["All", "Active", "Planned", "Completed"].map(opt => (
                     <button
                       key={opt}
@@ -300,7 +300,7 @@ export default function RoadmapPage() {
         <div className="p-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary-container text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
           <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700" />
           <div className="flex items-start gap-5 relative z-10">
-            <div className="bg-white/20 p-3 rounded-xl backdrop-blur-md flex-shrink-0">
+            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md flex-shrink-0">
               <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
             </div>
             <div>

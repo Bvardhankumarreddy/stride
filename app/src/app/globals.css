@@ -137,21 +137,21 @@ body {
 
 /* ─── Dark Mode ─────────────────────────────────────────────── */
 .dark {
-  /* Surface hierarchy */
-  --color-background: #111318;
-  --color-surface: #111318;
-  --color-surface-bright: #33353c;
-  --color-surface-dim: #0d1117;
-  --color-surface-container-lowest: #0d1117;
-  --color-surface-container-low: #1b1d22;
-  --color-surface-container: #1f2128;
-  --color-surface-container-high: #24262d;
-  --color-surface-container-highest: #292b32;
-  --color-surface-variant: #292b32;
+  /* Surface hierarchy — each step is visibly lighter than the last */
+  --color-background: #0f1014;
+  --color-surface: #0f1014;
+  --color-surface-dim: #0f1014;
+  --color-surface-container-lowest: #17181d;
+  --color-surface-container-low: #1c1e24;
+  --color-surface-container: #21232a;
+  --color-surface-container-high: #282b32;
+  --color-surface-container-highest: #30333b;
+  --color-surface-variant: #30333b;
+  --color-surface-bright: #3a3d46;
 
   /* Primary (blue) */
   --color-primary: #adc6ff;
-  --color-primary-container: #004494;
+  --color-primary-container: #003580;
   --color-primary-fixed: #001a42;
   --color-primary-fixed-dim: #002c71;
   --color-on-primary: #002c71;
@@ -161,7 +161,7 @@ body {
 
   /* Secondary / AI (violet) */
   --color-secondary: #d0bcff;
-  --color-secondary-container: #4f33a0;
+  --color-secondary-container: #4a2d9a;
   --color-secondary-fixed: #23005c;
   --color-secondary-fixed-dim: #38007a;
   --color-on-secondary: #38007a;
@@ -175,20 +175,20 @@ body {
 
   /* Error */
   --color-error: #ffb4ab;
-  --color-error-container: #93000a;
+  --color-error-container: #7a0007;
   --color-on-error: #690005;
   --color-on-error-container: #ffdad6;
 
-  /* Text */
-  --color-on-surface: #e3e2e6;
-  --color-on-surface-variant: #8e9099;
-  --color-on-background: #e3e2e6;
-  --color-outline: #585c6d;
-  --color-outline-variant: #41444d;
-  --color-inverse-surface: #e3e2e6;
-  --color-inverse-on-surface: #2e3132;
+  /* Text — slightly brighter variant for readability */
+  --color-on-surface: #e4e2e9;
+  --color-on-surface-variant: #c4c6d2;
+  --color-on-background: #e4e2e9;
+  --color-outline: #8e919e;
+  --color-outline-variant: #43464f;
+  --color-inverse-surface: #e4e2e9;
+  --color-inverse-on-surface: #2e3033;
 }
 
 .dark .glass-panel {
-  background: rgba(17, 19, 24, 0.85);
+  background: rgba(15, 16, 20, 0.85);
 }

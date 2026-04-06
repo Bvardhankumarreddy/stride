@@ -104,7 +104,7 @@ export default function DocsPage() {
                 {activeSort.label}
               </button>
               {sortOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                <div className="absolute right-0 top-full mt-1 w-44 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
                   {SORT_OPTIONS.map(o => (
                     <button
                       key={o.id}
@@ -138,7 +138,7 @@ export default function DocsPage() {
                 {filterStatus === "all" ? "Filter" : activeFilter.label}
               </button>
               {filterOpen && (
-                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+                <div className="absolute right-0 top-full mt-1 w-40 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
                   {FILTER_OPTIONS.map(o => (
                     <button
                       key={o.id}

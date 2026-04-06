@@ -299,7 +299,7 @@ export default function BoardPage() {
             onClick={() => setActiveView(v)}
             className={clsx(
               "px-3 py-1 text-sm rounded-md transition-all",
-              v === activeView ? "bg-white text-primary font-bold shadow-sm" : "font-medium text-on-surface-variant hover:text-on-surface"
+              v === activeView ? "bg-surface-container-lowest text-primary font-bold shadow-sm" : "font-medium text-on-surface-variant hover:text-on-surface"
             )}
           >
             {v}
@@ -333,7 +333,7 @@ export default function BoardPage() {
             Filter{hasActiveFilters ? ` (${filterPriorities.size})` : ""}
           </button>
           {filterOpen && (
-            <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-outline-variant/10 p-3 z-50">
+            <div className="absolute left-0 top-full mt-1 w-48 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 p-3 z-50">
               <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Priority</p>
               <div className="space-y-1">
                 {PRIORITY_GROUPS.map(p => (
@@ -378,7 +378,7 @@ export default function BoardPage() {
             Group: {groupBy === "status" ? "Status" : groupBy === "priority" ? "Priority" : "Assignee"}
           </button>
           {groupByOpen && (
-            <div className="absolute left-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
+            <div className="absolute left-0 top-full mt-1 w-40 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 py-1 z-50">
               {(["status", "priority", "assignee"] as const).map(opt => (
                 <button
                   key={opt}
