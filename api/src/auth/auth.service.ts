@@ -77,7 +77,7 @@ export class AuthService {
 
     const { user, org } = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: { name: dto.name, email: dto.email, password: passwordHash, initials, passwordChangedAt: new Date() },
+        data: { name: dto.name, email: dto.email, password: passwordHash, initials, passwordChangedAt: new Date(), emailVerified: new Date() },
       });
       const org = await tx.organization.create({
         data: { name: `${dto.name}'s Workspace`, slug: orgSlug },
@@ -250,7 +250,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: record.userId }, data: { password: passwordHash, mustChangePassword: false, passwordChangedAt: new Date(), failedLoginCount: 0, lockedUntil: null } }),
+      this.prisma.user.update({ where: { id: record.userId }, data: { password: passwordHash, mustChangePassword: false, passwordChangedAt: new Date(), failedLoginCount: 0, lockedUntil: null, emailVerified: new Date() } }),
       this.prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
       // Revoke all refresh tokens on password reset
       this.prisma.refreshToken.deleteMany({ where: { userId: record.userId } }),
