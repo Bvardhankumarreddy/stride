@@ -17,7 +17,6 @@ export default function MembersPage() {
   const token = useToken();
   const { data: session } = useSession();
   const me = session?.user as any;
-  const orgId = me?.organizationId as string | undefined;
 
   const [members, setMembers] = useState<ApiOrgMember[]>([]);
   const [invitations, setInvitations] = useState<ApiInvitation[]>([]);
@@ -30,24 +29,25 @@ export default function MembersPage() {
   const [inviteError, setInviteError] = useState("");
 
   useEffect(() => {
-    if (!token || !orgId) return;
-    Promise.all([
-      api.organizations.members(token, orgId),
-      api.organizations.invitations(token, orgId),
-      api.organizations.mine(token),
-    ]).then(([m, inv, o]) => {
+    if (!token) return;
+    api.organizations.mine(token).then((o) => {
+      setOrg(o);
+      return Promise.all([
+        api.organizations.members(token, o.id),
+        api.organizations.invitations(token, o.id),
+      ]);
+    }).then(([m, inv]) => {
       setMembers(m);
       setInvitations(inv);
-      setOrg(o);
     }).finally(() => setLoading(false));
-  }, [token, orgId]);
+  }, [token]);
 
   async function sendInvite() {
-    if (!token || !orgId || !inviteEmail.trim()) return;
+    if (!token || !org || !inviteEmail.trim()) return;
     setSending(true);
     setInviteError("");
     try {
-      const inv = await api.organizations.invite(token, orgId, { email: inviteEmail.trim(), role: inviteRole });
+      const inv = await api.organizations.invite(token, org.id, { email: inviteEmail.trim(), role: inviteRole });
       setInvitations((prev) => [inv, ...prev]);
       setInviteEmail("");
     } catch (e: any) {
@@ -58,20 +58,20 @@ export default function MembersPage() {
   }
 
   async function changeRole(userId: string, role: string) {
-    if (!token || !orgId) return;
-    const updated = await api.organizations.updateMember(token, orgId, userId, role);
+    if (!token || !org) return;
+    const updated = await api.organizations.updateMember(token, org.id, userId, role);
     setMembers((prev) => prev.map((m) => m.userId === userId ? { ...m, role: updated.role } : m));
   }
 
   async function removeMember(userId: string) {
-    if (!token || !orgId) return;
-    await api.organizations.removeMember(token, orgId, userId);
+    if (!token || !org) return;
+    await api.organizations.removeMember(token, org.id, userId);
     setMembers((prev) => prev.filter((m) => m.userId !== userId));
   }
 
   async function revokeInvitation(invitationId: string) {
-    if (!token || !orgId) return;
-    await api.organizations.revokeInvitation(token, orgId, invitationId);
+    if (!token || !org) return;
+    await api.organizations.revokeInvitation(token, org.id, invitationId);
     setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
   }
 
