@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import Providers from "@/components/Providers";
+import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -96,6 +97,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-dvh flex flex-col">
         <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('stride:theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -125,7 +131,9 @@ export default function RootLayout({
             }),
           }}
         />
-        <Providers>{children}</Providers>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-2WCEXGZ9HJ" />
     </html>

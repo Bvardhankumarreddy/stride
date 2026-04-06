@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
 import { api } from "@/lib/api";
 import { toast } from "@/components/Toast";
+import { useTheme } from "@/components/ThemeProvider";
 
 const TABS = [
   { id: "workspace", label: "Workspace", icon: "business" },
@@ -111,6 +112,7 @@ const INTEGRATIONS: Integration[] = [
 ];
 
 function SettingsInner() {
+  const { theme, toggleTheme } = useTheme();
   const token = useToken();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -228,7 +230,7 @@ function SettingsInner() {
           {/* Workspace */}
           {activeTab === "workspace" && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <h2 className="font-bold text-on-surface mb-4">Workspace Details</h2>
                 <div className="space-y-4">
                   <div>
@@ -265,7 +267,32 @@ function SettingsInner() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+                <h2 className="font-bold text-on-surface mb-4">Appearance</h2>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-on-surface">Dark mode</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Switch between light and dark interface</p>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className={clsx(
+                      "relative w-11 h-6 rounded-full transition-colors duration-200",
+                      theme === "dark" ? "bg-primary" : "bg-surface-container-high"
+                    )}
+                    aria-label="Toggle dark mode"
+                  >
+                    <span
+                      className={clsx(
+                        "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
+                        theme === "dark" ? "translate-x-5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <h2 className="font-bold text-on-surface mb-1">Danger Zone</h2>
                 <p className="text-xs text-on-surface-variant mb-4">These actions are irreversible. Proceed with caution.</p>
                 {!confirmDelete ? (
@@ -309,7 +336,7 @@ function SettingsInner() {
 
           {/* Members */}
           {activeTab === "members" && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10 flex flex-col items-start gap-4">
+            <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 flex flex-col items-start gap-4">
               <p className="text-sm text-on-surface-variant">Manage your team members and their roles from the Members page.</p>
               <button
                 onClick={() => router.push("/settings/members")}
@@ -324,7 +351,7 @@ function SettingsInner() {
           {/* Custom Fields */}
           {activeTab === "fields" && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="font-bold text-on-surface">Custom Fields</h2>
                   <button
@@ -348,7 +375,7 @@ function SettingsInner() {
                           value={newFieldName}
                           onChange={e => setNewFieldName(e.target.value)}
                           placeholder="e.g. Customer name"
-                          className="w-full px-3 py-2 text-sm bg-white border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
                         />
                       </div>
                       <div>
@@ -356,7 +383,7 @@ function SettingsInner() {
                         <select
                           value={newFieldType}
                           onChange={e => setNewFieldType(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-white border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
                         >
                           {FIELD_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                         </select>
@@ -369,7 +396,7 @@ function SettingsInner() {
                           value={newFieldOptions}
                           onChange={e => setNewFieldOptions(e.target.value)}
                           placeholder="Option 1, Option 2, Option 3"
-                          className="w-full px-3 py-2 text-sm bg-white border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-3 py-2 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
                         />
                       </div>
                     )}
@@ -418,14 +445,14 @@ function SettingsInner() {
                                 autoFocus
                                 value={editFieldName}
                                 onChange={e => setEditFieldName(e.target.value)}
-                                className="w-full px-3 py-1.5 text-sm bg-white border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="w-full px-3 py-1.5 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
                               />
                               {field.type === "select" && (
                                 <input
                                   value={editFieldOptions}
                                   onChange={e => setEditFieldOptions(e.target.value)}
                                   placeholder="Options comma-separated"
-                                  className="w-full px-3 py-1.5 text-sm bg-white border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                  className="w-full px-3 py-1.5 text-sm bg-surface-container-low border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
                                 />
                               )}
                               <div className="flex gap-2">
@@ -491,7 +518,7 @@ function SettingsInner() {
                 const intType = integration.name.toLowerCase().replace(/\s+/g, "_");
                 const isConnected = connectedIntegrations.has(intType);
                 return (
-                  <div key={integration.name} className="bg-white rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex items-start gap-4">
+                  <div key={integration.name} className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-outline-variant/10 flex items-start gap-4">
                     <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", integration.color)}>
                       <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>{integration.icon}</span>
                     </div>
@@ -534,7 +561,7 @@ function SettingsInner() {
           {/* Integration connection modal */}
           {connectingTo && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" style={{ background: "rgba(15,23,42,0.5)", backdropFilter: "blur(4px)" }}>
-              <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="w-full max-w-lg bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center gap-4 px-6 py-5 border-b border-outline-variant/10">
                   <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", connectingTo.color)}>
@@ -651,7 +678,7 @@ function SettingsInner() {
           {/* AI Settings */}
           {activeTab === "notifications" && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="material-symbols-outlined text-primary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>notifications</span>
                   <h2 className="font-bold text-on-surface">Notification Preferences</h2>
@@ -701,7 +728,7 @@ function SettingsInner() {
           {activeTab === "billing" && (
             <div className="space-y-6">
               {/* Current plan */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="material-symbols-outlined text-primary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>credit_card</span>
                   <h2 className="font-bold text-on-surface">Current Plan</h2>
@@ -761,7 +788,7 @@ function SettingsInner() {
                       features: ["Everything in Pro", "AI digest & suggestions", "GitHub & Slack integrations", "Audit logs", "Priority support"],
                     },
                   ]).map((p) => (
-                    <div key={p.plan} className="bg-white rounded-2xl border border-outline-variant/15 overflow-hidden shadow-sm">
+                    <div key={p.plan} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/15 overflow-hidden shadow-sm">
                       <div className={`px-5 py-4 ${p.accentClass}`}>
                         <p className="font-black text-base tracking-tight">{p.name}</p>
                         <p className="text-sm opacity-80 mt-0.5">{p.price}</p>
@@ -803,7 +830,7 @@ function SettingsInner() {
 
           {activeTab === "ai" && (
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="material-symbols-outlined text-secondary" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                   <h2 className="font-bold text-on-surface">AI Features</h2>
