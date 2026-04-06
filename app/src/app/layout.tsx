@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
@@ -126,6 +127,7 @@ export default function RootLayout({
         />
         <Providers>{children}</Providers>
       </body>
+      <GoogleAnalytics gaId="G-2WCEXGZ9HJ" />
     </html>
   );
 }
