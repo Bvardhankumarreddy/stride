@@ -152,8 +152,6 @@ body {
   /* Primary (blue) */
   --color-primary: #adc6ff;
   --color-primary-container: #003580;
-  --color-primary-fixed: #001a42;
-  --color-primary-fixed-dim: #002c71;
   --color-on-primary: #002c71;
   --color-on-primary-container: #d8e2ff;
   --color-inverse-primary: #0058be;
@@ -162,8 +160,6 @@ body {
   /* Secondary / AI (violet) */
   --color-secondary: #d0bcff;
   --color-secondary-container: #4a2d9a;
-  --color-secondary-fixed: #23005c;
-  --color-secondary-fixed-dim: #38007a;
   --color-on-secondary: #38007a;
   --color-on-secondary-container: #e9ddff;
 
