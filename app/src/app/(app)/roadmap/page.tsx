@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import TopBar from "@/components/TopBar";
 import { useToken } from "@/lib/useToken";
 import { api, ApiSprint } from "@/lib/api";
-import { toast } from "@/components/Toast";
 import clsx from "clsx";
 
 const SPRINT_COLORS = [
@@ -297,28 +296,6 @@ export default function RoadmapPage() {
           </div>
         )}
 
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-secondary to-secondary-container text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
-          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700" />
-          <div className="flex items-start gap-5 relative z-10">
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md flex-shrink-0">
-              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-            </div>
-            <div>
-              <h4 className="text-lg font-bold mb-1">Predictive Capacity Insight</h4>
-              <p className="text-white/80 max-w-2xl leading-relaxed font-body">
-                AI-powered sprint analysis and capacity forecasting is coming soon.
-              </p>
-              <div className="mt-4 flex gap-3">
-                <button
-                  onClick={() => toast("AI insights coming soon")}
-                  className="px-5 py-2 bg-white text-secondary text-sm font-bold rounded-lg hover:bg-secondary-fixed transition-colors"
-                >
-                  View Analysis
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
