@@ -139,21 +139,38 @@ export default function InvitePage() {
           )}
 
           {/* Already logged in */}
-          {status === "authenticated" && (
-            <>
-              <p className="text-sm text-on-surface-variant mb-4">
-                Signed in as <strong>{session.user?.email}</strong>
-              </p>
-              {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
-              <button
-                onClick={() => acceptInvite()}
-                disabled={accepting}
-                className="w-full bg-primary text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 disabled:opacity-40"
-              >
-                {accepting ? "Joining…" : `Join ${invite?.organization.name} →`}
-              </button>
-            </>
-          )}
+          {status === "authenticated" && (() => {
+            const emailMismatch = invite && session.user?.email?.toLowerCase() !== invite.email.toLowerCase();
+            return (
+              <>
+                <p className="text-sm text-on-surface-variant mb-4">
+                  Signed in as <strong>{session.user?.email}</strong>
+                </p>
+                {emailMismatch && (
+                  <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs font-bold text-amber-700 mb-1">Wrong account</p>
+                    <p className="text-xs text-amber-600">
+                      This invite was sent to <strong>{invite.email}</strong>. Please sign out and sign in with the correct account.
+                    </p>
+                    <button
+                      onClick={() => import("next-auth/react").then(m => m.signOut({ redirect: false })).then(() => window.location.reload())}
+                      className="mt-2 text-xs font-bold text-amber-700 underline"
+                    >
+                      Sign out and switch account
+                    </button>
+                  </div>
+                )}
+                {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+                <button
+                  onClick={() => acceptInvite()}
+                  disabled={accepting || !!emailMismatch}
+                  className="w-full bg-primary text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {accepting ? "Joining…" : `Join ${invite?.organization.name} →`}
+                </button>
+              </>
+            );
+          })()}
 
           {/* Not logged in */}
           {status === "unauthenticated" && (

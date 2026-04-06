@@ -80,10 +80,12 @@ export class InvitationsService {
     let userName: string | null = null;
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.organizationMember.upsert({
+      const existing = await tx.organizationMember.findUnique({
         where: { userId_organizationId: { userId, organizationId: org.id } },
-        create: { userId, organizationId: org.id, role: invitation.role },
-        update: { role: invitation.role },
+      });
+      if (existing) throw new BadRequestException('You are already a member of this workspace');
+      await tx.organizationMember.create({
+        data: { userId, organizationId: org.id, role: invitation.role },
       });
 
       const user = await tx.user.findUnique({ where: { id: userId } });
