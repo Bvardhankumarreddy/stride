@@ -135,6 +135,40 @@ body {
 .tiptap-editor .tiptap pre { background: var(--color-surface-container); padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin: 1rem 0; }
 .tiptap-editor .tiptap pre code { background: none; padding: 0; }
 
+/* ─── Force light mode on auth pages ───────────────────────── */
+.light-page {
+  --color-background: #f8f9fb;
+  --color-surface: #f8f9fb;
+  --color-surface-bright: #f8f9fb;
+  --color-surface-dim: #d9dadc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #edeef0;
+  --color-surface-container-high: #e7e8ea;
+  --color-surface-container-highest: #e1e2e4;
+  --color-surface-variant: #e1e2e4;
+  --color-primary: #0058be;
+  --color-primary-container: #2170e4;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fefcff;
+  --color-secondary: #6b38d4;
+  --color-secondary-container: #8455ef;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #fffbff;
+  --color-tertiary: #006947;
+  --color-on-tertiary: #ffffff;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #424754;
+  --color-on-background: #191c1e;
+  --color-outline: #727785;
+  --color-outline-variant: #c2c6d6;
+  color-scheme: light;
+}
+
 /* ─── Dark Mode ─────────────────────────────────────────────── */
 .dark {
   /* Surface hierarchy — each step is visibly lighter than the last */

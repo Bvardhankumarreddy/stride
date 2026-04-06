@@ -93,7 +93,7 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="light-page min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
@@ -101,7 +101,7 @@ export default function InvitePage() {
 
   if (error && !invite) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="light-page min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">
           <span className="material-symbols-outlined text-4xl text-outline mb-4 block">link_off</span>
           <h1 className="text-xl font-bold text-on-surface mb-2">Invalid or expired invite</h1>
@@ -112,7 +112,7 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="light-page min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 mb-10 justify-center">
           <div className="w-10 h-10 rounded-xl cta-gradient flex items-center justify-center text-white shadow-lg">

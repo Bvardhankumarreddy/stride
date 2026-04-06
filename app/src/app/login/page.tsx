@@ -63,7 +63,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
+    <div className="light-page min-h-dvh bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">

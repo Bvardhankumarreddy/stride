@@ -109,7 +109,7 @@ export default function OnboardingPage() {
   const stepIndex = steps.indexOf(step);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="light-page min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10 justify-center">
