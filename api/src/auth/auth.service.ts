@@ -77,7 +77,7 @@ export class AuthService {
 
     const { user, org } = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: { name: dto.name, email: dto.email, password: passwordHash, initials, passwordChangedAt: new Date(), emailVerified: new Date() },
+        data: { name: dto.name, email: dto.email, password: passwordHash, initials, passwordChangedAt: new Date() },
       });
       const org = await tx.organization.create({
         data: { name: `${dto.name}'s Workspace`, slug: orgSlug },

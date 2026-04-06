@@ -24,19 +24,41 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      // Call API directly first so we can surface the real error message
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    setLoading(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = data.message ?? "Invalid email or password.";
+        // If email not verified, offer to resend
+        setError(msg);
+        setLoading(false);
+        return;
+      }
 
-    if (result?.error) {
-      setError("Invalid email or password.");
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
+      const { accessToken } = await res.json();
+
+      // Create NextAuth session from the verified token
+      const result = await signIn("credentials", {
+        token: accessToken,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        router.push(callbackUrl);
+        router.refresh();
+      } else {
+        setError("Sign-in failed. Please try again.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 

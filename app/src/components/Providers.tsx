@@ -21,6 +21,7 @@ function SessionWatcher() {
       pathname.startsWith("/auth/") ||
       pathname.startsWith("/forgot-password") ||
       pathname.startsWith("/reset-password") ||
+      pathname.startsWith("/verify-email") ||
       pathname.startsWith("/pricing") ||
       pathname.startsWith("/change-password");
     if (!isPublic) {
