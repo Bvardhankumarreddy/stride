@@ -356,6 +356,9 @@ export class AuthService {
     const pending: { name: string; email: string; password: string } = JSON.parse(raw);
     await this.redis.del(otpKey, pendingKey);
 
-    return this.register({ name: pending.name, email: pending.email, password: pending.password });
+    const result = await this.register({ name: pending.name, email: pending.email, password: pending.password });
+    // OTP proves email ownership — mark as verified immediately so login isn't blocked
+    await this.prisma.user.update({ where: { id: result.user.id }, data: { emailVerified: new Date() } });
+    return result;
   }
 }
