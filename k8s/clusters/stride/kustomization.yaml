@@ -1,0 +1,107 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: stride
+
+# Pull in the shared base manifests
+resources:
+  - ../../base
+
+# ── Docker Hub image tags ──────────────────────────────────────────────────────
+# Update newTag to the image tag you pushed to Docker Hub
+images:
+  - name: stride-api
+    newName: bhopathivardhan1/stride-api
+    newTag: latest
+  - name: stride-web
+    newName: bhopathivardhan1/stride-web
+    newTag: latest
+
+# ── Cluster-specific overrides ────────────────────────────────────────────────
+patches:
+  # Real domain + URLs
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: stride-config
+        namespace: stride
+      data:
+        APP_URL:               https://stride.example.com
+        FRONTEND_URL:          https://stride.example.com
+        NEXT_PUBLIC_API_URL:   https://api.stride.example.com
+        EMAIL_LAMBDA_URL:      https://your-lambda-url.lambda-url.ap-south-1.on.aws
+        CONTACT_EMAIL:         hello@stride.example.com
+        STRIPE_PRICE_PRO:      price_xxx
+        STRIPE_PRICE_BUSINESS: price_xxx
+
+  # Fix Let's Encrypt email in ClusterIssuer
+  - patch: |-
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-prod
+      spec:
+        acme:
+          email: hello@stride.example.com
+
+  # t3.medium single node: 1 replica, tighter resources
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: api-hpa
+        namespace: stride
+      spec:
+        minReplicas: 1
+        maxReplicas: 2
+
+  - patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: web-hpa
+        namespace: stride
+      spec:
+        minReplicas: 1
+        maxReplicas: 2
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api
+        namespace: stride
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: api
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 128Mi
+                  limits:
+                    cpu: 500m
+                    memory: 384Mi
+
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: web
+        namespace: stride
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: web
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 128Mi
+                  limits:
+                    cpu: 500m
+                    memory: 384Mi

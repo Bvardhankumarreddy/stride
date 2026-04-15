@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stride-config
+  namespace: stride
+data:
+  NODE_ENV:              production
+  POSTGRES_USER:         stride
+  POSTGRES_DB:           stride
+  PORT:                  "4000"
+
+  # ── URLs (override in clusters/stride/kustomization.yaml) ───────────────────
+  APP_URL:               https://stride.example.com
+  FRONTEND_URL:          https://stride.example.com
+  NEXT_PUBLIC_API_URL:   https://api.stride.example.com
+
+  # ── Email Lambda ─────────────────────────────────────────────────────────────
+  EMAIL_LAMBDA_URL:      https://your-lambda-url.lambda-url.ap-south-1.on.aws
+
+  # ── Contact ──────────────────────────────────────────────────────────────────
+  CONTACT_EMAIL:         hello@stride.example.com
+
+  # ── Stripe ───────────────────────────────────────────────────────────────────
+  STRIPE_PRICE_PRO:      price_xxx
+  STRIPE_PRICE_BUSINESS: price_xxx

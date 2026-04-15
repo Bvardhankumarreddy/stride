@@ -75,3 +75,5 @@ pip-selfcheck.json
 *.pem
 *.p12
 *.key
+k8s/base/01-secrets.yaml
+
