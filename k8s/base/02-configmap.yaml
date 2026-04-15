@@ -21,6 +21,9 @@ data:
   # ── Contact ──────────────────────────────────────────────────────────────────
   CONTACT_EMAIL:         reharse@inferix.in
 
+  # ── API public URL (used for OAuth callbacks) ────────────────────────────
+  API_URL:               https://api.stride.example.com
+
   # ── Redis (BullMQ job queues) ─────────────────────────────────────────────
   REDIS_HOST:            redis-svc
   REDIS_PORT:            "6379"

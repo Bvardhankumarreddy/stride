@@ -42,6 +42,11 @@ spec:
                 configMapKeyRef:
                   name: stride-config
                   key: APP_URL
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: stride-config
+                  key: API_URL
             - name: FRONTEND_URL
               valueFrom:
                 configMapKeyRef:

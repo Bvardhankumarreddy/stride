@@ -36,6 +36,7 @@ patches:
         STRIPE_PRICE_PRO:      price_xxx
         STRIPE_PRICE_BUSINESS: price_xxx
         TYPESENSE_HOST:        kmhc0p7r4ef8bugap-1.a1.typesense.net
+        API_URL:               https://api.stride.inferix.in
 
   # Fix Let's Encrypt email in ClusterIssuer
   - patch: |-
