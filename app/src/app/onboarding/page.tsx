@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useToken } from "@/lib/useToken";
@@ -20,7 +20,15 @@ export default function OnboardingPage() {
 
   // Step 0 = signup (only shown when not logged in)
   const isLoggedIn = !!session;
-  const [step, setStep] = useState<"signup" | "otp" | "workspace" | "invite">(isLoggedIn ? "workspace" : "signup");
+  const [step, setStep] = useState<"signup" | "otp" | "workspace" | "invite">("signup");
+
+  // When session loads (e.g. after OTP sign-in redirect or returning logged-in user),
+  // jump past the signup/otp steps automatically.
+  useEffect(() => {
+    if (session && step === "signup") {
+      setStep("workspace");
+    }
+  }, [session, step]);
 
   // Signup state
   const [signupName, setSignupName]         = useState("");
@@ -92,9 +100,11 @@ export default function OnboardingPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message ?? "Invalid or expired OTP.");
       }
-      const result = await signIn("credentials", { email: signupEmail.trim(), password: signupPassword, redirect: false });
+      const { accessToken } = await res.json();
+      const result = await signIn("credentials", { token: accessToken, redirect: false });
       if (result?.error) throw new Error("Account created but login failed — try signing in.");
-      setStep("workspace");
+      // Full reload so session cookie is available; useEffect will advance to workspace step
+      window.location.href = "/onboarding";
     } catch (e: any) {
       setError(e.message ?? "Something went wrong.");
     } finally {

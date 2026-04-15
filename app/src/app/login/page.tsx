@@ -2,13 +2,12 @@
 
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const raw = searchParams.get("callbackUrl") ?? "/dashboard";
   const callbackUrl = raw.startsWith("http") ? new URL(raw).pathname : raw;
@@ -50,8 +49,7 @@ function LoginForm() {
       });
 
       if (result?.ok) {
-        router.push(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       } else {
         setError("Sign-in failed. Please try again.");
       }
