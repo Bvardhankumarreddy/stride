@@ -89,6 +89,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Pull latest k8s manifests and apply (configmaps, secrets refs, etc.)
+            cd /home/ubuntu/stride && git pull origin main
+            kubectl apply -k k8s/clusters/stride/
+
             CHANGED=""
             if [ "${{ needs.changes.outputs.api }}" = "true" ]; then
               CHANGED="$CHANGED deployment/api"
@@ -111,5 +115,5 @@ jobs:
                 echo "✅ $DEPLOYMENT is healthy"
               done
             else
-              echo "No deployments to restart"
+              echo "No image changes — configmap/manifests applied only"
             fi
