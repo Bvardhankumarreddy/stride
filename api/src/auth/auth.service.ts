@@ -330,13 +330,18 @@ export class AuthService {
 
   async sendOtp(dto: SendOtpDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Email already in use.');
+    // If the account exists and is already verified, block signup
+    if (existing?.emailVerified) throw new ConflictException('Email already in use.');
+    // If unverified account exists (previous signup that failed), allow re-verification
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const pendingKey = `otp-pending:${dto.email}`;
     const otpKey = `otp:${dto.email}`;
 
-    await this.redis.setex(pendingKey, OTP_TTL_SECONDS, JSON.stringify({ name: dto.name, email: dto.email, password: dto.password }));
+    await this.redis.setex(pendingKey, OTP_TTL_SECONDS, JSON.stringify({
+      name: dto.name, email: dto.email, password: dto.password,
+      existingId: existing?.id ?? null,
+    }));
     await this.redis.setex(otpKey, OTP_TTL_SECONDS, otp);
 
     await this.email.send('stride_otp', { email: dto.email, name: dto.name, otp });
@@ -353,11 +358,27 @@ export class AuthService {
     const raw = await this.redis.get(pendingKey);
     if (!raw) throw new BadRequestException('Registration session expired. Please start again.');
 
-    const pending: { name: string; email: string; password: string } = JSON.parse(raw);
+    const pending: { name: string; email: string; password: string; existingId?: string | null } = JSON.parse(raw);
     await this.redis.del(otpKey, pendingKey);
 
+    // Re-verification of a previously unverified account (e.g. signIn failed after first OTP)
+    if (pending.existingId) {
+      const user = await this.prisma.user.update({
+        where: { id: pending.existingId },
+        data: { emailVerified: new Date() },
+      });
+      let organizationId = user.organizationId;
+      if (!organizationId) {
+        const membership = await this.prisma.organizationMember.findFirst({ where: { userId: user.id } });
+        organizationId = membership?.organizationId ?? null;
+      }
+      const accessToken = this.signToken(user, organizationId, false);
+      const refreshToken = await this.generateRefreshToken(user.id);
+      return { accessToken, refreshToken, user: { ...this.sanitize(user), organizationId } };
+    }
+
+    // Normal flow: fresh registration, then mark email verified atomically
     const result = await this.register({ name: pending.name, email: pending.email, password: pending.password });
-    // OTP proves email ownership — mark as verified immediately so login isn't blocked
     await this.prisma.user.update({ where: { id: result.user.id }, data: { emailVerified: new Date() } });
     return result;
   }
