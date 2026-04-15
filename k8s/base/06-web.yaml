@@ -24,6 +24,8 @@ spec:
               value: "3000"
             - name: HOSTNAME
               value: "0.0.0.0"
+            - name: AUTH_TRUST_HOST
+              value: "true"
             # Internal API URL for server-side rendering (Next.js → K8s service)
             - name: API_URL
               value: http://api-svc:4000
