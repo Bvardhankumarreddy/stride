@@ -43,14 +43,16 @@ export KUBECONFIG=$KUBECONFIG_PATH
 # ── Build & push images ───────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" != "--skip-build" ]; then
   echo "━━━ Building API image ━━━"
-  docker build \
+  # --platform linux/amd64 required when building on Apple Silicon for EC2 (x86_64)
+  docker buildx build --platform linux/amd64 \
     -f api/Dockerfile \
     -t $DOCKER_USER/stride-api:$TAG \
+    --push \
     .
 
   echo "━━━ Building Web image ━━━"
-  # NEXT_PUBLIC_API_URL must be baked at build time
-  docker build \
+  # NEXT_PUBLIC_* vars must be baked at build time
+  docker buildx build --platform linux/amd64 \
     -f app/Dockerfile \
     --build-arg NEXT_PUBLIC_API_URL=https://$API_DOMAIN \
     --build-arg NEXT_PUBLIC_APP_URL=https://$APP_DOMAIN \
@@ -59,11 +61,8 @@ if [ "$SKIP_BUILD" != "--skip-build" ]; then
     --build-arg DATABASE_URL=placeholder \
     --build-arg API_URL=http://localhost:4000 \
     -t $DOCKER_USER/stride-web:$TAG \
+    --push \
     app/
-
-  echo "━━━ Pushing images ━━━"
-  docker push $DOCKER_USER/stride-api:$TAG
-  docker push $DOCKER_USER/stride-web:$TAG
 else
   echo "→ Skipping build (--skip-build)"
 fi
