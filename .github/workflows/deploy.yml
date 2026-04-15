@@ -3,14 +3,22 @@ name: Build & Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force rebuild all images'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
 
 jobs:
   # ── Detect which services changed ─────────────────────────────────────────
   changes:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ steps.filter.outputs.api }}
-      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api == 'true' || inputs.force_build == 'true' }}
+      web: ${{ steps.filter.outputs.web == 'true' || inputs.force_build == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
