@@ -32,7 +32,7 @@ patches:
         NEXT_PUBLIC_API_URL:   https://api.stride.inferix.in
         NEXT_PUBLIC_APP_URL:   https://stride.inferix.in
         EMAIL_LAMBDA_URL:      https://tqbpgz7ze42kzgzaheo76q6ika0sgqhl.lambda-url.us-east-1.on.aws/
-        CONTACT_EMAIL:         reharse@reharse.inferix.in
+        CONTACT_EMAIL:         reharse@inferix.in
         STRIPE_PRICE_PRO:      price_xxx
         STRIPE_PRICE_BUSINESS: price_xxx
         TYPESENSE_HOST:        kmhc0p7r4ef8bugap-1.a1.typesense.net
@@ -45,7 +45,7 @@ patches:
         name: letsencrypt-prod
       spec:
         acme:
-          email: reharse@reharse.inferix.in
+          email:  reharse@inferix.in
 
   # t3.medium single node: 1 replica, tighter resources
   - patch: |-
@@ -87,6 +87,53 @@ patches:
                   limits:
                     cpu: 500m
                     memory: 384Mi
+
+  # Real domains for ingress
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: stride-web-ingress
+        namespace: stride
+      spec:
+        tls:
+          - hosts:
+              - stride.inferix.in
+            secretName: stride-web-tls
+        rules:
+          - host: stride.inferix.in
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: web-svc
+                      port:
+                        number: 3000
+
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: stride-api-ingress
+        namespace: stride
+      spec:
+        tls:
+          - hosts:
+              - api.stride.inferix.in
+            secretName: stride-api-tls
+        rules:
+          - host: api.stride.inferix.in
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: api-svc
+                      port:
+                        number: 4000
 
   - patch: |-
       apiVersion: apps/v1
