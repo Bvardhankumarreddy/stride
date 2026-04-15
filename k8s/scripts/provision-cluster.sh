@@ -45,8 +45,8 @@ echo "→ Installing Nginx Ingress Controller..."
 $SSH "kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/baremetal/deploy.yaml"
 $SSH "kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s"
 
-# Expose ingress on host ports 80 + 443
-$SSH "kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{\"spec\":{\"type\":\"NodePort\",\"ports\":[{\"port\":80,\"nodePort\":80,\"protocol\":\"TCP\",\"name\":\"http\"},{\"port\":443,\"nodePort\":443,\"protocol\":\"TCP\",\"name\":\"https\"}]}}'"
+# Baremetal nginx-ingress uses hostPort on the controller pod (ports 80 + 443).
+# No NodePort patch needed — k3s restricts NodePort range to 30000-32767.
 
 # ── 6. cert-manager ───────────────────────────────────────────────────────────
 echo "→ Installing cert-manager..."
