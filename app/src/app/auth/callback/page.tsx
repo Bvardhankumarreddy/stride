@@ -23,6 +23,7 @@ function OAuthCallback() {
     }).then((result) => {
       if (result?.ok) {
         router.replace("/dashboard");
+        router.refresh();
       } else {
         setError(true);
       }
