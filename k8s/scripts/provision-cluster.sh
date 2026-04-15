@@ -33,7 +33,8 @@ $SSH "curl -fsSL https://get.docker.com | sh && sudo usermod -aG docker ubuntu"
 
 # ── 3. k3s ─────────────────────────────────────────────────────────────────────
 echo "→ Installing k3s..."
-$SSH "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--disable traefik' sh -"
+# --tls-san includes the public IP so remote kubectl works without cert errors
+$SSH "curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC='--disable traefik --tls-san $EC2_IP' sh -"
 $SSH "mkdir -p ~/.kube && sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config && sudo chown ubuntu:ubuntu ~/.kube/config"
 
 # ── 4. kubectl ────────────────────────────────────────────────────────────────
