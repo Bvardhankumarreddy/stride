@@ -7,7 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { REDIS_CLIENT } from './auth.module';
+import { REDIS_CLIENT } from './redis.constants';
 import type Redis from 'ioredis';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';

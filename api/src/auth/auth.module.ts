@@ -10,8 +10,7 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
 import Redis from 'ioredis';
-
-export const REDIS_CLIENT = 'REDIS_CLIENT';
+import { REDIS_CLIENT } from './redis.constants';
 
 @Module({
   imports: [
