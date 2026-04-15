@@ -102,7 +102,7 @@ jobs:
 
               for DEPLOYMENT in $CHANGED; do
                 echo "Waiting for $DEPLOYMENT..."
-                if ! kubectl rollout status $DEPLOYMENT -n stride --timeout=120s; then
+                if ! kubectl rollout status $DEPLOYMENT -n stride --timeout=240s; then
                   echo "❌ $DEPLOYMENT rollout failed — rolling back"
                   kubectl rollout undo $DEPLOYMENT -n stride
                   kubectl rollout status $DEPLOYMENT -n stride --timeout=60s
