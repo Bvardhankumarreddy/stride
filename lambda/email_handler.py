@@ -45,12 +45,13 @@ def lambda_handler(event, context):
         elif email_type == 'stride_verify_email':    return handle_verify_email(body, headers)
         elif email_type == 'stride_contact':         return handle_stride_contact(body, headers)
         elif email_type == 'stride_due_date':        return handle_stride_due_date(body, headers)
+        elif email_type == 'stride_otp':             return handle_stride_otp(body, headers)
         else:
             return {
                 'statusCode': 400, 'headers': headers,
                 'body': json.dumps({
                     'error': 'Invalid email type',
-                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email', 'stride_contact']
+                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email', 'stride_contact', 'stride_otp']
                 })
             }
 
@@ -397,6 +398,71 @@ def handle_stride_contact(body, headers):
             ReplyToAddresses=[submitter_email],
             Message={
                 'Subject': {'Data': f'New contact from {name}', 'Charset': 'UTF-8'},
+                'Body':    {'Html': {'Data': html_body, 'Charset': 'UTF-8'}}
+            }
+        )
+        return {'statusCode': 200, 'headers': headers,
+                'body': json.dumps({'success': True, 'messageId': response['MessageId']})}
+    except ClientError as e:
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': e.response['Error']['Message']})}
+
+
+# ── OTP Verification ──────────────────────────────────────────────────────────
+
+def handle_stride_otp(body, headers):
+    email = body.get('email')
+    name  = body.get('name', 'there')
+    otp   = body.get('otp')
+
+    if not all([email, otp]):
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'Missing required fields: email, otp'})}
+
+    html_body = f"""
+    <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;
+                background:#fff;border-radius:16px;overflow:hidden">
+        <div style="padding:32px 32px 0;background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.1em;
+                       color:rgba(255,255,255,.7);text-transform:uppercase">Stride</p>
+            <h1 style="margin:0 0 20px;font-size:22px;font-weight:900;color:#fff">
+                Verify your email address
+            </h1>
+        </div>
+        <div style="padding:32px 32px 24px">
+            <p style="margin:0 0 8px;font-size:15px;color:#1e293b">
+                Hi <strong>{name}</strong>,
+            </p>
+            <p style="margin:0 0 28px;font-size:14px;color:#475569">
+                Use the code below to verify your email and complete your Stride account setup.
+            </p>
+            <div style="text-align:center;padding:24px 0;background:#f8fafc;
+                        border-radius:12px;margin-bottom:24px">
+                <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.15em;
+                           color:#6366f1;text-transform:uppercase">Your verification code</p>
+                <p style="margin:0;font-size:40px;font-weight:900;letter-spacing:.25em;
+                           color:#1e293b;font-family:monospace">{otp}</p>
+            </div>
+            <p style="margin:0 0 8px;font-size:13px;color:#64748b;text-align:center">
+                This code expires in <strong>10 minutes</strong>.
+            </p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center">
+                If you didn&apos;t request this, you can safely ignore this email.
+            </p>
+        </div>
+        <div style="padding:16px 32px 24px;border-top:1px solid #f1f5f9">
+            <p style="margin:0;font-size:11px;color:#94a3b8">
+                Never share this code with anyone. Stride will never ask for it.
+            </p>
+        </div>
+    </div>"""
+
+    try:
+        response = ses_client.send_email(
+            Source=f'Stride <{FROM_EMAIL}>',
+            Destination={'ToAddresses': [email]},
+            Message={
+                'Subject': {'Data': f'{otp} is your Stride verification code', 'Charset': 'UTF-8'},
                 'Body':    {'Html': {'Data': html_body, 'Charset': 'UTF-8'}}
             }
         )

@@ -16,13 +16,13 @@ data:
   NEXT_PUBLIC_APP_URL:   https://stride.inferix.in
 
   # ── Email Lambda ─────────────────────────────────────────────────────────────
-  EMAIL_LAMBDA_URL:      https://tqbpgz7ze42kzgzaheo76q6ika0sgqhl.lambda-url.us-east-1.on.aws/
+  EMAIL_LAMBDA_URL:      https://t17ry79c9f.execute-api.ap-south-1.amazonaws.com/
 
   # ── Contact ──────────────────────────────────────────────────────────────────
   CONTACT_EMAIL:         reharse@inferix.in
 
   # ── API public URL (used for OAuth callbacks) ────────────────────────────
-  API_URL:               https://api.stride.example.com
+  API_URL:               https://api.stride.inferix.in
 
   # ── Redis (BullMQ job queues) ─────────────────────────────────────────────
   REDIS_HOST:            redis-svc
