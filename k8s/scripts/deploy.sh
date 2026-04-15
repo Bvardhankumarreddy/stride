@@ -20,8 +20,8 @@ DOCKER_USER="bhopathivardhan1"
 TAG="latest"
 
 # ── Config — edit these ───────────────────────────────────────────────────────
-APP_DOMAIN="stride.example.com"
-API_DOMAIN="api.stride.example.com"
+APP_DOMAIN="stride.inferix.in"
+API_DOMAIN="api.stride.inferix.in"
 AUTH_SECRET="$(grep NEXTAUTH_SECRET k8s/base/01-secrets.yaml | awk -F'"' '{print $2}')"
 # ─────────────────────────────────────────────────────────────────────────────
 

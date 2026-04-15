@@ -27,12 +27,12 @@ patches:
         name: stride-config
         namespace: stride
       data:
-        APP_URL:               https://stride.example.com
-        FRONTEND_URL:          https://stride.example.com
-        NEXT_PUBLIC_API_URL:   https://api.stride.example.com
-        NEXT_PUBLIC_APP_URL:   https://stride.example.com
-        EMAIL_LAMBDA_URL:      https://your-lambda-url.lambda-url.ap-south-1.on.aws
-        CONTACT_EMAIL:         hello@stride.example.com
+        APP_URL:               https://stride.inferix.in
+        FRONTEND_URL:          https://stride.inferix.in
+        NEXT_PUBLIC_API_URL:   https://api.stride.inferix.in
+        NEXT_PUBLIC_APP_URL:   https://stride.inferix.in
+        EMAIL_LAMBDA_URL:      https://tqbpgz7ze42kzgzaheo76q6ika0sgqhl.lambda-url.us-east-1.on.aws/
+        CONTACT_EMAIL:         reharse@reharse.inferix.in
         STRIPE_PRICE_PRO:      price_xxx
         STRIPE_PRICE_BUSINESS: price_xxx
         TYPESENSE_HOST:        kmhc0p7r4ef8bugap-1.a1.typesense.net
@@ -45,7 +45,7 @@ patches:
         name: letsencrypt-prod
       spec:
         acme:
-          email: hello@stride.example.com
+          email: reharse@reharse.inferix.in
 
   # t3.medium single node: 1 replica, tighter resources
   - patch: |-
