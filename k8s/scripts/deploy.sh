@@ -53,6 +53,7 @@ if [ "$SKIP_BUILD" != "--skip-build" ]; then
   docker build \
     -f app/Dockerfile \
     --build-arg NEXT_PUBLIC_API_URL=https://$API_DOMAIN \
+    --build-arg NEXT_PUBLIC_APP_URL=https://$APP_DOMAIN \
     --build-arg AUTH_SECRET=$AUTH_SECRET \
     --build-arg AUTH_URL=https://$APP_DOMAIN \
     --build-arg DATABASE_URL=placeholder \

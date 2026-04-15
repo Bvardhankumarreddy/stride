@@ -13,6 +13,7 @@ data:
   APP_URL:               https://stride.example.com
   FRONTEND_URL:          https://stride.example.com
   NEXT_PUBLIC_API_URL:   https://api.stride.example.com
+  NEXT_PUBLIC_APP_URL:   https://stride.example.com
 
   # ── Email Lambda ─────────────────────────────────────────────────────────────
   EMAIL_LAMBDA_URL:      https://your-lambda-url.lambda-url.ap-south-1.on.aws
@@ -20,6 +21,15 @@ data:
   # ── Contact ──────────────────────────────────────────────────────────────────
   CONTACT_EMAIL:         hello@stride.example.com
 
-  # ── Stripe ───────────────────────────────────────────────────────────────────
+  # ── Redis (BullMQ job queues) ─────────────────────────────────────────────
+  REDIS_HOST:            redis-svc
+  REDIS_PORT:            "6379"
+
+  # ── Typesense (cloud-hosted) ──────────────────────────────────────────────
+  TYPESENSE_HOST:        kmhc0p7r4ef8bugap-1.a1.typesense.net
+  TYPESENSE_PORT:        "443"
+  TYPESENSE_PROTOCOL:    https
+
+  # ── Stripe ───────────────────────────────────────────────────────────────
   STRIPE_PRICE_PRO:      price_xxx
   STRIPE_PRICE_BUSINESS: price_xxx

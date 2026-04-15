@@ -8,6 +8,7 @@ resources:
   - 01-secrets.yaml
   - 02-configmap.yaml
   - 03-postgres.yaml
-  - 04-api.yaml
-  - 05-web.yaml
-  - 06-ingress.yaml
+  - 04-redis.yaml
+  - 05-api.yaml
+  - 06-web.yaml
+  - 07-ingress.yaml
