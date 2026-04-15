@@ -20,7 +20,7 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stride-app.up.railway.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stride.inferix.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
