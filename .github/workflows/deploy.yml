@@ -1,0 +1,63 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: bhopathivardhan1/stride-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: app/
+          file: app/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: bhopathivardhan1/stride-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.stride.inferix.in
+            NEXT_PUBLIC_APP_URL=https://stride.inferix.in
+            AUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            AUTH_URL=https://stride.inferix.in
+            DATABASE_URL=placeholder
+            API_URL=http://localhost:4000
+
+      - name: Deploy to K8s
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          curl -sLO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+          kubectl apply -k k8s/clusters/stride/
+          kubectl rollout status deployment/api -n stride --timeout=180s
+          kubectl rollout status deployment/web -n stride --timeout=180s
+          kubectl get pods -n stride
