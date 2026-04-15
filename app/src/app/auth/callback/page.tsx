@@ -22,8 +22,7 @@ function OAuthCallback() {
       redirect: false,
     }).then((result) => {
       if (result?.ok) {
-        router.replace("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       } else {
         setError(true);
       }
