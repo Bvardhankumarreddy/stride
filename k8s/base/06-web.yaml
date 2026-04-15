@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: stride-web:latest
+          image: bhopathivardhan1/stride-web:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -31,7 +31,7 @@ spec:
               value: http://api-svc:4000
             # These are baked at build time via Docker build args.
             # They must match the values used when building the image.
-            - name: NEXTAUTH_SECRET
+            - name: AUTH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: stride-secrets
@@ -91,7 +91,7 @@ spec:
 
           resources:
             requests:
-              cpu: 250m
+              cpu: 100m
               memory: 256Mi
             limits:
               cpu: 1000m

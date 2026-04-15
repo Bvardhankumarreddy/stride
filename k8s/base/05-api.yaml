@@ -24,7 +24,7 @@ spec:
 
       containers:
         - name: api
-          image: stride-api:latest
+          image: bhopathivardhan1/stride-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 4000
