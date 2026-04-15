@@ -134,6 +134,21 @@ export class EmailService {
       };
     }
 
+    if (type === 'stride_otp') {
+      const otp = payload.otp as string;
+      return {
+        subject: `${otp} is your Stride verification code`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Verify your email</h2>
+            <p style="color:#424754;margin-bottom:24px">Hi ${name}, enter the code below to confirm your email address. It expires in <strong>10 minutes</strong>.</p>
+            <div style="font-size:36px;font-weight:900;letter-spacing:12px;text-align:center;background:#f0f4ff;border-radius:12px;padding:24px;color:#0058be;margin-bottom:24px">${otp}</div>
+            <p style="font-size:12px;color:#9aa0af">If you didn't request this, you can safely ignore this email.</p>
+          </div>`,
+        text: `Your Stride verification code is: ${otp}\n\nIt expires in 10 minutes.`,
+      };
+    }
+
     if (type === 'stride_contact') {
       const submitterEmail = payload.submitterEmail as string;
       return {

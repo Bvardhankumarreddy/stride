@@ -5,6 +5,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('auth')
@@ -16,6 +18,18 @@ export class AuthController {
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
+  }
+
+  @Post('send-otp')
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  sendOtp(@Body() dto: SendOtpDto) {
+    return this.auth.sendOtp(dto);
+  }
+
+  @Post('verify-otp')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.auth.verifyOtp(dto);
   }
 
   @Post('register-member')

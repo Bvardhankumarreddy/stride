@@ -20,14 +20,19 @@ export default function OnboardingPage() {
 
   // Step 0 = signup (only shown when not logged in)
   const isLoggedIn = !!session;
-  const [step, setStep] = useState<"signup" | "workspace" | "invite">(isLoggedIn ? "workspace" : "signup");
+  const [step, setStep] = useState<"signup" | "otp" | "workspace" | "invite">(isLoggedIn ? "workspace" : "signup");
 
   // Signup state
-  const [signupName, setSignupName]       = useState("");
-  const [signupEmail, setSignupEmail]     = useState("");
+  const [signupName, setSignupName]         = useState("");
+  const [signupEmail, setSignupEmail]       = useState("");
   const [signupPassword, setSignupPassword] = useState("");
-  const [showPassword, setShowPassword]   = useState(false);
-  const [signingUp, setSigningUp]         = useState(false);
+  const [showPassword, setShowPassword]     = useState(false);
+  const [signingUp, setSigningUp]           = useState(false);
+
+  // OTP state
+  const [otp, setOtp]               = useState("");
+  const [verifying, setVerifying]   = useState(false);
+  const [resending, setResending]   = useState(false);
 
   // Workspace state
   const [orgName, setOrgName]       = useState("");
@@ -55,23 +60,61 @@ export default function OnboardingPage() {
     setSigningUp(true);
     setError("");
     try {
-      const res = await fetch(`${API}/auth/register`, {
+      const res = await fetch(`${API}/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: signupName.trim(), email: signupEmail.trim(), password: signupPassword }),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text.includes("already") ? "Email already in use." : "Registration failed.");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message?.includes("already") ? "Email already in use." : (data.message ?? "Failed to send OTP."));
       }
-      // Auto sign-in
-      const result = await signIn("credentials", { email: signupEmail.trim(), password: signupPassword, redirect: false });
-      if (result?.error) throw new Error("Signed up but login failed — try logging in manually.");
-      setStep("workspace");
+      setStep("otp");
     } catch (e: any) {
       setError(e.message ?? "Something went wrong.");
     } finally {
       setSigningUp(false);
+    }
+  }
+
+  async function handleVerifyOtp(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!otp.trim()) return;
+    setVerifying(true);
+    setError("");
+    try {
+      const res = await fetch(`${API}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: signupEmail.trim(), otp: otp.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message ?? "Invalid or expired OTP.");
+      }
+      const result = await signIn("credentials", { email: signupEmail.trim(), password: signupPassword, redirect: false });
+      if (result?.error) throw new Error("Account created but login failed — try signing in.");
+      setStep("workspace");
+    } catch (e: any) {
+      setError(e.message ?? "Something went wrong.");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function handleResendOtp() {
+    setResending(true);
+    setError("");
+    try {
+      await fetch(`${API}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: signupName.trim(), email: signupEmail.trim(), password: signupPassword }),
+      });
+    } catch {
+      setError("Failed to resend OTP.");
+    } finally {
+      setResending(false);
     }
   }
 
@@ -105,7 +148,7 @@ export default function OnboardingPage() {
     }
   }
 
-  const steps = isLoggedIn ? ["workspace", "invite"] : ["signup", "workspace", "invite"];
+  const steps = isLoggedIn ? ["workspace", "invite"] : ["signup", "otp", "workspace", "invite"];
   const stepIndex = steps.indexOf(step);
 
   return (
@@ -140,6 +183,27 @@ export default function OnboardingPage() {
             <>
               <h2 className="text-xl font-black font-headline mb-1">Create your account</h2>
               <p className="text-sm text-on-surface-variant mb-6">Free to start. No credit card needed.</p>
+
+              {/* OAuth buttons */}
+              <div className="space-y-2.5 mb-5">
+                <button onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm font-medium hover:bg-surface-container-high transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.583c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.163 6.656 3.583 9 3.583z" fill="#EA4335"/></svg>
+                  Continue with Google
+                </button>
+                <button onClick={() => signIn("github", { callbackUrl: "/onboarding" })}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm font-medium hover:bg-surface-container-high transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                  Continue with GitHub
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex-1 h-px bg-outline-variant/30" />
+                <span className="text-xs text-on-surface-variant">or sign up with email</span>
+                <div className="flex-1 h-px bg-outline-variant/30" />
+              </div>
+
               <form onSubmit={handleSignup} className="space-y-4">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-1.5 block">Full name</label>
@@ -183,13 +247,50 @@ export default function OnboardingPage() {
                 {error && <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
                 <button type="submit" disabled={signingUp}
                   className="w-full bg-primary text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 shadow-md shadow-primary/20">
-                  {signingUp ? "Creating account…" : "Create account →"}
+                  {signingUp ? "Sending code…" : "Continue →"}
                 </button>
               </form>
               <p className="text-center text-xs text-on-surface-variant mt-5">
                 Already have an account?{" "}
                 <a href="/login" className="text-primary font-bold hover:underline">Sign in</a>
               </p>
+            </>
+          )}
+
+          {/* ── Step 2: OTP verification ──────────────────────────────────── */}
+          {step === "otp" && (
+            <>
+              <h2 className="text-xl font-black font-headline mb-1">Check your email</h2>
+              <p className="text-sm text-on-surface-variant mb-1">We sent a 6-digit code to</p>
+              <p className="text-sm font-bold text-on-surface mb-6">{signupEmail}</p>
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-1.5 block">Verification code</label>
+                  <input
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="000000"
+                    required
+                    maxLength={6}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant/30 bg-surface-container text-2xl font-bold tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  />
+                </div>
+                {error && <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+                <button type="submit" disabled={verifying || otp.length < 6}
+                  className="w-full bg-primary text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-40 shadow-md shadow-primary/20">
+                  {verifying ? "Verifying…" : "Verify & create account →"}
+                </button>
+              </form>
+              <div className="flex items-center justify-between mt-5">
+                <button onClick={() => { setStep("signup"); setOtp(""); setError(""); }}
+                  className="text-xs text-on-surface-variant hover:text-on-surface">
+                  ← Change email
+                </button>
+                <button onClick={handleResendOtp} disabled={resending}
+                  className="text-xs text-primary font-bold hover:underline disabled:opacity-40">
+                  {resending ? "Sending…" : "Resend code"}
+                </button>
+              </div>
             </>
           )}
 

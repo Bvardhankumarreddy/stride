@@ -1,14 +1,19 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AuditService } from '../audit/audit.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { REDIS_CLIENT } from './auth.module';
+import type Redis from 'ioredis';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
 const PASSWORD_EXPIRY_DAYS = 90;
+const OTP_TTL_SECONDS = 600; // 10 minutes
 
 @Injectable()
 export class AuthService {
@@ -17,6 +22,7 @@ export class AuthService {
     private jwt: JwtService,
     private email: EmailService,
     private audit: AuditService,
+    @Inject(REDIS_CLIENT) private redis: Redis,
   ) {}
 
   private sanitize(user: any) {
@@ -320,5 +326,36 @@ export class AuthService {
       include: { organization: { select: { id: true, name: true, slug: true, plan: true } } },
     });
     return this.sanitize(user);
+  }
+
+  async sendOtp(dto: SendOtpDto) {
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('Email already in use.');
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const pendingKey = `otp-pending:${dto.email}`;
+    const otpKey = `otp:${dto.email}`;
+
+    await this.redis.setex(pendingKey, OTP_TTL_SECONDS, JSON.stringify({ name: dto.name, email: dto.email, password: dto.password }));
+    await this.redis.setex(otpKey, OTP_TTL_SECONDS, otp);
+
+    await this.email.send('stride_otp', { email: dto.email, name: dto.name, otp });
+    return { message: 'OTP sent' };
+  }
+
+  async verifyOtp(dto: VerifyOtpDto) {
+    const otpKey = `otp:${dto.email}`;
+    const pendingKey = `otp-pending:${dto.email}`;
+
+    const stored = await this.redis.get(otpKey);
+    if (!stored || stored !== dto.otp) throw new BadRequestException('Invalid or expired OTP.');
+
+    const raw = await this.redis.get(pendingKey);
+    if (!raw) throw new BadRequestException('Registration session expired. Please start again.');
+
+    const pending: { name: string; email: string; password: string } = JSON.parse(raw);
+    await this.redis.del(otpKey, pendingKey);
+
+    return this.register({ name: pending.name, email: pending.email, password: pending.password });
   }
 }

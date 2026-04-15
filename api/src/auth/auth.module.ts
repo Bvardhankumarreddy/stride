@@ -9,6 +9,9 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 import { EmailModule } from '../email/email.module';
 import { AuditModule } from '../audit/audit.module';
+import Redis from 'ioredis';
+
+export const REDIS_CLIENT = 'REDIS_CLIENT';
 
 @Module({
   imports: [
@@ -24,7 +27,22 @@ import { AuditModule } from '../audit/audit.module';
     EmailModule,
     AuditModule,
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy],
+  providers: [
+    {
+      provide: REDIS_CLIENT,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        new Redis({
+          host: config.get('REDIS_HOST', 'localhost'),
+          port: config.get<number>('REDIS_PORT', 6379),
+          password: config.get('REDIS_PASSWORD'),
+        }),
+    },
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+  ],
   controllers: [AuthController],
   exports: [JwtModule],
 })
