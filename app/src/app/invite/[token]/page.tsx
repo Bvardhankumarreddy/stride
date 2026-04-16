@@ -227,7 +227,10 @@ export default function InvitePage() {
                       className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wide text-on-surface-variant mb-1 block">Password</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Password</label>
+                      <a href="/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot password?</a>
+                    </div>
                     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
                       className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-container text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                   </div>
