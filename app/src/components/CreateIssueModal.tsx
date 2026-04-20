@@ -53,8 +53,10 @@ export default function CreateIssueModal() {
   const [aiWriting, setAiWriting] = useState(false);
   const [showAiDraft, setShowAiDraft] = useState(false);
 
+  // Reset form fields only when the modal opens — do NOT depend on `token`,
+  // which changes every session refetch (30s) and would wipe user input.
   useEffect(() => {
-    if (!open || !token) return;
+    if (!open) return;
     setTitle("");
     setStatus(defaultStatus);
     setPriority("medium");
@@ -62,6 +64,12 @@ export default function CreateIssueModal() {
     setDescription("");
     setCfValues({});
     setShowTemplates(false);
+  }, [open, defaultStatus]);
+
+  // Fetch supporting data once per open. Safe to re-run on token change
+  // (just re-fetches; does not touch form input state).
+  useEffect(() => {
+    if (!open || !token) return;
     Promise.all([
       api.users.list(token),
       api.customFields.list(token),
@@ -73,7 +81,7 @@ export default function CreateIssueModal() {
       setDefaultProjectId(projects[0]?.id ?? null);
       setCustomTemplates(tmpl);
     }).catch(() => {});
-  }, [open, token, defaultStatus]);
+  }, [open, token]);
 
   function applyTemplate(tmpl: typeof BUILTIN_TEMPLATES[0] | ApiIssueTemplate) {
     if (tmpl.titlePrefix) setTitle(tmpl.titlePrefix);
