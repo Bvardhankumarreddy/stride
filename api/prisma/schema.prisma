@@ -100,6 +100,7 @@ model User {
 
 model Project {
   id             String   @id @default(cuid())
+  key            String?  // short identifier like "STR" — used in issue slugs (STR-123)
   name           String
   description    String?
   createdAt      DateTime @default(now())
@@ -113,6 +114,8 @@ model Project {
   sprints   Sprint[]
   issues    Issue[]
   documents Document[]
+
+  @@unique([organizationId, key])
 }
 
 model Sprint {
@@ -132,6 +135,7 @@ model Sprint {
 
 model Issue {
   id             String    @id @default(cuid())
+  number         Int?      // sequential per project, used in slugs (STR-123)
   title          String
   description    String?
   status         String    @default("todo")
@@ -163,6 +167,8 @@ model Issue {
   blocking          IssueDependency[]  @relation("BlockingIssue")
   blockedBy         IssueDependency[]  @relation("BlockedIssue")
   timeLogs          TimeLog[]
+
+  @@unique([projectId, number])
 }
 
 model IssueDependency {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -7,8 +7,32 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateProjectDto, organizationId?: string) {
-    return this.prisma.project.create({ data: { ...dto, organizationId } as any });
+  // Generate a unique 3-letter key from a project name, scoped to an organization.
+  // Strips non-letters, takes first 3 chars uppercased, falls back to "PRJ",
+  // and appends a counter if collisions exist.
+  private async generateKey(name: string, organizationId?: string): Promise<string> {
+    const base = (name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase()) || 'PRJ';
+    let candidate = base;
+    let suffix = 1;
+    while (await this.prisma.project.findFirst({ where: { key: candidate, organizationId: organizationId ?? null } })) {
+      suffix += 1;
+      candidate = `${base}${suffix}`;
+    }
+    return candidate;
+  }
+
+  async create(dto: CreateProjectDto, organizationId?: string) {
+    let key = dto.key?.trim().toUpperCase();
+    if (key) {
+      if (!/^[A-Z0-9]{2,10}$/.test(key)) {
+        throw new BadRequestException('Key must be 2–10 uppercase letters or digits');
+      }
+      const exists = await this.prisma.project.findFirst({ where: { key, organizationId: organizationId ?? null } });
+      if (exists) throw new BadRequestException(`Key "${key}" is already used in this workspace`);
+    } else {
+      key = await this.generateKey(dto.name, organizationId);
+    }
+    return this.prisma.project.create({ data: { ...dto, key, organizationId } as any });
   }
 
   findAll(organizationId?: string, teamId?: string) {

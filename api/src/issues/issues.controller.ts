@@ -39,12 +39,15 @@ export class IssuesController {
     return { updated: ids.length };
   }
 
-  @Get(':id') findOne(@Param('id') id: string) { return this.issues.findOne(id); }
-  @Patch(':id') update(@Param('id') id: string, @Body() dto: UpdateIssueDto) { return this.issues.update(id, dto); }
-  @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('id') id: string) { return this.issues.remove(id); }
+  @Get(':id') findOne(@Param('id') id: string, @Req() req: any) { return this.issues.findOne(id, req.user.organizationId); }
+  @Patch(':id') update(@Param('id') id: string, @Body() dto: UpdateIssueDto, @Req() req: any) { return this.issues.update(id, dto, req.user.organizationId); }
+  @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('id') id: string, @Req() req: any) { return this.issues.remove(id, req.user.organizationId); }
 
   @Get(':id/activity')
-  getActivity(@Param('id') id: string) { return this.issues.getActivity(id); }
+  async getActivity(@Param('id') id: string, @Req() req: any) {
+    const issue = await this.issues.findOne(id, req.user.organizationId);
+    return this.issues.getActivity(issue.id);
+  }
 
   @Post(':id/subtasks')
   createSubTask(@Param('id') id: string, @Body() body: { title: string }, @Req() req: any) {
