@@ -2,6 +2,8 @@ import { create } from "zustand";
 
 export interface Issue {
   id: string;
+  number?: number | null;
+  projectKey?: string | null;
   title: string;
   label?: string | null;
   priority?: string | null;

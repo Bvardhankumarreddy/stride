@@ -55,6 +55,7 @@ export interface ApiUser {
 
 export interface ApiIssueChild {
   id: string;
+  number: number | null;
   title: string;
   status: string;
   priority: string;
@@ -62,8 +63,8 @@ export interface ApiIssueChild {
 
 export interface ApiIssueDependency {
   id: string;
-  blockingIssue: { id: string; title: string; status: string };
-  blockedIssue:  { id: string; title: string; status: string };
+  blockingIssue: { id: string; number: number | null; title: string; status: string };
+  blockedIssue:  { id: string; number: number | null; title: string; status: string };
 }
 
 export interface ApiAuditLog {
@@ -95,6 +96,7 @@ export interface ApiSavedView {
 
 export interface ApiIssue {
   id: string;
+  number: number | null;
   title: string;
   description: string | null;
   status: string;
@@ -110,12 +112,27 @@ export interface ApiIssue {
   assignee: Pick<ApiUser, "id" | "name" | "initials" | "image"> | null;
   creator: Pick<ApiUser, "id" | "name" | "initials"> | null;
   sprint: { id: string; name: string; status: string } | null;
-  project: { id: string; name: string } | null;
+  project: { id: string; name: string; key: string | null } | null;
   comments?: ApiComment[];
   customFieldValues?: ApiCustomFieldValue[];
   children?: ApiIssueChild[];
   blocking?: ApiIssueDependency[];
   blockedBy?: ApiIssueDependency[];
+}
+
+/**
+ * Return the human-readable slug for an issue (e.g. "STR-123").
+ * Falls back to the cuid when project key or issue number is missing.
+ */
+export function issueSlug(issue: {
+  id: string;
+  number?: number | null;
+  project?: { key?: string | null } | null;
+}): string {
+  if (issue.project?.key && issue.number != null) {
+    return `${issue.project.key}-${issue.number}`;
+  }
+  return issue.id;
 }
 
 export interface ApiComment {
@@ -372,9 +389,9 @@ export const api = {
 
   projects: {
     list: (token: string) =>
-      apiFetch<{ id: string; name: string }[]>(`/projects`, token),
-    create: (token: string, body: { name: string; description?: string }) =>
-      apiFetch<{ id: string; name: string }>(`/projects`, token, { method: "POST", body: JSON.stringify(body) }),
+      apiFetch<{ id: string; name: string; key: string | null }[]>(`/projects`, token),
+    create: (token: string, body: { name: string; description?: string; key?: string }) =>
+      apiFetch<{ id: string; name: string; key: string | null }>(`/projects`, token, { method: "POST", body: JSON.stringify(body) }),
   },
 
   notifications: {

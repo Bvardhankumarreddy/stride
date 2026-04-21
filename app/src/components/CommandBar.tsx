@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import { useToken } from "@/lib/useToken";
-import { api } from "@/lib/api";
+import { api, issueSlug } from "@/lib/api";
 
 interface CommandBarProps {
   open: boolean;
@@ -50,7 +50,7 @@ export default function CommandBar({ open, onClose, initialQuery = "" }: Command
           iconBg: "bg-orange-100 text-orange-600",
           title: i.title,
           subtitle: `${i.status} · ${i.priority}`,
-          href: `/issues/${i.id}`,
+          href: `/issues/${issueSlug(i)}`,
         })),
         ...docsRes.data.map(d => ({
           icon: "article",

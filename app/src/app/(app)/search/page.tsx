@@ -5,7 +5,7 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api } from "@/lib/api";
+import { api, issueSlug } from "@/lib/api";
 
 
 interface SearchResult {
@@ -53,9 +53,10 @@ export default function SearchPage() {
       api.issues.list(token, { limit: "3" }),
       api.docs.list(token, { limit: "2" }),
     ]).then(([issuesRes, docsRes]) => {
-      const issueItems: RecentItem[] = issuesRes.data.map(i => ({
-        type: "issue", icon: "confirmation_number", label: i.id.length > 8 ? `#${i.id.slice(-6).toUpperCase()}` : i.id, title: i.title, href: `/issues/${i.id}`,
-      }));
+      const issueItems: RecentItem[] = issuesRes.data.map(i => {
+        const slug = issueSlug(i);
+        return { type: "issue", icon: "confirmation_number", label: slug === i.id ? `#${i.id.slice(-6).toUpperCase()}` : slug, title: i.title, href: `/issues/${slug}` };
+      });
       const docItems: RecentItem[] = docsRes.data.map(d => ({
         type: "doc", icon: "description", label: "Doc", title: d.title, href: `/docs/${d.id}`,
       }));

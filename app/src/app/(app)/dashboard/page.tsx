@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
-import { api, ApiIssue, ApiDoc } from "@/lib/api";
+import { api, ApiIssue, ApiDoc, issueSlug } from "@/lib/api";
 import { useSession } from "next-auth/react";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 
@@ -151,13 +151,13 @@ export default function DashboardPage() {
             {loading ? Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="h-16 bg-surface-container-lowest rounded-xl animate-pulse" />
             )) : displayIssues.slice(0, 8).map((issue) => (
-              <Link key={issue.id} href={`/issues/${issue.id}`} className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-all duration-200 group block">
+              <Link key={issue.id} href={`/issues/${issueSlug(issue)}`} className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-all duration-200 group block">
                 <div className="flex items-center gap-4">
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[issue.priority] ?? PRIORITY_DOT.default}`} />
                   <div>
                     <p className="font-headline font-semibold text-on-surface group-hover:text-primary transition-colors">{issue.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-bold text-on-surface-variant/60">{issue.id}</span>
+                      <span className="text-[10px] font-bold text-on-surface-variant/60">{issueSlug(issue)}</span>
                       {issue.project && <>
                         <span className="w-1 h-1 rounded-full bg-outline-variant/40" />
                         <span className="text-[10px] font-bold uppercase tracking-tight text-primary">{issue.project.name}</span>

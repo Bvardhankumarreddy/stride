@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
 import { useSession } from "next-auth/react";
-import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch, issueSlug } from "@/lib/api";
 import CommentEditor from "@/components/CommentEditor";
 import { toast } from "@/components/Toast";
 
@@ -219,6 +219,12 @@ export default function IssueDetailPage() {
           ) : issue ? (
             <>
               <section className="mb-8">
+                {/* Issue slug (e.g. STR-123) */}
+                {issue.project?.key && issue.number != null && (
+                  <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                    {issue.project.key}-{issue.number}
+                  </p>
+                )}
                 {/* Editable title */}
                 {editingTitle ? (
                   <input
@@ -322,17 +328,20 @@ export default function IssueDetailPage() {
                 )}
 
                 <div className="space-y-1">
-                  {(issue.children ?? []).map(child => (
-                    <Link key={child.id} href={`/issues/${child.id}`}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors group">
-                      <span className={`material-symbols-outlined flex-shrink-0 ${child.status === "done" ? "text-emerald-500" : "text-outline"}`}
-                        style={{ fontSize: 16, fontVariationSettings: child.status === "done" ? "'FILL' 1" : "'FILL' 0" }}>
-                        {child.status === "done" ? "check_circle" : "radio_button_unchecked"}
-                      </span>
-                      <span className={`text-sm flex-1 truncate ${child.status === "done" ? "line-through text-outline" : "text-on-surface"}`}>{child.title}</span>
-                      <span className="text-[10px] font-bold text-outline uppercase opacity-0 group-hover:opacity-100 transition-opacity">{child.id}</span>
-                    </Link>
-                  ))}
+                  {(issue.children ?? []).map(child => {
+                    const slug = issueSlug({ id: child.id, number: child.number, project: { key: issue.project?.key ?? null } });
+                    return (
+                      <Link key={child.id} href={`/issues/${slug}`}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors group">
+                        <span className={`material-symbols-outlined flex-shrink-0 ${child.status === "done" ? "text-emerald-500" : "text-outline"}`}
+                          style={{ fontSize: 16, fontVariationSettings: child.status === "done" ? "'FILL' 1" : "'FILL' 0" }}>
+                          {child.status === "done" ? "check_circle" : "radio_button_unchecked"}
+                        </span>
+                        <span className={`text-sm flex-1 truncate ${child.status === "done" ? "line-through text-outline" : "text-on-surface"}`}>{child.title}</span>
+                        <span className="text-[10px] font-bold text-outline uppercase opacity-0 group-hover:opacity-100 transition-opacity">{slug}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {addingSubTask && (
@@ -392,7 +401,7 @@ export default function IssueDetailPage() {
                   {(issue.blocking ?? []).map(dep => (
                     <div key={dep.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-low">
                       <span className="text-[10px] font-bold text-amber-600 uppercase bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">blocks</span>
-                      <Link href={`/issues/${dep.blockedIssue.id}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockedIssue.title}</Link>
+                      <Link href={`/issues/${issueSlug(dep.blockedIssue)}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockedIssue.title}</Link>
                       <button onClick={async () => { if (!token) return; await api.issues.removeDependency(token, id, dep.blockedIssue.id); setIssue(await api.issues.get(token, id)); }}
                         className="text-outline hover:text-error transition-colors flex-shrink-0">
                         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
@@ -402,7 +411,7 @@ export default function IssueDetailPage() {
                   {(issue.blockedBy ?? []).map(dep => (
                     <div key={dep.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-low">
                       <span className="text-[10px] font-bold text-rose-600 uppercase bg-rose-50 px-1.5 py-0.5 rounded flex-shrink-0">blocked by</span>
-                      <Link href={`/issues/${dep.blockingIssue.id}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockingIssue.title}</Link>
+                      <Link href={`/issues/${issueSlug(dep.blockingIssue)}`} className="text-sm text-on-surface hover:text-primary truncate flex-1">{dep.blockingIssue.title}</Link>
                       <button onClick={async () => { if (!token) return; await api.issues.removeDependency(token, dep.blockingIssue.id, id); setIssue(await api.issues.get(token, id)); }}
                         className="text-outline hover:text-error transition-colors flex-shrink-0">
                         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>

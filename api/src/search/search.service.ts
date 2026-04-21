@@ -15,6 +15,7 @@ export class SearchService {
 
   async indexIssue(issue: {
     id: string;
+    number?: number | null;
     title: string;
     description?: string | null;
     status: string;
@@ -23,16 +24,19 @@ export class SearchService {
     projectId?: string | null;
     sprintId?: string | null;
     assignee?: { name: string } | null;
+    project?: { key?: string | null } | null;
     createdAt: Date;
   }) {
     const doc = {
       id: issue.id,
+      number: issue.number ?? 0,
       title: issue.title,
       description: issue.description ?? '',
       status: issue.status,
       priority: issue.priority,
       labels: Array.isArray(issue.labels) ? issue.labels.map(String) : [],
       projectId: issue.projectId ?? '',
+      projectKey: issue.project?.key ?? '',
       sprintId: issue.sprintId ?? '',
       assigneeName: issue.assignee?.name ?? '',
       createdAt: Math.floor(issue.createdAt.getTime() / 1000),
@@ -115,7 +119,8 @@ export class SearchService {
       (res.hits ?? []).forEach((hit: any) => {
         const doc = hit.document;
         if (type === 'issue') {
-          results.push({ type: 'issue', id: doc.id, title: doc.title, meta: `${doc.status} · ${doc.priority}`, href: `/issues/${doc.id}`, highlight: hit.highlights?.[0]?.snippet });
+          const slug = doc.projectKey && doc.number ? `${doc.projectKey}-${doc.number}` : doc.id;
+          results.push({ type: 'issue', id: doc.id, title: doc.title, meta: `${doc.status} · ${doc.priority}`, href: `/issues/${slug}`, highlight: hit.highlights?.[0]?.snippet });
         } else {
           results.push({ type: 'doc', id: doc.id, title: doc.title, meta: `${doc.status} · ${doc.authorName || 'Unknown'}`, href: `/docs/${doc.id}`, highlight: hit.highlights?.[0]?.snippet });
         }
@@ -132,11 +137,14 @@ export class SearchService {
     if (!filter || filter === 'issues') {
       const issues = await this.prisma.issue.findMany({
         where: { OR: [{ title: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }] },
-        include: { assignee: { select: { name: true } } },
+        include: { assignee: { select: { name: true } }, project: { select: { key: true } } },
         orderBy: { createdAt: 'desc' },
         take: 10,
       });
-      issues.forEach((i) => results.push({ type: 'issue', id: i.id, title: i.title, meta: `${i.status} · ${i.priority}`, href: `/issues/${i.id}` }));
+      issues.forEach((i: any) => {
+        const slug = i.project?.key && i.number ? `${i.project.key}-${i.number}` : i.id;
+        results.push({ type: 'issue', id: i.id, title: i.title, meta: `${i.status} · ${i.priority}`, href: `/issues/${slug}` });
+      });
     }
 
     if (!filter || filter === 'docs') {

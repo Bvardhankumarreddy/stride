@@ -5,7 +5,7 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api, ApiIssue, ApiCustomField, ApiUser, ApiSavedView } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiSavedView, issueSlug } from "@/lib/api";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import { toast } from "@/components/Toast";
 
@@ -173,7 +173,10 @@ function IssueRow({
       {/* Title */}
       {visibleFields.has("title") && (
         <td className="px-2 py-2 text-on-surface truncate">
-          <Link href={`/issues/${issue.id}`} className="hover:text-primary transition-colors font-medium text-sm">
+          <Link href={`/issues/${issueSlug(issue)}`} className="hover:text-primary transition-colors font-medium text-sm">
+            {issue.project?.key && issue.number != null && (
+              <span className="text-[11px] font-bold text-on-surface-variant mr-2">{issue.project.key}-{issue.number}</span>
+            )}
             {issue.title}
           </Link>
         </td>
@@ -901,11 +904,11 @@ export default function IssuesPage() {
                 <div key={i} className="px-4 py-3 h-16 animate-pulse bg-surface-container-lowest" />
               ))
             ) : filteredIssues.map(issue => (
-              <Link key={issue.id} href={`/issues/${issue.id}`} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-container-lowest transition-colors">
+              <Link key={issue.id} href={`/issues/${issueSlug(issue)}`} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-container-lowest transition-colors">
                 <span className={clsx("mt-1.5 w-2 h-2 rounded-full flex-shrink-0", PRIORITY_DOT[issue.priority] ?? "bg-slate-300")} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-on-surface truncate">{issue.title}</p>
-                  <p className="text-xs text-on-surface-variant mt-0.5">{issue.id} · {issue.assignee?.name ?? "Unassigned"}</p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">{issueSlug(issue)} · {issue.assignee?.name ?? "Unassigned"}</p>
                 </div>
                 <span className="text-xs font-bold text-outline">{issue.estimate ? `${issue.estimate}p` : ""}</span>
               </Link>

@@ -15,9 +15,9 @@ const INCLUDE = {
   sprint: { select: { id: true, name: true, status: true } },
   project: { select: { id: true, name: true, key: true } },
   customFieldValues: { include: { customField: true } },
-  children: { select: { id: true, title: true, status: true, priority: true, number: true } },
-  blocking: { include: { blockedIssue: { select: { id: true, title: true, status: true, number: true } } } },
-  blockedBy: { include: { blockingIssue: { select: { id: true, title: true, status: true, number: true } } } },
+  children: { select: { id: true, title: true, status: true, priority: true, number: true, project: { select: { key: true } } } },
+  blocking: { include: { blockedIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
+  blockedBy: { include: { blockingIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
 };
 
 // Parse "KEY-NUMBER" slug → { key, number }. Returns null if not a slug.

@@ -73,7 +73,7 @@ function IssueCard({ card, isDragging = false }: { card: Issue; isDragging?: boo
     >
       <div className="flex justify-between items-start mb-2">
         <span className={clsx("text-[10px] font-bold tracking-tight font-headline", card.featured ? "text-primary" : "text-slate-400")}>
-          {card.id}
+          {card.projectKey && card.number ? `${card.projectKey}-${card.number}` : card.id.slice(-6).toUpperCase()}
         </span>
         {card.done ? (
           <span className="material-symbols-outlined text-tertiary" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -102,7 +102,7 @@ function SortableCard({ card }: { card: Issue }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-      <Link href={`/issues/${card.id}`} onClick={(e) => isDragging && e.preventDefault()}>
+      <Link href={`/issues/${card.projectKey && card.number ? `${card.projectKey}-${card.number}` : card.id}`} onClick={(e) => isDragging && e.preventDefault()}>
         <IssueCard card={card} isDragging={isDragging} />
       </Link>
     </div>
@@ -171,6 +171,8 @@ export default function BoardPage() {
     api.issues.list(t, { limit: "100" }).then((res) => {
       setIssues(res.data.map((issue) => ({
         id: issue.id,
+        number: issue.number,
+        projectKey: issue.project?.key ?? null,
         title: issue.title,
         label: Array.isArray(issue.labels) ? issue.labels[0] ?? null : null,
         priority: issue.priority,
@@ -439,7 +441,7 @@ export default function BoardPage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {groupIssues.map(card => (
-                      <Link key={card.id} href={`/issues/${card.id}`}>
+                      <Link key={card.id} href={`/issues/${card.projectKey && card.number ? `${card.projectKey}-${card.number}` : card.id}`}>
                         <IssueCard card={card} />
                       </Link>
                     ))}
@@ -470,7 +472,7 @@ export default function BoardPage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {groupIssues.map(card => (
-                      <Link key={card.id} href={`/issues/${card.id}`}>
+                      <Link key={card.id} href={`/issues/${card.projectKey && card.number ? `${card.projectKey}-${card.number}` : card.id}`}>
                         <IssueCard card={card} />
                       </Link>
                     ))}

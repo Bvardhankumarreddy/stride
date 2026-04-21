@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCreateIssueStore } from "@/store/useCreateIssueStore";
 import clsx from "clsx";
 import { useToken } from "@/lib/useToken";
-import { api, ApiSprint, ApiIssue, ApiVelocity } from "@/lib/api";
+import { api, ApiSprint, ApiIssue, ApiVelocity, issueSlug } from "@/lib/api";
 import { toast } from "@/components/Toast";
 
 type SprintAnalysis = {
@@ -748,10 +748,10 @@ export default function SprintsPage() {
             </div>
             <div className="space-y-2">
               {backlog.slice(0, 5).map((issue) => (
-                <Link key={issue.id} href={`/issues/${issue.id}`} className="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm border border-outline-variant/10 flex items-start gap-3 hover:shadow-md transition-shadow block">
+                <Link key={issue.id} href={`/issues/${issueSlug(issue)}`} className="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm border border-outline-variant/10 flex items-start gap-3 hover:shadow-md transition-shadow block">
                   <span className={clsx("mt-1 w-2 h-2 rounded-full flex-shrink-0", PRIORITY_DOT[issue.priority] ?? "bg-slate-300")} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-outline">{issue.id}</p>
+                    <p className="text-xs font-bold text-outline">{issueSlug(issue)}</p>
                     <p className="text-sm text-on-surface font-medium leading-snug mt-0.5">{issue.title}</p>
                   </div>
                   <span className="text-xs font-bold text-on-surface-variant flex-shrink-0">{issue.estimate ? `${issue.estimate}p` : "—"}</span>
