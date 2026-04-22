@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import { useToken } from "@/lib/useToken";
 import { useTheme } from "@/lib/useTheme";
-import { api } from "@/lib/api";
+import { api, ApiOrganization } from "@/lib/api";
 
 interface TopBarProps {
   breadcrumbs?: { label: string; href?: string }[];
@@ -24,6 +24,27 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [memberships, setMemberships] = useState<{ organization: ApiOrganization; role: string }[]>([]);
+  const [switching, setSwitching] = useState<string | null>(null);
+
+  const activeOrgId = user?.organizationId as string | undefined;
+
+  async function switchWorkspace(orgId: string) {
+    if (!token || orgId === activeOrgId || switching) return;
+    setSwitching(orgId);
+    try {
+      const { accessToken } = await api.organizations.switch(token, orgId);
+      await signIn("credentials", { token: accessToken, redirect: false });
+      window.location.href = "/dashboard";
+    } catch {
+      setSwitching(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!token || !menuOpen) return;
+    api.organizations.listAll(token).then(setMemberships).catch(() => {});
+  }, [token, menuOpen]);
 
   useEffect(() => {
     if (!token) return;
@@ -141,6 +162,35 @@ export default function TopBar({ breadcrumbs, actions }: TopBarProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Workspace switcher */}
+              {memberships.length > 0 && (
+                <div className="p-2 border-b border-outline-variant/10">
+                  <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-outline">Workspaces</p>
+                  {memberships.map(({ organization: org, role }) => {
+                    const isActive = org.id === activeOrgId;
+                    const isSwitching = switching === org.id;
+                    return (
+                      <button
+                        key={org.id}
+                        onClick={() => switchWorkspace(org.id)}
+                        disabled={isActive || !!switching}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          isActive ? "bg-primary/10 text-primary cursor-default" : "text-on-surface hover:bg-surface-container-high"
+                        } disabled:opacity-60`}
+                      >
+                        <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18 }}>
+                          {isActive ? "check_circle" : "corporate_fare"}
+                        </span>
+                        <span className="flex-1 truncate text-left">{org.name}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-outline">
+                          {isSwitching ? "…" : role}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className="p-2 space-y-0.5">
                 <Link
