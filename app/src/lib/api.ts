@@ -448,7 +448,7 @@ export const api = {
     preview: (inviteToken: string) =>
       apiFetch<ApiInvitationPreview>(`/invitations/${inviteToken}`, undefined),
     accept: (token: string, inviteToken: string) =>
-      apiFetch<{ organizationId: string; organizationSlug: string }>(`/invitations/${inviteToken}/accept`, token, { method: 'POST' }),
+      apiFetch<{ organizationId: string; organizationSlug: string; accessToken: string; refreshToken: string }>(`/invitations/${inviteToken}/accept`, token, { method: 'POST' }),
   },
 
   comments: {

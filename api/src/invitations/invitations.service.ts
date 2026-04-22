@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { EmailService } from '../email/email.service';
@@ -10,7 +12,23 @@ export class InvitationsService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private jwt: JwtService,
   ) {}
+
+  private signToken(user: { id: string; email: string; role: string }, organizationId: string | null, mustChangePassword: boolean) {
+    return this.jwt.sign({
+      sub: user.id, email: user.email, role: user.role,
+      organizationId, mustChangePassword,
+    });
+  }
+
+  private async generateRefreshToken(userId: string): Promise<string> {
+    const raw = crypto.randomBytes(40).toString('hex');
+    const hash = crypto.createHash('sha256').update(raw).digest('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await this.prisma.refreshToken.create({ data: { tokenHash: hash, userId, expiresAt } });
+    return raw;
+  }
 
   private async sendInviteEmail(params: {
     to: string;
@@ -78,6 +96,8 @@ export class InvitationsService {
     const org = invitation.organization;
 
     let userName: string | null = null;
+    let userEmail = '';
+    let userRole = 'user';
 
     await this.prisma.$transaction(async (tx) => {
       const existing = await tx.organizationMember.findUnique({
@@ -88,11 +108,16 @@ export class InvitationsService {
         data: { userId, organizationId: org.id, role: invitation.role },
       });
 
-      const user = await tx.user.findUnique({ where: { id: userId } });
-      userName = user?.name ?? null;
-      if (!user?.organizationId) {
-        await tx.user.update({ where: { id: userId }, data: { organizationId: org.id } });
-      }
+      // Switch user's active organization to the invited one so their session
+      // points at the right workspace. A user may be in multiple orgs, but
+      // `user.organizationId` drives the JWT's org context on login.
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { organizationId: org.id },
+      });
+      userName = user.name;
+      userEmail = user.email;
+      userRole = user.role;
 
       await tx.invitation.update({ where: { token }, data: { acceptedAt: new Date() } });
     });
@@ -106,7 +131,12 @@ export class InvitationsService {
       appUrl,
     }).catch(() => {});
 
-    return { organizationId: org.id, organizationSlug: org.slug };
+    // Issue a fresh JWT signed with the new organizationId so the caller can
+    // refresh its session immediately (no logout/login required).
+    const accessToken = this.signToken({ id: userId, email: userEmail, role: userRole }, org.id, false);
+    const refreshToken = await this.generateRefreshToken(userId);
+
+    return { organizationId: org.id, organizationSlug: org.slug, accessToken, refreshToken };
   }
 
   async revoke(orgId: string, invitationId: string, requesterId: string) {

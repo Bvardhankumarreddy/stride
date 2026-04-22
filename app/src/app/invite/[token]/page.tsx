@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { api, ApiInvitationPreview } from "@/lib/api";
 import { useToken } from "@/lib/useToken";
@@ -12,7 +12,6 @@ export default function InvitePage() {
   const { token: inviteToken } = useParams<{ token: string }>();
   const { data: session, status } = useSession();
   const token = useToken();
-  const router = useRouter();
 
   const [invite, setInvite]     = useState<ApiInvitationPreview | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -40,8 +39,12 @@ export default function InvitePage() {
     if (!t || !inviteToken) return;
     setAccepting(true);
     try {
-      await api.invitations.accept(t, inviteToken);
-      router.push("/dashboard");
+      const { accessToken } = await api.invitations.accept(t, inviteToken);
+      // Refresh the NextAuth session with the new JWT (signed with the
+      // invited org as organizationId) so /users and other org-scoped APIs
+      // return the correct workspace without requiring a logout/login.
+      await signIn("credentials", { token: accessToken, redirect: false });
+      window.location.href = "/dashboard";
     } catch (e: any) {
       setError(e.message ?? "Failed to accept invite");
       setAccepting(false);
