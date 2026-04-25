@@ -1,12 +1,19 @@
 import json
 import boto3
 import os
+import uuid
+import re
 from botocore.exceptions import ClientError
 
-ses_client = boto3.client('ses', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+REGION = os.environ.get('AWS_REGION', 'us-east-1')
+ses_client = boto3.client('ses', region_name=REGION)
+s3_client  = boto3.client('s3',  region_name=REGION)
 
-FROM_EMAIL     = os.environ.get('FROM_EMAIL', '')
-STRIDE_API_KEY = os.environ.get('STRIDE_API_KEY', '')
+FROM_EMAIL              = os.environ.get('FROM_EMAIL', '')
+STRIDE_API_KEY          = os.environ.get('STRIDE_API_KEY', '')
+ATTACHMENTS_BUCKET      = os.environ.get('ATTACHMENTS_BUCKET', '')
+PRESIGN_EXPIRES_SECONDS = int(os.environ.get('PRESIGN_EXPIRES_SECONDS', '900'))  # 15 min default
+MAX_UPLOAD_BYTES        = int(os.environ.get('MAX_UPLOAD_BYTES', str(25 * 1024 * 1024)))  # 25 MB default
 
 
 def lambda_handler(event, context):
@@ -46,12 +53,13 @@ def lambda_handler(event, context):
         elif email_type == 'stride_contact':         return handle_stride_contact(body, headers)
         elif email_type == 'stride_due_date':        return handle_stride_due_date(body, headers)
         elif email_type == 'stride_otp':             return handle_stride_otp(body, headers)
+        elif email_type == 'stride_upload_url':      return handle_upload_url(body, headers)
         else:
             return {
                 'statusCode': 400, 'headers': headers,
                 'body': json.dumps({
-                    'error': 'Invalid email type',
-                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email', 'stride_contact', 'stride_otp']
+                    'error': 'Invalid type',
+                    'supported_types': ['stride_digest', 'stride_invite', 'stride_password_reset', 'stride_verify_email', 'stride_contact', 'stride_otp', 'stride_upload_url']
                 })
             }
 
@@ -533,3 +541,77 @@ def handle_stride_invite(body, headers):
     except ClientError as e:
         return {'statusCode': 500, 'headers': headers,
                 'body': json.dumps({'error': e.response['Error']['Message']})}
+
+
+# ── Attachment upload (S3 presigned PUT) ──────────────────────────────────────
+
+_SAFE_FILENAME_RE = re.compile(r'[^A-Za-z0-9._-]+')
+
+
+def _sanitize_filename(name: str) -> str:
+    name = (name or 'file').strip() or 'file'
+    return _SAFE_FILENAME_RE.sub('_', name)[:200]
+
+
+def handle_upload_url(body, headers):
+    """
+    Mint a short-lived S3 presigned PUT URL for the client to upload a file
+    directly. The client then notifies the Stride API with the resulting
+    public GET URL + metadata.
+
+    Body:
+      filename      (str, required)   Original filename (for extension/display)
+      contentType   (str, required)   MIME type
+      organizationId(str, optional)   Used as a path prefix for organization
+      issueId       (str, optional)   Used as a path prefix for the issue
+      size          (int, optional)   Bytes; rejected if > MAX_UPLOAD_BYTES
+
+    Returns:
+      uploadUrl  : presigned PUT URL (15 min)
+      fileUrl    : permanent public GET URL the API stores on the Attachment
+      key        : the S3 object key
+    """
+    if not ATTACHMENTS_BUCKET:
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': 'ATTACHMENTS_BUCKET env var not configured'})}
+
+    filename     = body.get('filename')
+    content_type = body.get('contentType')
+    if not filename or not content_type:
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'filename and contentType are required'})}
+
+    size = body.get('size')
+    if isinstance(size, int) and size > MAX_UPLOAD_BYTES:
+        return {'statusCode': 413, 'headers': headers,
+                'body': json.dumps({'error': f'File too large (max {MAX_UPLOAD_BYTES} bytes)'})}
+
+    org_id   = body.get('organizationId') or 'global'
+    issue_id = body.get('issueId') or 'misc'
+    safe     = _sanitize_filename(filename)
+    key      = f'attachments/{org_id}/{issue_id}/{uuid.uuid4().hex}-{safe}'
+
+    try:
+        upload_url = s3_client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket':      ATTACHMENTS_BUCKET,
+                'Key':         key,
+                'ContentType': content_type,
+            },
+            ExpiresIn=PRESIGN_EXPIRES_SECONDS,
+        )
+    except ClientError as e:
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': e.response['Error']['Message']})}
+
+    file_url = f'https://{ATTACHMENTS_BUCKET}.s3.{REGION}.amazonaws.com/{key}'
+
+    return {
+        'statusCode': 200, 'headers': headers,
+        'body': json.dumps({
+            'uploadUrl': upload_url,
+            'fileUrl':   file_url,
+            'key':       key,
+        }),
+    }
