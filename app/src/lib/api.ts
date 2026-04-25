@@ -12,6 +12,13 @@ function handleSessionExpired() {
   );
 }
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public body: any) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   token: string | undefined,
@@ -33,7 +40,10 @@ export async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${path} → ${res.status}: ${text}`);
+    let body: any = text;
+    try { body = JSON.parse(text); } catch { /* keep as string */ }
+    const message = (body && typeof body === "object" && body.message) ? body.message : `API ${path} → ${res.status}: ${text}`;
+    throw new ApiError(res.status, message, body);
   }
 
   if (res.status === 204) return undefined as T;

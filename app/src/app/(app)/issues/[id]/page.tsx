@@ -5,8 +5,8 @@ import { useParams } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
-import { useSession } from "next-auth/react";
-import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch, issueSlug } from "@/lib/api";
+import { useSession, signIn } from "next-auth/react";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch, issueSlug, ApiError } from "@/lib/api";
 import CommentEditor from "@/components/CommentEditor";
 import { toast } from "@/components/Toast";
 
@@ -122,6 +122,16 @@ export default function IssueDetailPage() {
       const initial: Record<string, string> = {};
       (iss.customFieldValues ?? []).forEach((v) => { initial[v.customFieldId] = v.value; });
       setFieldValues(initial);
+    }).catch(async (err) => {
+      // Auto-switch workspace if the issue lives in another org the user belongs to
+      if (err instanceof ApiError && err.status === 409 && err.body?.code === "WRONG_WORKSPACE" && err.body?.organizationId) {
+        try {
+          const { accessToken } = await api.organizations.switch(token, err.body.organizationId);
+          await signIn("credentials", { token: accessToken, redirect: false });
+          window.location.reload();
+          return;
+        } catch { /* fall through to default loading-finish */ }
+      }
     }).finally(() => setLoading(false));
     api.issues.activity(token, id).then(setActivity).catch(() => {});
   }, [token, id]);

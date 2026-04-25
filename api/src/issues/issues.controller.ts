@@ -39,13 +39,13 @@ export class IssuesController {
     return { updated: ids.length };
   }
 
-  @Get(':id') findOne(@Param('id') id: string, @Req() req: any) { return this.issues.findOne(id, req.user.organizationId); }
+  @Get(':id') findOne(@Param('id') id: string, @Req() req: any) { return this.issues.findOne(id, req.user.organizationId, req.user.sub); }
   @Patch(':id') update(@Param('id') id: string, @Body() dto: UpdateIssueDto, @Req() req: any) { return this.issues.update(id, dto, req.user.organizationId); }
   @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('id') id: string, @Req() req: any) { return this.issues.remove(id, req.user.organizationId); }
 
   @Get(':id/activity')
   async getActivity(@Param('id') id: string, @Req() req: any) {
-    const issue = await this.issues.findOne(id, req.user.organizationId);
+    const issue = await this.issues.findOne(id, req.user.organizationId, req.user.sub);
     return this.issues.getActivity(issue.id);
   }
 

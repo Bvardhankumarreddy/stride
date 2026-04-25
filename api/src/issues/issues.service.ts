@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -93,21 +93,42 @@ export class IssuesService {
     return { data, total, page, limit };
   }
 
-  async findOne(idOrSlug: string, organizationId?: string) {
+  async findOne(idOrSlug: string, organizationId?: string, userId?: string) {
     const include = { ...INCLUDE, comments: { include: { author: { select: { id: true, name: true, initials: true, image: true } } }, orderBy: { createdAt: 'asc' as const } } };
 
     // Slug form like "STR-123" — look up by project key + issue number.
     const slug = parseSlug(idOrSlug);
     if (slug) {
-      const where: any = { key: slug.key };
-      if (organizationId) where.organizationId = organizationId;
-      const project = await this.prisma.project.findFirst({ where });
-      if (project) {
-        const issue = await this.prisma.issue.findFirst({
-          where: { projectId: project.id, number: slug.number } as any,
-          include,
+      // 1) Try the user's current active workspace
+      if (organizationId) {
+        const project = await this.prisma.project.findFirst({ where: { key: slug.key, organizationId } });
+        if (project) {
+          const issue = await this.prisma.issue.findFirst({
+            where: { projectId: project.id, number: slug.number } as any,
+            include,
+          });
+          if (issue) return issue;
+        }
+      }
+
+      // 2) Slug matches a project in another workspace the user belongs to —
+      // signal the frontend so it can switch workspace and retry.
+      if (userId) {
+        const crossOrg = await this.prisma.project.findFirst({
+          where: {
+            key: slug.key,
+            organizationId: organizationId ? { not: organizationId } : undefined,
+            organization: { members: { some: { userId } } },
+          },
+          select: { organizationId: true, organization: { select: { name: true } } },
         });
-        if (issue) return issue;
+        if (crossOrg?.organizationId) {
+          throw new ConflictException({
+            code: 'WRONG_WORKSPACE',
+            message: `This issue is in the "${crossOrg.organization?.name ?? 'another'}" workspace`,
+            organizationId: crossOrg.organizationId,
+          });
+        }
       }
     }
 
