@@ -16,7 +16,7 @@ All commands assume `us-east-1`. Change the region if your Lambda lives elsewher
 ### 1. Create the bucket
 
 ```bash
-BUCKET=stride-attachments-yourname  # must be globally unique
+BUCKET=stride-attachments  # must be globally unique
 REGION=us-east-1
 
 aws s3api create-bucket --bucket "$BUCKET" --region "$REGION"
@@ -76,7 +76,7 @@ In the Lambda console (or via CLI), add:
 
 | Key | Value |
 |---|---|
-| `ATTACHMENTS_BUCKET` | `stride-attachments-yourname` |
+| `ATTACHMENTS_BUCKET` | `stride-attachments` |
 | `PRESIGN_EXPIRES_SECONDS` | `900` (optional, default 15 min) |
 | `MAX_UPLOAD_BYTES` | `26214400` (optional, default 25 MB) |
 
@@ -90,7 +90,7 @@ Attach this inline policy to the Lambda's execution role:
   "Statement": [{
     "Effect": "Allow",
     "Action": ["s3:PutObject", "s3:GetObject"],
-    "Resource": "arn:aws:s3:::stride-attachments-yourname/*"
+    "Resource": "arn:aws:s3:::stride-attachments/*"
   }]
 }
 ```
@@ -108,7 +108,7 @@ Expected response:
 ```json
 {
   "uploadUrl": "https://...amazonaws.com/...?X-Amz-Algorithm=...",
-  "fileUrl":   "https://stride-attachments-yourname.s3.us-east-1.amazonaws.com/attachments/global/misc/<uuid>-test.png",
+  "fileUrl":   "https://stride-attachments.s3.us-east-1.amazonaws.com/attachments/global/misc/<uuid>-test.png",
   "key":       "attachments/global/misc/<uuid>-test.png"
 }
 ```
