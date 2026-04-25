@@ -33,6 +33,22 @@ export class AttachmentsController {
     return this.attachments.create(id, body, req.user.sub);
   }
 
+  @Post('presign')
+  async presign(
+    @Param('issueId') issueId: string,
+    @Body() body: { filename: string; contentType: string; size?: number },
+    @Req() req: any,
+  ) {
+    const id = await this.resolveIssueId(issueId, req.user.organizationId, req.user.sub);
+    return this.attachments.presignUpload({
+      filename: body.filename,
+      contentType: body.contentType,
+      size: body.size,
+      organizationId: req.user.organizationId ?? undefined,
+      issueId: id,
+    });
+  }
+
   @Delete(':attachmentId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('attachmentId') attachmentId: string) {

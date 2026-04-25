@@ -358,6 +358,8 @@ export const api = {
       apiFetch<ApiAttachment>(`/issues/${issueId}/attachments`, token, { method: "POST", body: JSON.stringify(body) }),
     removeAttachment: (token: string, issueId: string, attachmentId: string) =>
       apiFetch<void>(`/issues/${issueId}/attachments/${attachmentId}`, token, { method: "DELETE" }),
+    presignUpload: (token: string, issueId: string, body: { filename: string; contentType: string; size?: number }) =>
+      apiFetch<{ uploadUrl: string; fileUrl: string; key: string }>(`/issues/${issueId}/attachments/presign`, token, { method: "POST", body: JSON.stringify(body) }),
     downloadCsv: (token: string) => {
       const a = document.createElement("a");
       a.href = `${API}/issues/export`;

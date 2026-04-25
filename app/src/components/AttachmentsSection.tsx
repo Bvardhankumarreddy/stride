@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { api, ApiAttachment } from "@/lib/api";
 import { useToken } from "@/lib/useToken";
 import { toast } from "@/components/Toast";
@@ -30,10 +30,12 @@ interface Props {
 
 export default function AttachmentsSection({ issueId, attachments, onChange }: Props) {
   const token = useToken();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [adding, setAdding] = useState<null | "link" | "image">(null);
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<{ name: string; progress: number } | null>(null);
 
   function reset() {
     setAdding(null);
@@ -64,6 +66,46 @@ export default function AttachmentsSection({ issueId, attachments, onChange }: P
     }
   }
 
+  async function uploadFile(file: File) {
+    if (!token) return;
+    setUploading({ name: file.name, progress: 0 });
+    try {
+      const { uploadUrl, fileUrl } = await api.issues.presignUpload(token, issueId, {
+        filename: file.name,
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+      });
+
+      // Upload via XHR so we can report progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploading({ name: file.name, progress: Math.round((e.loaded / e.total) * 100) });
+        };
+        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(`Upload failed (${xhr.status})`));
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.send(file);
+      });
+
+      const isImage = (file.type || "").startsWith("image/");
+      const created = await api.issues.addAttachment(token, issueId, {
+        type: isImage ? "image" : "file",
+        url: fileUrl,
+        name: file.name,
+        mimeType: file.type || undefined,
+        size: file.size,
+      });
+      onChange([created, ...attachments]);
+    } catch (e: any) {
+      toast(e.message ?? "Upload failed");
+    } finally {
+      setUploading(null);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
   async function remove(att: ApiAttachment) {
     if (!token) return;
     if (!confirm(`Remove "${att.name}"?`)) return;
@@ -88,6 +130,19 @@ export default function AttachmentsSection({ issueId, attachments, onChange }: P
           )}
         </h3>
         <div className="flex items-center gap-2">
+          <input
+            ref={fileInput}
+            type="file"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); }}
+          />
+          <button
+            onClick={() => fileInput.current?.click()}
+            disabled={!!uploading}
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5 disabled:opacity-40"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>upload</span>Upload
+          </button>
           <button
             onClick={() => setAdding("link")}
             className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5"
@@ -102,6 +157,18 @@ export default function AttachmentsSection({ issueId, attachments, onChange }: P
           </button>
         </div>
       </div>
+
+      {uploading && (
+        <div className="mb-2 p-3 rounded-xl border border-outline-variant/20 bg-surface-container-low">
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="font-semibold text-on-surface truncate flex-1">{uploading.name}</span>
+            <span className="text-on-surface-variant ml-2">{uploading.progress}%</span>
+          </div>
+          <div className="h-1 bg-surface-container rounded-full overflow-hidden">
+            <div className="h-full bg-primary transition-all" style={{ width: `${uploading.progress}%` }} />
+          </div>
+        </div>
+      )}
 
       {/* Existing attachments */}
       {attachments.length === 0 && !adding && (

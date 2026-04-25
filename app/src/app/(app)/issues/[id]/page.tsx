@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import Link from "next/link";
 import { useToken } from "@/lib/useToken";
 import { useSession, signIn } from "next-auth/react";
-import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, ApiAttachment, apiFetch, issueSlug, ApiError } from "@/lib/api";
+import { api, ApiIssue, ApiCustomField, ApiUser, ApiIssueActivity, ApiTimeLog, apiFetch, issueSlug, ApiError } from "@/lib/api";
 import AttachmentsSection from "@/components/AttachmentsSection";
 import CommentEditor from "@/components/CommentEditor";
 import { toast } from "@/components/Toast";
