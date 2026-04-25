@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Req, UseGuards, Http
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CustomFieldsService } from './custom-fields.service';
+import { IssuesService } from '../issues/issues.service';
 import { CreateCustomFieldDto } from './dto/create-custom-field.dto';
 
 @ApiTags('custom-fields')
@@ -9,7 +10,7 @@ import { CreateCustomFieldDto } from './dto/create-custom-field.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('custom-fields')
 export class CustomFieldsController {
-  constructor(private service: CustomFieldsService) {}
+  constructor(private service: CustomFieldsService, private issues: IssuesService) {}
 
   @Get()
   findAll(@Req() req: any) {
@@ -33,10 +34,12 @@ export class CustomFieldsController {
   }
 
   @Patch('issues/:issueId/values')
-  upsertValues(
+  async upsertValues(
     @Param('issueId') issueId: string,
     @Body() body: { values: { fieldId: string; value: string }[] },
+    @Req() req: any,
   ) {
-    return this.service.upsertValues(issueId, body.values);
+    const issue = await this.issues.findOne(issueId, req.user.organizationId, req.user.sub);
+    return this.service.upsertValues(issue.id, body.values);
   }
 }
