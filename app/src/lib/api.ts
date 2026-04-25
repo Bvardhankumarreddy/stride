@@ -88,6 +88,17 @@ export interface ApiAuditLog {
   user: { id: string; name: string | null; email: string; initials: string | null } | null;
 }
 
+export interface ApiAttachment {
+  id: string;
+  type: "link" | "image" | "file";
+  url: string;
+  name: string;
+  mimeType: string | null;
+  size: number | null;
+  createdAt: string;
+  createdBy: Pick<ApiUser, "id" | "name" | "initials" | "image"> | null;
+}
+
 export interface ApiTimeLog {
   id: string;
   minutes: number;
@@ -129,6 +140,7 @@ export interface ApiIssue {
   children?: ApiIssueChild[];
   blocking?: ApiIssueDependency[];
   blockedBy?: ApiIssueDependency[];
+  attachments?: ApiAttachment[];
 }
 
 /**
@@ -340,6 +352,12 @@ export const api = {
       apiFetch<ApiIssueDependency>(`/issues/${blockingIssueId}/dependencies`, token, { method: "POST", body: JSON.stringify({ blockedIssueId }) }),
     removeDependency: (token: string, blockingIssueId: string, blockedIssueId: string) =>
       apiFetch<void>(`/issues/${blockingIssueId}/dependencies/${blockedIssueId}`, token, { method: "DELETE" }),
+    listAttachments: (token: string, issueId: string) =>
+      apiFetch<ApiAttachment[]>(`/issues/${issueId}/attachments`, token),
+    addAttachment: (token: string, issueId: string, body: { type: "link" | "image" | "file"; url: string; name: string; mimeType?: string; size?: number }) =>
+      apiFetch<ApiAttachment>(`/issues/${issueId}/attachments`, token, { method: "POST", body: JSON.stringify(body) }),
+    removeAttachment: (token: string, issueId: string, attachmentId: string) =>
+      apiFetch<void>(`/issues/${issueId}/attachments/${attachmentId}`, token, { method: "DELETE" }),
     downloadCsv: (token: string) => {
       const a = document.createElement("a");
       a.href = `${API}/issues/export`;
