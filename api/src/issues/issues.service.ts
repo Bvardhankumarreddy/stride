@@ -22,6 +22,10 @@ const INCLUDE = {
   } },
   blocking: { include: { blockedIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
   blockedBy: { include: { blockingIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
+  attachments: {
+    include: { createdBy: { select: { id: true, name: true, initials: true, image: true } } },
+    orderBy: { createdAt: 'desc' as const },
+  },
 };
 
 // Parse "KEY-NUMBER" slug → { key, number }. Returns null if not a slug.

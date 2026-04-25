@@ -28,6 +28,7 @@ import { ContactModule } from './contact/contact.module';
 import { AuditModule } from './audit/audit.module';
 import { PublicModule } from './public/public.module';
 import { TimeLogsModule } from './time-logs/time-logs.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { TimeLogsModule } from './time-logs/time-logs.module';
     ProjectsModule,
     SprintsModule,
     IssuesModule,
+    AttachmentsModule,
     CommentsModule,
     DocsModule,
     NotificationsModule,

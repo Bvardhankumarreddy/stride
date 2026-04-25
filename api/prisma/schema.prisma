@@ -96,6 +96,7 @@ model User {
   createdTemplates         IssueTemplate[] @relation("CreatedTemplates")
   createdViews             SavedView[]     @relation("CreatedViews")
   timeLogs                 TimeLog[]       @relation("TimeLogs")
+  uploadedAttachments      Attachment[]
 }
 
 model Project {
@@ -167,8 +168,26 @@ model Issue {
   blocking          IssueDependency[]  @relation("BlockingIssue")
   blockedBy         IssueDependency[]  @relation("BlockedIssue")
   timeLogs          TimeLog[]
+  attachments       Attachment[]
 
   @@unique([projectId, number])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  issueId     String
+  type        String   // "link" | "image" | "file"
+  url         String   // For uploads: S3 URL. For links: the link itself.
+  name        String   // Display name (for links: title; for files: original filename)
+  mimeType    String?
+  size        Int?     // bytes (only for files/images)
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  issue     Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdBy User? @relation(fields: [createdById], references: [id])
+
+  @@index([issueId])
 }
 
 model IssueDependency {

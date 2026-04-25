@@ -11,5 +11,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
   imports: [SearchModule, NotificationsModule, EmailModule, WebhooksModule, IntegrationsModule],
   providers: [IssuesService],
   controllers: [IssuesController],
+  exports: [IssuesService],
 })
 export class IssuesModule {}
