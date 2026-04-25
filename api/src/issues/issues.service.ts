@@ -15,7 +15,11 @@ const INCLUDE = {
   sprint: { select: { id: true, name: true, status: true } },
   project: { select: { id: true, name: true, key: true } },
   customFieldValues: { include: { customField: true } },
-  children: { select: { id: true, title: true, status: true, priority: true, number: true, project: { select: { key: true } } } },
+  children: { select: {
+    id: true, title: true, status: true, priority: true, number: true,
+    project: { select: { key: true } },
+    assignee: { select: { id: true, name: true, initials: true, image: true } },
+  } },
   blocking: { include: { blockedIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
   blockedBy: { include: { blockingIssue: { select: { id: true, title: true, status: true, number: true, project: { select: { key: true } } } } } },
 };
@@ -220,7 +224,7 @@ export class IssuesService {
     }
   }
 
-  async createSubTask(parentIdOrSlug: string, dto: { title: string }, creatorId: string, organizationId?: string) {
+  async createSubTask(parentIdOrSlug: string, dto: { title: string; status?: string; priority?: string; assigneeId?: string }, creatorId: string, organizationId?: string) {
     const parent = await this.findOne(parentIdOrSlug, organizationId);
 
     // Subtask inherits project — compute its own sequential number
@@ -237,8 +241,9 @@ export class IssuesService {
       return tx.issue.create({
         data: {
           title: dto.title,
-          status: 'todo',
-          priority: 'medium',
+          status: dto.status ?? 'todo',
+          priority: dto.priority ?? 'medium',
+          assigneeId: dto.assigneeId || undefined,
           number,
           parentId: parent.id,
           creatorId,

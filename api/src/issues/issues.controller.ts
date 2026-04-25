@@ -50,7 +50,7 @@ export class IssuesController {
   }
 
   @Post(':id/subtasks')
-  createSubTask(@Param('id') id: string, @Body() body: { title: string }, @Req() req: any) {
+  createSubTask(@Param('id') id: string, @Body() body: { title: string; status?: string; priority?: string; assigneeId?: string }, @Req() req: any) {
     return this.issues.createSubTask(id, body, req.user.sub, req.user.organizationId);
   }
 

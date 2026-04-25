@@ -69,6 +69,7 @@ export interface ApiIssueChild {
   title: string;
   status: string;
   priority: string;
+  assignee?: Pick<ApiUser, "id" | "name" | "initials" | "image"> | null;
 }
 
 export interface ApiIssueDependency {
@@ -333,7 +334,7 @@ export const api = {
       apiFetch<ApiIssueActivity[]>(`/issues/${id}/activity`, token),
     bulkUpdate: (token: string, ids: string[], data: { status?: string; assigneeId?: string; priority?: string }) =>
       apiFetch<{ updated: number }>(`/issues/bulk`, token, { method: "PATCH", body: JSON.stringify({ ids, ...data }) }),
-    createSubTask: (token: string, parentId: string, body: { title: string }) =>
+    createSubTask: (token: string, parentId: string, body: { title: string; status?: string; priority?: string; assigneeId?: string }) =>
       apiFetch<ApiIssueChild>(`/issues/${parentId}/subtasks`, token, { method: "POST", body: JSON.stringify(body) }),
     addDependency: (token: string, blockingIssueId: string, blockedIssueId: string) =>
       apiFetch<ApiIssueDependency>(`/issues/${blockingIssueId}/dependencies`, token, { method: "POST", body: JSON.stringify({ blockedIssueId }) }),

@@ -101,6 +101,9 @@ export default function IssueDetailPage() {
 
   // Sub-tasks
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
+  const [newSubTaskStatus, setNewSubTaskStatus] = useState("todo");
+  const [newSubTaskPriority, setNewSubTaskPriority] = useState("medium");
+  const [newSubTaskAssignee, setNewSubTaskAssignee] = useState("");
   const [addingSubTask, setAddingSubTask]     = useState(false);
   const [savingSubTask, setSavingSubTask]     = useState(false);
 
@@ -340,6 +343,7 @@ export default function IssueDetailPage() {
                 <div className="space-y-1">
                   {(issue.children ?? []).map(child => {
                     const slug = issueSlug({ id: child.id, number: child.number, project: { key: issue.project?.key ?? null } });
+                    const priorityMeta = PRIORITIES.find(p => p.value === child.priority);
                     return (
                       <Link key={child.id} href={`/issues/${slug}`}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors group">
@@ -348,6 +352,23 @@ export default function IssueDetailPage() {
                           {child.status === "done" ? "check_circle" : "radio_button_unchecked"}
                         </span>
                         <span className={`text-sm flex-1 truncate ${child.status === "done" ? "line-through text-outline" : "text-on-surface"}`}>{child.title}</span>
+                        {priorityMeta && (
+                          <span className={`material-symbols-outlined flex-shrink-0 ${priorityMeta.color}`} title={priorityMeta.label} style={{ fontSize: 14 }}>
+                            {priorityMeta.icon}
+                          </span>
+                        )}
+                        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${STATUS_STYLES[child.status] ?? STATUS_STYLES.todo}`}>
+                          {STATUSES.find(s => s.value === child.status)?.label ?? child.status}
+                        </span>
+                        {child.assignee ? (
+                          <span title={child.assignee.name ?? ""} className="w-5 h-5 rounded-full bg-primary-fixed flex items-center justify-center flex-shrink-0">
+                            {child.assignee.image
+                              ? <img src={child.assignee.image} alt="" className="w-full h-full rounded-full object-cover" />
+                              : <span className="text-[8px] font-bold text-on-primary-fixed">{child.assignee.initials ?? "?"}</span>}
+                          </span>
+                        ) : (
+                          <span className="w-5 h-5 rounded-full border border-dashed border-outline-variant/40 flex-shrink-0" title="Unassigned" />
+                        )}
                         <span className="text-[10px] font-bold text-outline uppercase opacity-0 group-hover:opacity-100 transition-opacity">{slug}</span>
                       </Link>
                     );
@@ -355,42 +376,53 @@ export default function IssueDetailPage() {
                 </div>
 
                 {addingSubTask && (
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 space-y-2 p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
                     <input
                       autoFocus
                       value={newSubTaskTitle}
                       onChange={e => setNewSubTaskTitle(e.target.value)}
-                      onKeyDown={async e => {
-                        if (e.key === "Enter" && newSubTaskTitle.trim() && token) {
+                      onKeyDown={e => { if (e.key === "Escape") { setAddingSubTask(false); setNewSubTaskTitle(""); } }}
+                      placeholder="Sub-task title…"
+                      className="w-full px-3 py-2 text-sm border border-outline-variant/20 rounded-lg bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <select value={newSubTaskStatus} onChange={e => setNewSubTaskStatus(e.target.value)}
+                        className="text-xs px-2 py-1 rounded border border-outline-variant/30 bg-surface-container-lowest text-on-surface">
+                        {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      </select>
+                      <select value={newSubTaskPriority} onChange={e => setNewSubTaskPriority(e.target.value)}
+                        className="text-xs px-2 py-1 rounded border border-outline-variant/30 bg-surface-container-lowest text-on-surface">
+                        {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                      </select>
+                      <select value={newSubTaskAssignee} onChange={e => setNewSubTaskAssignee(e.target.value)}
+                        className="text-xs px-2 py-1 rounded border border-outline-variant/30 bg-surface-container-lowest text-on-surface flex-1 min-w-32">
+                        <option value="">Unassigned</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.name ?? u.email}</option>)}
+                      </select>
+                      <button
+                        disabled={savingSubTask || !newSubTaskTitle.trim()}
+                        onClick={async () => {
+                          if (!token || !newSubTaskTitle.trim()) return;
                           setSavingSubTask(true);
                           try {
-                            await api.issues.createSubTask(token, id, { title: newSubTaskTitle.trim() });
+                            await api.issues.createSubTask(token, id, {
+                              title: newSubTaskTitle.trim(),
+                              status: newSubTaskStatus,
+                              priority: newSubTaskPriority,
+                              assigneeId: newSubTaskAssignee || undefined,
+                            });
                             const updated = await api.issues.get(token, id);
                             setIssue(updated);
                             setNewSubTaskTitle("");
+                            setNewSubTaskStatus("todo");
+                            setNewSubTaskPriority("medium");
+                            setNewSubTaskAssignee("");
                             setAddingSubTask(false);
                           } finally { setSavingSubTask(false); }
-                        }
-                        if (e.key === "Escape") { setAddingSubTask(false); setNewSubTaskTitle(""); }
-                      }}
-                      placeholder="Sub-task title… (Enter to save)"
-                      className="flex-1 px-3 py-2 text-sm border border-outline-variant/20 rounded-lg bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary/20 text-on-surface"
-                    />
-                    <button
-                      disabled={savingSubTask || !newSubTaskTitle.trim()}
-                      onClick={async () => {
-                        if (!token || !newSubTaskTitle.trim()) return;
-                        setSavingSubTask(true);
-                        try {
-                          await api.issues.createSubTask(token, id, { title: newSubTaskTitle.trim() });
-                          const updated = await api.issues.get(token, id);
-                          setIssue(updated);
-                          setNewSubTaskTitle("");
-                          setAddingSubTask(false);
-                        } finally { setSavingSubTask(false); }
-                      }}
-                      className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-lg disabled:opacity-40"
-                    >{savingSubTask ? "…" : "Add"}</button>
+                        }}
+                        className="px-3 py-1 bg-primary text-white text-xs font-bold rounded disabled:opacity-40"
+                      >{savingSubTask ? "Adding…" : "Add subtask"}</button>
+                    </div>
                   </div>
                 )}
               </section>
