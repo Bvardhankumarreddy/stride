@@ -32,16 +32,6 @@ const NOTIF_EVENTS = [
   { id: "mention", label: "@mention in comment" },
 ];
 
-const NOTIF_STORAGE_KEY = "stride:notif_prefs";
-
-function loadNotifPrefs(): Record<string, { email: boolean; inApp: boolean }> {
-  if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) ?? "{}"); } catch { return {}; }
-}
-
-function saveNotifPrefs(prefs: Record<string, { email: boolean; inApp: boolean }>) {
-  localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(prefs));
-}
 
 const FIELD_TYPES = [
   { id: "text",     label: "Text",     icon: "text_fields" },
@@ -190,7 +180,10 @@ function SettingsInner() {
   const [savingWebhook, setSavingWebhook] = useState(false);
   const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
 
-  useEffect(() => { setNotifPrefs(loadNotifPrefs()); }, []);
+  useEffect(() => {
+    if (!token) return;
+    api.users.getNotifPrefs(token).then(setNotifPrefs).catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     const success = searchParams.get("integration_success");
@@ -1422,11 +1415,19 @@ function SettingsInner() {
                 <div className="space-y-1">
                   {NOTIF_EVENTS.map((ev) => {
                     const pref = notifPrefs[ev.id] ?? { email: true, inApp: true };
-                    function toggle(channel: "email" | "inApp") {
+                    async function toggle(channel: "email" | "inApp") {
                       const next = { ...pref, [channel]: !pref[channel] };
                       const updated = { ...notifPrefs, [ev.id]: next };
-                      setNotifPrefs(updated);
-                      saveNotifPrefs(updated);
+                      setNotifPrefs(updated); // optimistic
+                      if (!token) return;
+                      try {
+                        const saved = await api.users.updateNotifPrefs(token, { [ev.id]: next });
+                        setNotifPrefs(saved);
+                      } catch {
+                        // Revert on failure
+                        setNotifPrefs(notifPrefs);
+                        toast("Failed to save preference");
+                      }
                     }
                     return (
                       <div key={ev.id} className="grid grid-cols-[1fr_80px_80px] gap-x-4 items-center py-3 border-b border-outline-variant/10 last:border-0 px-1">
@@ -1447,7 +1448,7 @@ function SettingsInner() {
                   })}
                 </div>
 
-                <p className="text-xs text-on-surface-variant mt-4 italic">Preferences are saved locally on this device.</p>
+                <p className="text-xs text-on-surface-variant mt-4 italic">Changes save automatically and apply across all your devices.</p>
               </div>
             </div>
           )}

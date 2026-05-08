@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
 import { AiModule } from '../ai/ai.module';
+import { UsersModule } from '../users/users.module';
 import {
   QUEUE_EMAIL_DIGEST,
   QUEUE_AI_SUMMARY,
@@ -42,6 +43,7 @@ import { DigestScheduler } from './digest.scheduler';
     PrismaModule,
     EmailModule,
     AiModule,
+    UsersModule,
   ],
   controllers: [JobsController],
   providers: [

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../email/email.service';
+import { UsersService } from '../users/users.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
@@ -13,6 +14,7 @@ export class CommentsService {
     private prisma: PrismaService,
     private notifications: NotificationsService,
     private email: EmailService,
+    private users: UsersService,
   ) {}
 
   async create(issueId: string, dto: CreateCommentDto, authorId: string) {
@@ -39,17 +41,21 @@ export class CommentsService {
         ? await this.prisma.user.findMany({ where: { id: { in: notifyIds } }, select: { id: true, email: true, name: true } })
         : [];
 
-      await Promise.all(notifyIds.flatMap((userId) => {
+      await Promise.all(notifyIds.map(async (userId) => {
         const user = users.find((u) => u.id === userId);
-        return [
-          this.notifications.create({
+        const [wantsInApp, wantsEmail] = await Promise.all([
+          this.users.shouldNotify(userId, 'issue_comment', 'inApp'),
+          this.users.shouldNotify(userId, 'issue_comment', 'email'),
+        ]);
+        await Promise.all([
+          wantsInApp && this.notifications.create({
             type: 'comment',
             title: `New comment on "${issue.title}"`,
             body: `${authorName}: ${dto.body.slice(0, 120)}`,
             userId,
             issueId,
           }).catch(() => {}),
-          user && this.email.send('stride_comment', {
+          wantsEmail && user && this.email.send('stride_comment', {
             email: user.email,
             name: user.name ?? user.email,
             issueTitle: issue.title,
@@ -57,7 +63,7 @@ export class CommentsService {
             authorName,
             commentBody: dto.body,
           }).catch(() => {}),
-        ];
+        ]);
       }));
 
       // Parse @mentions
@@ -71,10 +77,16 @@ export class CommentsService {
         const alreadyNotified = new Set(notifyIds);
         await Promise.all(mentionedUsers
           .filter(u => u.id !== authorId && !alreadyNotified.has(u.id))
-          .map(u => Promise.all([
-            this.notifications.create({ type: 'mention', title: `${authorName} mentioned you`, body: dto.body.slice(0, 120), userId: u.id, issueId }).catch(() => {}),
-            this.email.send('stride_comment', { email: u.email, name: u.name ?? u.email, issueTitle: issue?.title ?? '', issueUrl, authorName, commentBody: dto.body }).catch(() => {}),
-          ]))
+          .map(async (u) => {
+            const [wantsInApp, wantsEmail] = await Promise.all([
+              this.users.shouldNotify(u.id, 'mention', 'inApp'),
+              this.users.shouldNotify(u.id, 'mention', 'email'),
+            ]);
+            await Promise.all([
+              wantsInApp && this.notifications.create({ type: 'mention', title: `${authorName} mentioned you`, body: dto.body.slice(0, 120), userId: u.id, issueId }).catch(() => {}),
+              wantsEmail && this.email.send('stride_comment', { email: u.email, name: u.name ?? u.email, issueTitle: issue?.title ?? '', issueUrl, authorName, commentBody: dto.body }).catch(() => {}),
+            ]);
+          })
         );
       }
     }

@@ -441,6 +441,10 @@ export const api = {
   users: {
     list: (token: string) =>
       apiFetch<ApiUser[]>(`/users`, token),
+    getNotifPrefs: (token: string) =>
+      apiFetch<Record<string, { email: boolean; inApp: boolean }>>(`/users/me/notification-prefs`, token),
+    updateNotifPrefs: (token: string, prefs: Record<string, { email?: boolean; inApp?: boolean }>) =>
+      apiFetch<Record<string, { email: boolean; inApp: boolean }>>(`/users/me/notification-prefs`, token, { method: "PATCH", body: JSON.stringify(prefs) }),
   },
 
   organizations: {

@@ -5,6 +5,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../email/email.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { SlackService } from '../integrations/slack.service';
+import { UsersService } from '../users/users.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { QueryIssueDto } from './dto/query-issue.dto';
@@ -44,6 +45,7 @@ export class IssuesService {
     private email: EmailService,
     private webhooks: WebhooksService,
     private slack: SlackService,
+    private users: UsersService,
   ) {}
 
   async create(dto: CreateIssueDto, creatorId: string, organizationId?: string) {
@@ -170,7 +172,7 @@ export class IssuesService {
       await this.prisma.issueActivity.create({ data: { issueId: id, type: 'priority_changed', from: existing.priority, to: dto.priority } }).catch(() => {});
     }
 
-    // Notify + email the new assignee (skip if unchanged or unassigned)
+    // Notify + email the new assignee (skip if unchanged or unassigned, and respect prefs)
     const newAssigneeId = dto.assigneeId;
     if (newAssigneeId && newAssigneeId !== existing.assigneeId) {
       const assignee = await this.prisma.user.findUnique({
@@ -181,15 +183,20 @@ export class IssuesService {
       const appUrl = process.env.APP_URL ?? 'http://localhost:3001';
       const slug = (issue as any).project?.key && (issue as any).number ? `${(issue as any).project.key}-${(issue as any).number}` : id;
 
+      const [wantsInApp, wantsEmail] = await Promise.all([
+        this.users.shouldNotify(newAssigneeId, 'issue_assigned', 'inApp'),
+        this.users.shouldNotify(newAssigneeId, 'issue_assigned', 'email'),
+      ]);
+
       await Promise.all([
-        this.notifications.create({
+        wantsInApp && this.notifications.create({
           type: 'assigned',
           title: 'You were assigned an issue',
           body: issue.title,
           userId: newAssigneeId,
           issueId: id,
         }).catch(() => {}),
-        assignee && this.email.send('stride_assigned', {
+        wantsEmail && assignee && this.email.send('stride_assigned', {
           email: assignee.email,
           name: assignee.name ?? assignee.email,
           issueTitle: issue.title,
