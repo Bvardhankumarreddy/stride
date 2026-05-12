@@ -30,6 +30,7 @@ const NOTIF_EVENTS = [
   { id: "sprint_start", label: "Sprint started / completed" },
   { id: "due_date", label: "Due date reminders" },
   { id: "mention", label: "@mention in comment" },
+  { id: "daily_digest", label: "Daily AI digest" },
 ];
 
 

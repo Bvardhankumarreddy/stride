@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { JobsService } from './jobs.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class DigestScheduler {
@@ -12,6 +13,7 @@ export class DigestScheduler {
     private prisma: PrismaService,
     private jobs: JobsService,
     private ai: AiService,
+    private users: UsersService,
   ) {}
 
   /** Runs daily at 9 AM — sends digest emails to all org members who have digest enabled */
@@ -79,6 +81,10 @@ export class DigestScheduler {
       }
 
       for (const member of members) {
+        // Respect the user's notification preference for daily digest
+        const wantsEmail = await this.users.shouldNotify(member.user.id, 'daily_digest', 'email');
+        if (!wantsEmail) continue;
+
         await this.jobs.scheduleEmailDigest({
           userId: member.user.id,
           email: member.user.email,

@@ -15,6 +15,7 @@ export const NOTIF_EVENTS = [
   'sprint_start',
   'due_date',
   'mention',
+  'daily_digest',
 ] as const;
 export type NotifEvent = typeof NOTIF_EVENTS[number];
 
